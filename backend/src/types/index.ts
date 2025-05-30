@@ -13,7 +13,20 @@ export interface PlayerInfo {
 export interface CardInfo {
   id: number;
   suit: 'HEARTS' | 'DIAMONDS' | 'CLUBS' | 'SPADES';
-  rank: 'ACE' | 'TWO' | 'THREE' | 'FOUR' | 'FIVE' | 'SIX' | 'SEVEN' | 'EIGHT' | 'NINE' | 'TEN' | 'JACK' | 'QUEEN' | 'KING';
+  rank:
+    | 'ACE'
+    | 'TWO'
+    | 'THREE'
+    | 'FOUR'
+    | 'FIVE'
+    | 'SIX'
+    | 'SEVEN'
+    | 'EIGHT'
+    | 'NINE'
+    | 'TEN'
+    | 'JACK'
+    | 'QUEEN'
+    | 'KING';
   code: string;
   pointValue: number;
   sortOrder: number;
@@ -31,14 +44,27 @@ export interface ServerToClientEvents {
   handCompleted: (handResult: HandResult) => void;
   gameCompleted: (gameResult: GameResult) => void;
   error: (error: string) => void;
-  connectionStatus: (status: 'connected' | 'disconnected' | 'reconnected') => void;
+  connectionStatus: (
+    status: 'connected' | 'disconnected' | 'reconnected'
+  ) => void;
 }
 
 export interface ClientToServerEvents {
-  login: (playerName: string, callback: (success: boolean, playerInfo?: PlayerInfo) => void) => void;
-  joinGame: (callback: (success: boolean, gameState?: GameState) => void) => void;
-  playCard: (cardId: number, callback: (success: boolean, error?: string) => void) => void;
-  exchangeCards: (cardIds: number[], callback: (success: boolean, error?: string) => void) => void;
+  login: (
+    playerName: string,
+    callback: (success: boolean, playerInfo?: PlayerInfo) => void
+  ) => void;
+  joinGame: (
+    callback: (success: boolean, gameState?: GameState) => void
+  ) => void;
+  playCard: (
+    cardId: number,
+    callback: (success: boolean, error?: string) => void
+  ) => void;
+  exchangeCards: (
+    cardIds: number[],
+    callback: (success: boolean, error?: string) => void
+  ) => void;
   disconnect: () => void;
 }
 

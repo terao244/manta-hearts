@@ -7,10 +7,15 @@ const SUITS: { value: Suit; name: string }[] = [
   { value: 'CLUBS', name: 'クラブ' },
   { value: 'DIAMONDS', name: 'ダイヤ' },
   { value: 'HEARTS', name: 'ハート' },
-  { value: 'SPADES', name: 'スペード' }
+  { value: 'SPADES', name: 'スペード' },
 ];
 
-const RANKS: { value: Rank; name: string; shortName: string; sortOrder: number }[] = [
+const RANKS: {
+  value: Rank;
+  name: string;
+  shortName: string;
+  sortOrder: number;
+}[] = [
   { value: 'TWO', name: '2', shortName: '2', sortOrder: 0 },
   { value: 'THREE', name: '3', shortName: '3', sortOrder: 1 },
   { value: 'FOUR', name: '4', shortName: '4', sortOrder: 2 },
@@ -23,7 +28,7 @@ const RANKS: { value: Rank; name: string; shortName: string; sortOrder: number }
   { value: 'JACK', name: 'ジャック', shortName: 'J', sortOrder: 9 },
   { value: 'QUEEN', name: 'クイーン', shortName: 'Q', sortOrder: 10 },
   { value: 'KING', name: 'キング', shortName: 'K', sortOrder: 11 },
-  { value: 'ACE', name: 'エース', shortName: 'A', sortOrder: 12 }
+  { value: 'ACE', name: 'エース', shortName: 'A', sortOrder: 12 },
 ];
 
 // スート略記号
@@ -31,7 +36,7 @@ const SUIT_CODES: Record<Suit, string> = {
   CLUBS: 'C',
   DIAMONDS: 'D',
   HEARTS: 'H',
-  SPADES: 'S'
+  SPADES: 'S',
 };
 
 async function main() {
@@ -45,27 +50,27 @@ async function main() {
         name: 'プレイヤー1',
         displayName: 'プレイヤー1',
         displayOrder: 1,
-        isActive: true
+        isActive: true,
       },
       {
         name: 'プレイヤー2',
         displayName: 'プレイヤー2',
         displayOrder: 2,
-        isActive: true
+        isActive: true,
       },
       {
         name: 'プレイヤー3',
         displayName: 'プレイヤー3',
         displayOrder: 3,
-        isActive: true
+        isActive: true,
       },
       {
         name: 'プレイヤー4',
         displayName: 'プレイヤー4',
         displayOrder: 4,
-        isActive: true
-      }
-    ]
+        isActive: true,
+      },
+    ],
   });
 
   // カードの作成
@@ -90,39 +95,39 @@ async function main() {
         rank: rank.value,
         code,
         pointValue,
-        sortOrder: sortOrder++
+        sortOrder: sortOrder++,
       });
     }
   }
 
   await prisma.card.createMany({
-    data: cards
+    data: cards,
   });
 
   // 各プレイヤーの統計データを初期化
   console.log('Creating player statistics...');
   const players = await prisma.player.findMany();
-  
+
   for (const player of players) {
     await prisma.playerStatistics.create({
       data: {
-        playerId: player.id
-      }
+        playerId: player.id,
+      },
     });
   }
 
   console.log('Database seed completed successfully!');
-  
+
   // 作成されたデータの確認
   const playerCount = await prisma.player.count();
   const cardCount = await prisma.card.count();
-  
+
   console.log(`Created ${playerCount} players`);
   console.log(`Created ${cardCount} cards`);
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error('Error during database seed:', e);
     process.exit(1);
   })
