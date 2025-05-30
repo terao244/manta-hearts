@@ -73,7 +73,7 @@ export const useSocket = () => {
     });
 
     // 再接続試行
-    socket.on('reconnect_attempt', (attemptNumber) => {
+    socket.io.on('reconnect_attempt', (attemptNumber: number) => {
       console.log('Reconnection attempt:', attemptNumber);
       setConnectionState(prev => ({
         ...prev,
@@ -83,7 +83,7 @@ export const useSocket = () => {
     });
 
     // 再接続成功
-    socket.on('reconnect', (attemptNumber) => {
+    socket.io.on('reconnect', (attemptNumber: number) => {
       console.log('Socket reconnected after', attemptNumber, 'attempts');
       setConnectionState({
         isConnected: true,
@@ -175,22 +175,18 @@ export const useSocket = () => {
   };
 
   // イベントリスナー登録関数
-  const on = <K extends keyof ServerToClientEvents>(
-    event: K, 
-    listener: ServerToClientEvents[K]
-  ) => {
+  const on = (event: string, listener: (...args: unknown[]) => void) => {
     if (socketRef.current) {
-      socketRef.current.on(event, listener);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (socketRef.current as any).on(event, listener);
     }
   };
 
   // イベントリスナー削除関数
-  const off = <K extends keyof ServerToClientEvents>(
-    event: K, 
-    listener?: ServerToClientEvents[K]
-  ) => {
+  const off = (event: string, listener?: (...args: unknown[]) => void) => {
     if (socketRef.current) {
-      socketRef.current.off(event, listener);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (socketRef.current as any).off(event, listener);
     }
   };
 

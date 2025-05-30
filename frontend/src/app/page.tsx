@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { PlayerSelect } from '@/components/ui/PlayerSelect';
 import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
 import { useSocket } from '@/hooks/useSocket';
-import type { PlayerInfo, LoginState } from '@/types';
+import type { LoginState } from '@/types';
 
 export default function Home() {
   const { connectionState, login } = useSocket();
