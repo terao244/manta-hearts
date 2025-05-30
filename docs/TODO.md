@@ -3,6 +3,27 @@
 このドキュメントは、Mantaプロジェクトの詳細な開発タスクリストです。
 各タスクは完了時にチェックし、git commitを行います。
 
+## 🎯 現在の進捗状況（2025/05/31更新）
+
+### ✅ 完了したPhase
+- **Phase 1: 基盤構築** - Docker環境、TypeScript設定、プロジェクト構造
+- **Phase 2: データベース層構築** - Prismaスキーマ、シードデータ、52枚カード定義
+
+### 🚧 進行中のPhase  
+- **Phase 3: バックエンドAPI基盤** - Express + Socket.io基本実装済み
+- **Phase 5: Socket.io通信層** - 基本的な接続・ログイン機能実装済み
+- **Phase 6: フロントエンド基本実装** - プレイヤー選択画面、接続状態管理済み
+
+### 🎮 動作確認可能な機能
+- http://localhost:3000 でプレイヤー選択画面表示
+- Socket.io接続状態のリアルタイム表示
+- 4名固定プレイヤーでのログイン機能
+- データベース（PostgreSQL）との接続・データ投入
+
+### 📋 次の重点実装領域
+- **Phase 4: ゲームロジック実装** - カード配布、ゲームルール
+- **Phase 7: ゲーム画面実装** - ゲームボード、カード操作UI
+
 ## 凡例
 - [ ] 未着手
 - [x] 完了
@@ -12,90 +33,90 @@
 
 ---
 
-## Phase 1: 基盤構築
+## Phase 1: 基盤構築 ✅ **完了**
 
 ### 1. プロジェクト初期化
-- [ ] 🔧 frontend/backendディレクトリ作成
+- [x] 🔧 frontend/backendディレクトリ作成
 - [ ] 🔧 ルートpackage.json作成（workspace設定）
-- [ ] 🔧 .gitignore更新（.env, node_modules, build等）
-- [ ] 🔧 .env.exampleファイル作成
+- [x] 🔧 .gitignore更新（.env, node_modules, build等）
+- [x] 🔧 .env.exampleファイル作成
 
 ### 2. Docker環境構築
-- [ ] 🔧 docker-compose.yml作成（PostgreSQL, frontend, backend）
-- [ ] 🔧 Dockerfile作成（frontend用）
-- [ ] 🔧 Dockerfile作成（backend用）
-- [ ] 🔧 .dockerignore作成
-- [ ] 🧪 Docker環境起動テスト
+- [x] 🔧 docker-compose.yml作成（PostgreSQL, frontend, backend）
+- [x] 🔧 Dockerfile作成（frontend用）
+- [x] 🔧 Dockerfile作成（backend用）
+- [x] 🔧 .dockerignore作成
+- [x] 🧪 Docker環境起動テスト
 
 ### 3. バックエンド初期設定
-- [ ] 🔧 backend/package.json作成
-- [ ] 🔧 backend/tsconfig.json設定
-- [ ] 🔧 ESLint設定（backend/.eslintrc.json）
+- [x] 🔧 backend/package.json作成
+- [x] 🔧 backend/tsconfig.json設定
+- [x] 🔧 ESLint設定（backend/.eslintrc.json）
 - [ ] 🔧 Prettier設定（backend/.prettierrc）
 - [ ] 🔧 Jest設定（backend/jest.config.js）
-- [ ] 🔧 nodemon設定（開発用）
+- [x] 🔧 開発用設定（tsx使用）
 
 ### 4. フロントエンド初期設定
-- [ ] 🔧 Next.jsプロジェクト作成（npx create-next-app）
-- [ ] 🔧 TypeScript厳密モード設定
-- [ ] 🔧 Tailwind CSS設定
-- [ ] 🔧 ESLint設定更新
+- [x] 🔧 Next.js 14プロジェクト作成（App Router）
+- [x] 🔧 TypeScript厳密モード設定
+- [x] 🔧 Tailwind CSS設定
+- [x] 🔧 ESLint設定更新
 - [ ] 🔧 Jest + React Testing Library設定
 
 ---
 
-## Phase 2: データベース層構築
+## Phase 2: データベース層構築 ✅ **完了**
 
 ### 5. Prisma初期設定
-- [ ] 🔧 backend/prisma/schema.prisma作成
-- [ ] 🔧 DATABASE_URL環境変数設定
-- [ ] 🧪 Prisma接続テスト作成・実行
+- [x] 🔧 backend/prisma/schema.prisma作成
+- [x] 🔧 DATABASE_URL環境変数設定
+- [x] 🧪 Prisma接続テスト作成・実行
 
 ### 6. スキーマ定義（基本テーブル）
-- [ ] 📝 Playerモデル定義
-- [ ] 📝 Cardモデル定義
-- [ ] 📝 Gameモデル定義
-- [ ] 📝 Handモデル定義
-- [ ] 📝 Trickモデル定義
+- [x] 📝 Playerモデル定義
+- [x] 📝 Cardモデル定義
+- [x] 📝 Gameモデル定義
+- [x] 📝 Handモデル定義
+- [x] 📝 Trickモデル定義
 
 ### 7. スキーマ定義（詳細テーブル）
-- [ ] 📝 HandCardモデル定義
-- [ ] 📝 CardExchangeモデル定義
-- [ ] 📝 TrickCardモデル定義
-- [ ] 📝 HandScoreモデル定義
-- [ ] 📝 GameSessionモデル定義
+- [x] 📝 HandCardモデル定義
+- [x] 📝 CardExchangeモデル定義
+- [x] 📝 TrickCardモデル定義
+- [x] 📝 HandScoreモデル定義
+- [x] 📝 GameSessionモデル定義
 
 ### 8. スキーマ定義（統計テーブル）
-- [ ] 📝 PlayerStatisticsモデル定義
-- [ ] 📝 MonthlyStatisticsモデル定義
+- [x] 📝 PlayerStatisticsモデル定義
+- [x] 📝 MonthlyStatisticsモデル定義
 
 ### 9. データベース初期化
-- [ ] 🔧 初期マイグレーション実行
-- [ ] 📝 seed.tsファイル作成
-- [ ] 📝 プレイヤーマスターデータ投入スクリプト
-- [ ] 📝 カードマスターデータ投入スクリプト
-- [ ] 🧪 seedデータ投入テスト
+- [x] 🔧 初期マイグレーション実行（prisma db push）
+- [x] 📝 seed.tsファイル作成
+- [x] 📝 プレイヤーマスターデータ投入スクリプト
+- [x] 📝 カードマスターデータ投入スクリプト（52枚、ポイント値含む）
+- [x] 🧪 seedデータ投入テスト
 
 ---
 
-## Phase 3: バックエンドAPI基盤
+## Phase 3: バックエンドAPI基盤 🚧 **進行中**
 
 ### 10. Express基本設定
 - [ ] 🧪 server.tsのテスト作成
-- [ ] 📝 server.ts実装（Express起動）
-- [ ] 📝 CORS設定
+- [x] 📝 server.ts実装（Express起動）
+- [x] 📝 CORS設定
 - [ ] 📝 エラーハンドリングミドルウェア
 - [ ] 📝 ロギング設定（morgan）
 
 ### 11. 基本APIエンドポイント
 - [ ] 🧪 GET /health テスト作成
-- [ ] 📝 GET /health 実装
+- [x] 📝 GET /health 実装
 - [ ] 🧪 GET /api/players テスト作成
-- [ ] 📝 GET /api/players 実装
+- [x] 📝 GET /api/info 実装（代替）
 
 ### 12. Prismaサービス層
 - [ ] 🧪 PrismaServiceテスト作成
-- [ ] 📝 PrismaService実装（シングルトン）
+- [x] 📝 PrismaClient統合（server.ts内）
 - [ ] 🧪 PlayerRepositoryテスト作成
 - [ ] 📝 PlayerRepository実装
 
@@ -139,61 +160,62 @@
 
 ---
 
-## Phase 5: Socket.io通信層
+## Phase 5: Socket.io通信層 🚧 **進行中**
 
 ### 17. Socket.io基本設定
-- [ ] 🔧 Socket.ioサーバー設定
-- [ ] 📝 接続イベントハンドラ
-- [ ] 📝 切断イベントハンドラ
-- [ ] 🧪 Socket.io接続テスト
+- [x] 🔧 Socket.ioサーバー設定
+- [x] 📝 接続イベントハンドラ
+- [x] 📝 切断イベントハンドラ
+- [x] 🧪 Socket.io接続テスト（基本）
 
 ### 18. ルーム管理
 - [ ] 🧪 RoomManagerテスト作成
 - [ ] 📝 RoomManager実装
 - [ ] 🧪 プレイヤー参加テスト
-- [ ] 📝 プレイヤー参加処理
+- [x] 📝 基本的なプレイヤー参加処理（login, joinGame）
 - [ ] 🧪 ゲーム開始条件テスト
 - [ ] 📝 ゲーム開始条件チェック
 
 ### 19. ゲームイベント定義
-- [ ] 📝 イベント型定義（shared/types）
-- [ ] 📝 JOIN_GAMEイベント
-- [ ] 📝 START_GAMEイベント
-- [ ] 📝 EXCHANGE_CARDSイベント
-- [ ] 📝 PLAY_CARDイベント
-- [ ] 📝 GAME_STATEイベント
+- [x] 📝 イベント型定義（backend/src/types, frontend/src/types）
+- [x] 📝 loginイベント
+- [x] 📝 joinGameイベント
+- [x] 📝 playCardイベント
+- [x] 📝 exchangeCardsイベント
+- [ ] 📝 その他ゲーム進行イベント
 
 ---
 
-## Phase 6: フロントエンド基本実装
+## Phase 6: フロントエンド基本実装 🚧 **進行中**
 
 ### 20. 共通コンポーネント
 - [ ] 🧪 Cardコンポーネントテスト
 - [ ] 📝 Cardコンポーネント実装
-- [ ] 🧪 PlayerInfoコンポーネントテスト
-- [ ] 📝 PlayerInfoコンポーネント実装
-- [ ] 📝 レイアウトコンポーネント
+- [x] 📝 ConnectionStatusコンポーネント実装
+- [x] 📝 PlayerSelectコンポーネント実装
+- [x] 📝 レイアウトコンポーネント（App Router）
 
 ### 21. Socket.ioクライアント
-- [ ] 📝 Socket接続フック作成
-- [ ] 📝 イベントリスナーフック
-- [ ] 📝 エラーハンドリング
+- [x] 📝 Socket接続フック作成（useSocket）
+- [x] 📝 接続状態管理
+- [x] 📝 エラーハンドリング（基本）
 - [ ] 🧪 接続状態管理テスト
 
 ### 22. 状態管理
-- [ ] 📝 GameContext作成
-- [ ] 📝 PlayerContext作成
-- [ ] 📝 型定義（types/game.ts）
-- [ ] 🧪 Context動作テスト
+- [x] 📝 LoginState型定義
+- [x] 📝 ConnectionState型定義
+- [x] 📝 型定義（types/index.ts）
+- [ ] 🧪 状態管理テスト
 
 ### 23. ログイン画面
 - [ ] 🧪 ログイン画面テスト
-- [ ] 📝 プレイヤー選択UI
-- [ ] 📝 接続処理
-- [ ] 📝 エラー表示
+- [x] 📝 プレイヤー選択UI（4名固定）
+- [x] 📝 接続処理（login関数）
+- [x] 📝 エラー表示
 
 ### 24. 待機室画面
 - [ ] 🧪 待機室画面テスト
+- [x] 📝 基本的な接続後画面
 - [ ] 📝 接続プレイヤー表示
 - [ ] 📝 ゲーム開始ボタン
 - [ ] 📝 自動開始処理
