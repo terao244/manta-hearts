@@ -1,0 +1,141 @@
+erDiagram
+    players {
+        int id
+        string name
+        string display_name
+        int display_order
+        int is_active
+        date created_at
+        date updated_at
+    }
+
+    cards {
+        int id
+        string suit
+        string rank
+        string code
+        int point_value
+        int sort_order
+    }
+
+    games {
+        int id
+        date start_time
+        date end_time
+        string status
+        int winner_id
+        int duration
+        date created_at
+        date updated_at
+    }
+
+    hands {
+        int id
+        int game_id
+        int hand_number
+        int shoot_the_moon_player_id
+        int hearts_broken
+        date created_at
+    }
+
+    hand_cards {
+        int id
+        int hand_id
+        int player_id
+        int card_id
+        date created_at
+    }
+
+    card_exchanges {
+        int id
+        int hand_id
+        int from_player_id
+        int to_player_id
+        int card_id
+        int exchange_order
+        date created_at
+    }
+
+    tricks {
+        int id
+        int hand_id
+        int trick_number
+        int winner_player_id
+        int points
+        int lead_player_id
+        date created_at
+    }
+
+    trick_cards {
+        int id
+        int trick_id
+        int player_id
+        int card_id
+        int play_order
+        date created_at
+    }
+
+    hand_scores {
+        int id
+        int hand_id
+        int player_id
+        int hand_points
+        int cumulative_points
+        int hearts_taken
+        int queen_of_spades_taken
+        int shoot_the_moon_achieved
+        date created_at
+    }
+
+    game_sessions {
+        int id
+        int game_id
+        int player_id
+        string session_id
+        string socket_id
+        string status
+        date connected_at
+        date disconnected_at
+    }
+
+    player_statistics {
+        int id
+        int player_id
+        int total_games
+        int wins
+        int win_rate
+        int average_score
+        int best_score
+        int worst_score
+        int total_score
+        int total_hearts_taken
+        int total_queen_of_spades_taken
+        int shoot_the_moon_count
+        int current_streak
+        int best_streak
+        int total_play_time
+        int average_game_time
+        date last_played_at
+        date updated_at
+    }
+
+    monthly_statistics {
+        int id
+        string year_month
+        int player_id
+        int games_played
+        int wins
+        int average_score
+        int best_score
+    }
+
+    games ||--o{ hands : has
+    games ||--o{ game_sessions : has
+    hands ||--o{ hand_cards : contains
+    hands ||--o{ card_exchanges : has
+    hands ||--o{ tricks : has
+    hands ||--o{ hand_scores : has
+    tricks ||--o{ trick_cards : contains
+    players ||--o| player_statistics : has
+    players ||--o{ monthly_statistics : has
+    

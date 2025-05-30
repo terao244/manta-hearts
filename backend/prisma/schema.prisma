@@ -1,0 +1,343 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// プレイヤーマスターテーブル
+model Player {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique // システム内部名（プレイヤー1, プレイヤー2, etc）
+  displayName   String   @map("display_name") // 表示名（将来的なカスタマイズ用）
+  displayOrder  Int      @map("display_order") // 表示順序
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  // リレーション
+  wonGames          Game[]    @relation("GameWinner")
+  handScores        HandScore[]
+  gameSessions      GameSession[]
+  statistics        PlayerStatistics?
+  monthlyStats      MonthlyStatistics[]
+  shootTheMoons     Hand[]    @relation("ShootTheMoonPlayer")
+  handCards         HandCard[]
+  cardExchangesFrom CardExchange[] @relation("FromPlayer")
+  cardExchangesTo   CardExchange[] @relation("ToPlayer")
+  trickCards        TrickCard[]
+  wonTricks         Trick[] @relation("TrickWinner")
+  leadTricks        Trick[] @relation("TrickLeader")
+  
+  // インデックス
+  @@index([name])
+  @@index([displayOrder])
+  @@map("players")
+}
+
+// カードマスターテーブル
+model Card {
+  id          Int      @id @default(autoincrement())
+  suit        Suit     // HEARTS, DIAMONDS, CLUBS, SPADES
+  rank        Rank     // ACE, TWO, THREE, ..., KING
+  code        String   @unique // "AH", "2C", etc.
+  pointValue  Int      @default(0) @map("point_value") // ハート=1, スペードQ=13
+  sortOrder   Int      @map("sort_order") // ソート用（0-51）
+  
+  // リレーション
+  handCards     HandCard[]
+  cardExchanges CardExchange[]
+  trickCards    TrickCard[]
+  
+  // インデックス
+  @@index([suit, rank])
+  @@index([code])
+  @@map("cards")
+}
+
+// ゲームテーブル
+model Game {
+  id           Int          @id @default(autoincrement())
+  startTime    DateTime     @default(now()) @map("start_time")
+  endTime      DateTime?    @map("end_time")
+  status       GameStatus   @default(PLAYING)
+  winnerId     Int?         @map("winner_id")
+  duration     Int?         // 分単位のゲーム時間
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+  
+  // リレーション
+  winner       Player?      @relation("GameWinner", fields: [winnerId], references: [id])
+  hands        Hand[]
+  sessions     GameSession[]
+  
+  // インデックス
+  @@index([startTime(sort: Desc)])
+  @@index([status])
+  @@index([winnerId])
+  @@map("games")
+}
+
+// ハンド（ラウンド）テーブル
+model Hand {
+  id                    Int      @id @default(autoincrement())
+  gameId                Int      @map("game_id")
+  handNumber            Int      @map("hand_number")
+  shootTheMoonPlayerId  Int?     @map("shoot_the_moon_player_id")
+  heartsBroken          Boolean  @default(false) @map("hearts_broken")
+  createdAt             DateTime @default(now()) @map("created_at")
+  
+  // リレーション
+  game                  Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  shootTheMoonPlayer    Player?  @relation("ShootTheMoonPlayer", fields: [shootTheMoonPlayerId], references: [id])
+  scores                HandScore[]
+  handCards             HandCard[]
+  cardExchanges         CardExchange[]
+  tricks                Trick[]
+  
+  // 複合ユニークキー
+  @@unique([gameId, handNumber])
+  @@index([gameId])
+  @@map("hands")
+}
+
+// ハンド配布カードテーブル（初期配布）
+model HandCard {
+  id          Int      @id @default(autoincrement())
+  handId      Int      @map("hand_id")
+  playerId    Int      @map("player_id")
+  cardId      Int      @map("card_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  // リレーション
+  hand        Hand     @relation(fields: [handId], references: [id], onDelete: Cascade)
+  player      Player   @relation(fields: [playerId], references: [id])
+  card        Card     @relation(fields: [cardId], references: [id])
+  
+  // 複合ユニークキー（同じハンドで同じカードは1枚のみ）
+  @@unique([handId, cardId])
+  @@index([handId, playerId])
+  @@map("hand_cards")
+}
+
+// カード交換テーブル
+model CardExchange {
+  id             Int      @id @default(autoincrement())
+  handId         Int      @map("hand_id")
+  fromPlayerId   Int      @map("from_player_id")
+  toPlayerId     Int      @map("to_player_id")
+  cardId         Int      @map("card_id")
+  exchangeOrder  Int      @map("exchange_order") // 交換順序（1-3）
+  createdAt      DateTime @default(now()) @map("created_at")
+  
+  // リレーション
+  hand           Hand     @relation(fields: [handId], references: [id], onDelete: Cascade)
+  fromPlayer     Player   @relation("FromPlayer", fields: [fromPlayerId], references: [id])
+  toPlayer       Player   @relation("ToPlayer", fields: [toPlayerId], references: [id])
+  card           Card     @relation(fields: [cardId], references: [id])
+  
+  // インデックス
+  @@index([handId, fromPlayerId])
+  @@index([handId, toPlayerId])
+  @@map("card_exchanges")
+}
+
+// トリックテーブル
+model Trick {
+  id              Int      @id @default(autoincrement())
+  handId          Int      @map("hand_id")
+  trickNumber     Int      @map("trick_number")
+  winnerPlayerId  Int      @map("winner_player_id")
+  points          Int      @default(0) // このトリックのポイント
+  leadPlayerId    Int      @map("lead_player_id") // 最初にカードを出したプレイヤー
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  // リレーション
+  hand            Hand     @relation(fields: [handId], references: [id], onDelete: Cascade)
+  winner          Player   @relation("TrickWinner", fields: [winnerPlayerId], references: [id])
+  leadPlayer      Player   @relation("TrickLeader", fields: [leadPlayerId], references: [id])
+  trickCards      TrickCard[]
+  
+  // 複合ユニークキー
+  @@unique([handId, trickNumber])
+  @@index([handId])
+  @@map("tricks")
+}
+
+// トリックカードテーブル（各トリックで出されたカード）
+model TrickCard {
+  id          Int      @id @default(autoincrement())
+  trickId     Int      @map("trick_id")
+  playerId    Int      @map("player_id")
+  cardId      Int      @map("card_id")
+  playOrder   Int      @map("play_order") // 出した順序（1-4）
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  // リレーション
+  trick       Trick    @relation(fields: [trickId], references: [id], onDelete: Cascade)
+  player      Player   @relation(fields: [playerId], references: [id])
+  card        Card     @relation(fields: [cardId], references: [id])
+  
+  // 複合ユニークキー
+  @@unique([trickId, playOrder])
+  @@unique([trickId, cardId])
+  @@index([trickId])
+  @@map("trick_cards")
+}
+
+// ハンドスコアテーブル
+model HandScore {
+  id                      Int      @id @default(autoincrement())
+  handId                  Int      @map("hand_id")
+  playerId                Int      @map("player_id")
+  
+  // スコア情報
+  handPoints              Int      @map("hand_points")         // このハンドで取得したポイント
+  cumulativePoints        Int      @map("cumulative_points")   // 累積ポイント
+  
+  // 詳細情報
+  heartsTaken             Int      @default(0) @map("hearts_taken")
+  queenOfSpadesTaken      Boolean  @default(false) @map("queen_of_spades_taken")
+  shootTheMoonAchieved    Boolean  @default(false) @map("shoot_the_moon_achieved")
+  
+  createdAt               DateTime @default(now()) @map("created_at")
+  
+  // リレーション
+  hand                    Hand     @relation(fields: [handId], references: [id], onDelete: Cascade)
+  player                  Player   @relation(fields: [playerId], references: [id])
+  
+  // インデックス
+  @@unique([handId, playerId])
+  @@index([playerId])
+  @@index([handId])
+  @@map("hand_scores")
+}
+
+// ゲームセッション（プレイヤー接続状態）
+model GameSession {
+  id            Int      @id @default(autoincrement())
+  gameId        Int      @map("game_id")
+  playerId      Int      @map("player_id")
+  sessionId     String   @unique @map("session_id")
+  socketId      String?  @map("socket_id")
+  status        SessionStatus @default(CONNECTED)
+  connectedAt   DateTime @default(now()) @map("connected_at")
+  disconnectedAt DateTime? @map("disconnected_at")
+  
+  // リレーション
+  game          Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  player        Player   @relation(fields: [playerId], references: [id])
+  
+  // インデックス
+  @@index([gameId, playerId])
+  @@index([sessionId])
+  @@map("game_sessions")
+}
+
+// プレイヤー統計テーブル
+model PlayerStatistics {
+  id                       Int      @id @default(autoincrement())
+  playerId                 Int      @unique @map("player_id")
+  
+  // 基本統計
+  totalGames               Int      @default(0) @map("total_games")
+  wins                     Int      @default(0)
+  winRate                  Float    @default(0) @map("win_rate") // 計算値
+  
+  // スコア統計
+  averageScore             Float?   @map("average_score")
+  bestScore                Int?     @map("best_score")
+  worstScore               Int?     @map("worst_score")
+  totalScore               Int      @default(0) @map("total_score")
+  
+  // カード統計
+  totalHeartsTaken         Int      @default(0) @map("total_hearts_taken")
+  totalQueenOfSpadesTaken  Int      @default(0) @map("total_queen_of_spades_taken")
+  shootTheMoonCount        Int      @default(0) @map("shoot_the_moon_count")
+  
+  // 連続記録
+  currentStreak            Int      @default(0) @map("current_streak")
+  bestStreak               Int      @default(0) @map("best_streak")
+  
+  // 時間統計
+  totalPlayTime            Int      @default(0) @map("total_play_time") // 分単位
+  averageGameTime          Float?   @map("average_game_time")
+  
+  lastPlayedAt             DateTime? @map("last_played_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+  
+  // リレーション
+  player                   Player   @relation(fields: [playerId], references: [id])
+  
+  // インデックス
+  @@index([winRate(sort: Desc)])
+  @@index([totalGames(sort: Desc)])
+  @@map("player_statistics")
+}
+
+// 月次統計テーブル（集計用）
+model MonthlyStatistics {
+  id              Int      @id @default(autoincrement())
+  yearMonth       String   @map("year_month") // "2025-01" 形式
+  playerId        Int      @map("player_id")
+  gamesPlayed     Int      @default(0) @map("games_played")
+  wins            Int      @default(0)
+  averageScore    Float?   @map("average_score")
+  bestScore       Int?     @map("best_score")
+  
+  // リレーション
+  player          Player   @relation(fields: [playerId], references: [id])
+  
+  // 複合ユニークキー
+  @@unique([yearMonth, playerId])
+  @@index([yearMonth])
+  @@index([playerId])
+  @@map("monthly_statistics")
+}
+
+// Enum定義
+enum GameStatus {
+  PLAYING
+  FINISHED
+  PAUSED
+  ABANDONED
+  
+  @@map("game_status")
+}
+
+enum SessionStatus {
+  CONNECTED
+  DISCONNECTED
+  RECONNECTED
+  
+  @@map("session_status")
+}
+
+enum Suit {
+  HEARTS
+  DIAMONDS
+  CLUBS
+  SPADES
+  
+  @@map("suit")
+}
+
+enum Rank {
+  ACE
+  TWO
+  THREE
+  FOUR
+  FIVE
+  SIX
+  SEVEN
+  EIGHT
+  NINE
+  TEN
+  JACK
+  QUEEN
+  KING
+  
+  @@map("rank")
+}
