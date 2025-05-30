@@ -49,6 +49,9 @@ npm run build           # プロダクションビルド
 npm run lint            # ESLint実行
 npm run type-check      # TypeScriptの型チェック
 npm test               # テスト実行
+npm run test:watch     # テスト監視モード
+npm run format         # Prettierでコード整形
+npm run format:check   # Prettierでフォーマットチェック
 ```
 
 ### バックエンド
@@ -61,9 +64,16 @@ npm run start           # プロダクション実行
 npm run lint            # ESLint実行
 npm run type-check      # TypeScriptの型チェック
 npm test               # テスト実行
-npx prisma migrate dev  # データベースマイグレーション
-npx prisma generate     # Prismaクライアント生成
-npx prisma studio       # Prisma Studio起動
+npm run test:watch     # テスト監視モード
+npm run format         # Prettierでコード整形
+npm run format:check   # Prettierでフォーマットチェック
+
+# Prisma関連コマンド
+npm run prisma:generate  # Prismaクライアント生成
+npm run prisma:push     # スキーマをデータベースにプッシュ
+npm run prisma:migrate  # マイグレーション実行
+npm run prisma:studio   # Prisma Studio起動
+npm run prisma:seed     # シードデータ投入
 ```
 
 ### Docker Compose
@@ -75,6 +85,27 @@ docker-compose logs -f   # ログ表示
 
 ## アーキテクチャ概要
 
+### バックエンドアーキテクチャ
+- **レイヤードアーキテクチャ**を採用
+  - `server.ts`: Express + Socket.ioサーバーエントリーポイント
+  - `routes/`: RESTful APIエンドポイント
+  - `services/`: ビジネスロジックとシングルトンサービス（PrismaService）
+  - `repositories/`: データアクセス層（Repository パターン）
+  - `middleware/`: エラーハンドリング、ロギングなど横断的関心事
+  - `types/`: TypeScript型定義（Socket.ioイベント含む）
+
+### データベース層
+- **PrismaService**: シングルトンパターンでPrismaClient管理
+- **Repository パターン**: データアクセスを抽象化（例：PlayerRepository）
+- **型安全性**: Prisma生成型とカスタム型（PlayerData）の組み合わせ
+
+### Socket.io通信
+- **型安全な通信**: TypeScriptインターフェース定義
+  - `ClientToServerEvents`: クライアント→サーバー
+  - `ServerToClientEvents`: サーバー→クライアント
+  - `SocketData`: セッションデータ管理
+- **イベント処理**: login, joinGame, playCard, exchangeCards
+
 ### ゲームロジック
 - **GameEngine**: ゲームの核となるロジック（backend/src/game/）
   - カード配布、交換、トリック処理、スコア計算
@@ -84,8 +115,8 @@ docker-compose logs -f   # ログ表示
 
 ### データフロー
 1. クライアント → Socket.io → GameEngine → 状態更新
-2. 状態更新 → Prisma → PostgreSQL
-3. PostgreSQL → Prisma → Socket.io → 全クライアントへブロードキャスト
+2. 状態更新 → Repository → Prisma → PostgreSQL
+3. PostgreSQL → Prisma → Repository → Socket.io → 全クライアントへブロードキャスト
 
 ### 主要なビジネスルール
 - 4人固定のプレイヤー（North, East, South, West）
@@ -99,6 +130,13 @@ docker-compose logs -f   # ログ表示
 - 新機能実装前にテストを作成
 - テストがパスするよう実装
 - リファクタリング時はテスト結果を維持
+- テスト環境（NODE_ENV=test）ではサーバー自動起動を無効化
+
+### テスト構造
+- **ユニットテスト**: services/, repositories/, middleware/
+- **統合テスト**: routes/, server.ts
+- **モック戦略**: PrismaService, Repository層のモック化
+- **型安全なモック**: TypeScript型定義を活用
 
 ### Gitコミット
 - 各TODO完了時にコミット
@@ -107,3 +145,42 @@ docker-compose logs -f   # ログ表示
 ### セキュリティ
 - 環境変数で機密情報を管理（.env.local）
 - APIキー等は絶対にコミットしない
+
+### コード品質
+- **Prettier**: 自動コード整形（プロジェクトルートの.prettierrc）
+- **ESLint**: 静的解析とコード規約
+- **TypeScript**: 厳密な型チェック
+- **エラーハンドリング**: asyncHandler, AppError型を活用
+
+## 現在の実装状況
+
+### 完了済みフェーズ
+- **Phase 1**: Docker環境、TypeScript設定、Prettier・Jest設定
+- **Phase 2**: Prismaスキーマ、シードデータ、カードマスターデータ
+- **Phase 3**: Express + Socket.io、REST API（Players）、Repository層、テスト
+- **Phase 4**: ゲームロジック（Card、Deck、Player、GameState、GameEngine）
+
+### 実装済みAPI
+- `GET /health`: ヘルスチェック
+- `GET /api/info`: API情報
+- `GET /api/players`: 全プレイヤー一覧
+- `GET /api/players/:id`: 特定プレイヤー情報
+
+### ゲームロジック実装済み
+- **Card、Suit、Rank**: カード表現とゲームルール
+- **Deck**: デッキ管理（シャッフル、配布）
+- **Player、GamePlayer**: プレイヤー管理とゲーム状態
+- **GameState**: ゲーム状態管理（フェーズ、トリック、スコア）
+- **GameEngine**: ゲーム制御（カード配布、交換、プレイ、スコア計算）
+- **テスト**: 101個のユニットテスト（全て合格）
+
+### Socket.ioイベント（設計済み）
+- `login`: プレイヤーログイン
+- `joinGame`: ゲーム参加
+- `playCard`: カードプレイ
+- `exchangeCards`: カード交換
+
+### 次の実装領域
+- **Phase 5**: Socket.ioハンドラーとGameEngineの統合
+- **Phase 6**: バックエンドサービス層の実装
+- **Phase 7**: フロントエンドゲーム画面（カード操作UI）

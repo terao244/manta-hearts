@@ -34,15 +34,17 @@ export interface CardInfo {
 
 // Socket.io関連の型定義
 export interface ServerToClientEvents {
-  gameState: (gameState: GameState) => void;
-  playerJoined: (playerInfo: PlayerInfo) => void;
+  gameStateChanged: (gameStateUpdate: GameStateUpdate) => void;
+  playerJoined: (playerId: number) => void;
   playerLeft: (playerId: number) => void;
-  gameStarted: (gameId: number) => void;
-  handStarted: (handData: HandData) => void;
-  cardPlayed: (playData: CardPlayData) => void;
-  trickCompleted: (trickResult: TrickResult) => void;
-  handCompleted: (handResult: HandResult) => void;
-  gameCompleted: (gameResult: GameResult) => void;
+  handStarted: (handNumber: number) => void;
+  cardsDealt: (cards: CardInfo[]) => void;
+  exchangePhaseStarted: (direction: 'left' | 'right' | 'across' | 'none') => void;
+  playingPhaseStarted: (leadPlayerId: number) => void;
+  cardPlayed: (playData: { playerId: number; card: CardInfo }) => void;
+  trickCompleted: (trickResult: { trickNumber: number; winnerId: number; points: number }) => void;
+  handCompleted: (handResult: { handNumber: number; scores: Record<number, number> }) => void;
+  gameCompleted: (gameResult: { winnerId: number; finalScores: Record<number, number> }) => void;
   error: (error: string) => void;
   connectionStatus: (
     status: 'connected' | 'disconnected' | 'reconnected'
@@ -55,7 +57,7 @@ export interface ClientToServerEvents {
     callback: (success: boolean, playerInfo?: PlayerInfo) => void
   ) => void;
   joinGame: (
-    callback: (success: boolean, gameState?: GameState) => void
+    callback: (success: boolean, gameInfo?: GameInfo) => void
   ) => void;
   playCard: (
     cardId: number,
@@ -79,6 +81,33 @@ export interface SocketData {
 }
 
 // ゲーム状態関連の型定義
+export interface GameInfo {
+  gameId: number;
+  status: string;
+  players: Array<{
+    id: number;
+    name: string;
+    position: 'North' | 'East' | 'South' | 'West';
+    score: number;
+  }>;
+  phase: string;
+  currentTurn?: number;
+  heartsBroken: boolean;
+  tricks: Array<any>;
+  scores: Record<number, number>;
+  hand?: CardInfo[];
+}
+
+export interface GameStateUpdate {
+  gameId: number;
+  status: string;
+  phase: string;
+  currentTurn?: number;
+  heartsBroken: boolean;
+  tricks: Array<any>;
+  scores: Record<number, number>;
+}
+
 export interface GameState {
   gameId: number;
   status: 'PLAYING' | 'FINISHED' | 'PAUSED' | 'ABANDONED';
