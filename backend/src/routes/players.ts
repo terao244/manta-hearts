@@ -1,14 +1,15 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
-import { PlayerRepository } from '../repositories/PlayerRepository';
+import Container from '../container/Container';
 
 const router = Router();
-const playerRepository = new PlayerRepository();
+const container = Container.getInstance();
 
 // GET /api/players - 全プレイヤー一覧取得
 router.get(
   '/',
   asyncHandler(async (req, res) => {
+    const playerRepository = container.getPlayerRepository();
     const players = await playerRepository.findAll();
 
     res.json({
@@ -33,6 +34,7 @@ router.get(
       });
     }
 
+    const playerRepository = container.getPlayerRepository();
     const player = await playerRepository.findById(playerId);
 
     if (!player) {

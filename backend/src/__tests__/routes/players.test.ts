@@ -1,24 +1,11 @@
 import request from 'supertest';
 import { app } from '../../server';
-import { PlayerRepository } from '../../repositories/PlayerRepository';
-
-// PlayerRepositoryをモック化
-jest.mock('../../repositories/PlayerRepository', () => {
-  return {
-    PlayerRepository: jest.fn(),
-  };
-});
+import Container from '../../container/Container';
+import { MockPlayerRepository, createMockPlayerRepository } from '../../helpers/mockHelpers';
 
 describe('Players API', () => {
-  let mockPlayerRepository: {
-    findAll: jest.MockedFunction<(activeOnly?: boolean) => Promise<any[]>>;
-    findById: jest.MockedFunction<(id: number) => Promise<any>>;
-    findByName: jest.MockedFunction<(name: string) => Promise<any>>;
-    create: jest.MockedFunction<(data: any) => Promise<any>>;
-    update: jest.MockedFunction<(id: number, data: any) => Promise<any>>;
-    delete: jest.MockedFunction<(id: number) => Promise<boolean>>;
-    count: jest.MockedFunction<(activeOnly?: boolean) => Promise<number>>;
-  };
+  let mockPlayerRepository: MockPlayerRepository;
+  let container: Container;
 
   const mockPlayers = [
     {
@@ -40,25 +27,14 @@ describe('Players API', () => {
   ];
 
   beforeEach(() => {
-    mockPlayerRepository = {
-      findAll: jest.fn(),
-      findById: jest.fn(),
-      findByName: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      count: jest.fn(),
-    };
-
-    (
-      PlayerRepository as jest.MockedClass<typeof PlayerRepository>
-    ).mockImplementation(() => ({
-      ...mockPlayerRepository,
-    } as unknown as PlayerRepository));
+    container = Container.getInstance();
+    mockPlayerRepository = createMockPlayerRepository();
+    container.setPlayerRepository(mockPlayerRepository);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+    container.reset();
   });
 
   describe('GET /api/players', () => {

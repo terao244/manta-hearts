@@ -1,5 +1,6 @@
 import { PrismaClient, Player } from '@prisma/client';
 import { PrismaService } from '../services/PrismaService';
+import { IPlayerRepository } from './interfaces/IPlayerRepository';
 
 export interface PlayerData {
   id: number;
@@ -9,7 +10,7 @@ export interface PlayerData {
   isActive: boolean;
 }
 
-export class PlayerRepository {
+export class PlayerRepository implements IPlayerRepository {
   private prisma: PrismaClient;
 
   constructor() {
