@@ -3,7 +3,10 @@
 import React, { useState } from 'react';
 import { PlayerSelect } from '@/components/ui/PlayerSelect';
 import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
+import { GameLobby } from '@/components/ui/GameLobby';
+import { GameBoard } from '@/components/game/GameBoard';
 import { useSocket } from '@/hooks/useSocket';
+import { useGame } from '@/hooks/useGame';
 import type { LoginState } from '@/types';
 
 export default function Home() {
@@ -12,6 +15,16 @@ export default function Home() {
     isLoggedIn: false,
     isLoading: false
   });
+
+  const { 
+    gameState, 
+    isInGame, 
+    isLoading: gameLoading, 
+    error: gameError,
+    joinGame,
+    playCard,
+    exchangeCards
+  } = useGame(loginState.playerInfo || null);
 
   const handlePlayerSelect = async (playerName: string) => {
     setLoginState(prev => ({ ...prev, isLoading: true, error: undefined }));
@@ -42,6 +55,7 @@ export default function Home() {
     }
   };
 
+  // ログイン前の画面
   if (!loginState.isLoggedIn) {
     return (
       <>
@@ -55,21 +69,42 @@ export default function Home() {
     );
   }
 
-  // ログイン成功後の画面（後で実装）
+  // ゲーム参加前のロビー画面
+  if (!isInGame && loginState.playerInfo) {
+    return (
+      <>
+        <ConnectionStatus connectionState={connectionState} />
+        <GameLobby
+          currentPlayer={loginState.playerInfo}
+          onJoinGame={joinGame}
+          isLoading={gameLoading}
+          error={gameError || undefined}
+        />
+      </>
+    );
+  }
+
+  // ゲーム画面
+  if (isInGame && gameState && loginState.playerInfo) {
+    return (
+      <>
+        <ConnectionStatus connectionState={connectionState} />
+        <GameBoard
+          gameState={gameState}
+          currentPlayerId={loginState.playerInfo.id}
+          onCardPlay={playCard}
+          onCardExchange={exchangeCards}
+        />
+      </>
+    );
+  }
+
+  // フォールバック（ロード中など）
   return (
-    <div className="min-h-screen bg-green-900 text-white">
-      <ConnectionStatus connectionState={connectionState} />
-      <div className="container mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-4">ハーツゲーム</h1>
-        <div className="bg-white/10 rounded-lg p-6">
-          <h2 className="text-xl mb-2">ようこそ、{loginState.playerInfo?.displayName}さん！</h2>
-          <p>ゲーム画面はこれから実装予定です。</p>
-          <div className="mt-4 p-4 bg-green-800 rounded">
-            <h3 className="font-semibold mb-2">接続状態:</h3>
-            <p>サーバー接続: {connectionState.isConnected ? '✅ 接続中' : '❌ 切断'}</p>
-            <p>プレイヤー: {loginState.playerInfo?.name} (ID: {loginState.playerInfo?.id})</p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-green-900 text-white flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+        <p>読み込み中...</p>
       </div>
     </div>
   );

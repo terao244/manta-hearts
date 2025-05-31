@@ -175,7 +175,8 @@ export const useSocket = () => {
   };
 
   // イベントリスナー登録関数
-  const on = (event: string, listener: (...args: unknown[]) => void) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const on = (event: string, listener: (...args: any[]) => void) => {
     if (socketRef.current) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (socketRef.current as any).on(event, listener);
@@ -183,7 +184,8 @@ export const useSocket = () => {
   };
 
   // イベントリスナー削除関数
-  const off = (event: string, listener?: (...args: unknown[]) => void) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const off = (event: string, listener?: (...args: any[]) => void) => {
     if (socketRef.current) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (socketRef.current as any).off(event, listener);
