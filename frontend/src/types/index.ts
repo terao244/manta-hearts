@@ -37,6 +37,7 @@ export interface ClientToServerEvents {
   joinGame: (playerId: number, callback: (success: boolean, gameInfo?: GameInfo) => void) => void;
   playCard: (cardId: number, callback: (success: boolean, error?: string) => void) => void;
   exchangeCards: (cardIds: number[], callback: (success: boolean, error?: string) => void) => void;
+  getValidCards: (callback: (validCardIds: number[]) => void) => void;
   disconnect: () => void;
 }
 
@@ -154,6 +155,7 @@ export interface PlayerSelectProps {
 export interface GameBoardProps {
   gameState: GameState;
   currentPlayerId?: number;
+  validCardIds?: number[];
   onCardPlay: (cardId: number) => void;
   onCardExchange: (cardIds: number[]) => void;
 }

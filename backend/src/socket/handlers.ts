@@ -165,6 +165,23 @@ export class SocketHandlers {
       }
     });
 
+    // 有効カード取得処理
+    socket.on('getValidCards', (callback) => {
+      try {
+        const playerId = socket.data.playerId;
+        if (!playerId) {
+          callback([]);
+          return;
+        }
+
+        const validCardIds = this.gameService.getValidCards(playerId);
+        callback(validCardIds);
+      } catch (error) {
+        console.error('Get valid cards error:', error);
+        callback([]);
+      }
+    });
+
     // 再接続処理
     socket.on('reconnect', () => {
       console.log(`Socket reconnected: ${socket.id}`);

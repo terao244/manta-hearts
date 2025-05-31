@@ -19,6 +19,7 @@ interface GameHookState {
   isInGame: boolean;
   isLoading: boolean;
   error: string | null;
+  validCardIds: number[];
 }
 
 export const useGame = (currentPlayer: PlayerInfo | null) => {
@@ -27,7 +28,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     gameState: null,
     isInGame: false,
     isLoading: false,
-    error: null
+    error: null,
+    validCardIds: []
   });
 
   // ゲーム参加
@@ -63,7 +65,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
           gameState,
           isInGame: true,
           isLoading: false,
-          error: null
+          error: null,
+          validCardIds: []
         });
       } else {
         setGameHookState(prev => ({
@@ -119,6 +122,18 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       }));
     }
   }, [exchangeCards]);
+
+  // 有効カード取得
+  const updateValidCards = useCallback(() => {
+    if (!socket || !currentPlayer) return;
+    
+    socket.emit('getValidCards', (validCardIds: number[]) => {
+      setGameHookState(prev => ({
+        ...prev,
+        validCardIds
+      }));
+    });
+  }, [socket, currentPlayer]);
 
   // Socket.ioイベントリスナー
   useEffect(() => {
@@ -291,8 +306,10 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     isInGame: gameHookState.isInGame,
     isLoading: gameHookState.isLoading,
     error: gameHookState.error,
+    validCardIds: gameHookState.validCardIds,
     joinGame: handleJoinGame,
     playCard: handleCardPlay,
-    exchangeCards: handleCardExchange
+    exchangeCards: handleCardExchange,
+    updateValidCards
   };
 };

@@ -69,6 +69,7 @@ export interface ClientToServerEvents {
     cardIds: number[],
     callback: (success: boolean, error?: string) => void
   ) => void;
+  getValidCards: (callback: (validCardIds: number[]) => void) => void;
   disconnect: () => void;
   reconnect: () => void;
   pong: () => void;

@@ -391,4 +391,21 @@ export class GameService {
     const players = this.gamePlayersMap.get(gameId);
     return players ? players.size : 0;
   }
+
+  public getValidCards(playerId: number): number[] {
+    const gameId = this.playerGameMap.get(playerId);
+    if (!gameId) return [];
+
+    const gameEngine = this.gameEngines.get(gameId);
+    if (!gameEngine) return [];
+
+    const gameState = gameEngine.getGameState();
+    const player = gameState.getPlayer(playerId);
+    if (!player) return [];
+
+    // プレイヤーの手札から有効なカードのIDを返す
+    return player.hand
+      .filter(card => gameState.canPlayCard(playerId, card))
+      .map(card => card.id);
+  }
 }

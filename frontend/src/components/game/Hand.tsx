@@ -131,25 +131,67 @@ export const Hand: React.FC<HandProps> = ({
         )}
       </div>
 
+      {/* 交換モード時の選択プログレス */}
+      {mode === 'exchange' && (
+        <div className="mb-3">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-xs text-gray-500">選択進捗</span>
+            <span className="text-xs font-medium">
+              {selectedCardIds.length}/{maxSelectableCards}
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className={`h-2 rounded-full transition-all duration-300 ${
+                selectedCardIds.length === maxSelectableCards 
+                  ? 'bg-green-500' 
+                  : 'bg-blue-500'
+              }`}
+              style={{ 
+                width: `${(selectedCardIds.length / maxSelectableCards) * 100}%` 
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* 手札表示エリア */}
       <div 
         data-testid="hand-container"
         className="flex flex-wrap justify-center gap-2 p-4 bg-green-100 rounded-lg min-h-32 border-2 border-green-200"
       >
-        {sortedCards.map((card) => (
-          <div
-            key={card.id}
-            className="transition-transform duration-200 hover:translate-y-[-8px]"
-          >
-            <Card
-              card={card}
-              isPlayable={isCardPlayable(card)}
-              isSelected={isCardSelected(card)}
-              onClick={() => handleCardClick(card)}
-              size="medium"
-            />
-          </div>
-        ))}
+        {sortedCards.map((card, index) => {
+          const isSelected = isCardSelected(card);
+          const isPlayable = isCardPlayable(card);
+          
+          return (
+            <div
+              key={card.id}
+              className={`
+                transition-all duration-300 ease-in-out
+                ${isSelected 
+                  ? 'translate-y-[-12px] scale-105 z-10 animate-pulse' 
+                  : 'hover:translate-y-[-8px]'
+                }
+                ${!isPlayable && mode === 'play' 
+                  ? 'hover:translate-y-[-2px]' 
+                  : ''
+                }
+              `}
+              style={{
+                animationDelay: `${index * 50}ms`
+              }}
+            >
+              <Card
+                card={card}
+                isPlayable={isPlayable}
+                isSelected={isSelected}
+                onClick={() => handleCardClick(card)}
+                size="medium"
+              />
+            </div>
+          );
+        })}
       </div>
 
       {/* モード別のメッセージ表示 */}
@@ -157,6 +199,37 @@ export const Hand: React.FC<HandProps> = ({
         <div className="mt-2 text-center">
           <div className="text-sm text-gray-700 bg-blue-50 rounded-lg px-3 py-2 inline-block">
             💡 {getSelectionMessage()}
+          </div>
+        </div>
+      )}
+
+      {/* 選択されたカードの詳細（交換モード時） */}
+      {mode === 'exchange' && selectedCardIds.length > 0 && (
+        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="text-sm font-medium text-blue-800 mb-2">
+            選択されたカード:
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {cards.filter(card => selectedCardIds.includes(card.id)).map(card => {
+              const suitName = { 'SPADES': '♠', 'HEARTS': '♥', 'DIAMONDS': '♦', 'CLUBS': '♣' }[card.suit];
+              const rankName = { 
+                'ACE': 'A', 'TWO': '2', 'THREE': '3', 'FOUR': '4', 'FIVE': '5', 'SIX': '6', 
+                'SEVEN': '7', 'EIGHT': '8', 'NINE': '9', 'TEN': '10', 'JACK': 'J', 
+                'QUEEN': 'Q', 'KING': 'K' 
+              }[card.rank];
+              return (
+                <span 
+                  key={card.id}
+                  className={`inline-block px-2 py-1 text-xs rounded ${
+                    card.suit === 'HEARTS' || card.suit === 'DIAMONDS' 
+                      ? 'bg-red-100 text-red-700' 
+                      : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  {suitName}{rankName}
+                </span>
+              );
+            })}
           </div>
         </div>
       )}

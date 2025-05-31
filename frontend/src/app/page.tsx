@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlayerSelect } from '@/components/ui/PlayerSelect';
 import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
 import { GameLobby } from '@/components/ui/GameLobby';
@@ -21,10 +21,19 @@ export default function Home() {
     isInGame, 
     isLoading: gameLoading, 
     error: gameError,
+    validCardIds,
     joinGame,
     playCard,
-    exchangeCards
+    exchangeCards,
+    updateValidCards
   } = useGame(loginState.playerInfo || null);
+
+  // ゲーム状態が変わったときに有効カードを更新
+  useEffect(() => {
+    if (isInGame && gameState && gameState.phase === 'playing' && gameState.currentTurn === loginState.playerInfo?.id) {
+      updateValidCards();
+    }
+  }, [isInGame, gameState, updateValidCards, loginState.playerInfo?.id]);
 
   const handlePlayerSelect = async (playerName: string) => {
     setLoginState(prev => ({ ...prev, isLoading: true, error: undefined }));
@@ -92,6 +101,7 @@ export default function Home() {
         <GameBoard
           gameState={gameState}
           currentPlayerId={loginState.playerInfo.id}
+          validCardIds={validCardIds}
           onCardPlay={playCard}
           onCardExchange={exchangeCards}
         />

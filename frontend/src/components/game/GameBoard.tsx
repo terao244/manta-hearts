@@ -33,6 +33,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, curren
 export const GameBoard: React.FC<GameBoardProps> = ({
   gameState,
   currentPlayerId,
+  validCardIds = [],
   onCardPlay,
   onCardExchange
 }) => {
@@ -268,7 +269,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             <Hand
               cards={currentPlayerCards}
               selectedCardIds={selectedCards}
-              playableCardIds={[]} // TODO: ゲームロジックから取得
+              playableCardIds={validCardIds}
               mode={phase === 'exchanging' ? 'exchange' : phase === 'playing' ? 'play' : 'view'}
               maxSelectableCards={3}
               showConfirmButton={phase === 'exchanging' && selectedCards.length === 3}
