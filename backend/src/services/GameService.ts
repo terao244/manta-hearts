@@ -303,6 +303,14 @@ export class GameService {
       },
       onTrickCompleted: (trickNumber, winnerId, points) => {
         this.broadcastToGame(gameId, 'trickCompleted', { trickNumber, winnerId, points });
+        
+        // 現在のハンドスコアも送信
+        const gameEngine = this.gameEngines.get(gameId);
+        if (gameEngine) {
+          const gameState = gameEngine.getGameState();
+          const currentHandScores = Object.fromEntries(gameState.getCurrentHandScores());
+          this.broadcastToGame(gameId, 'handScoreUpdate', currentHandScores);
+        }
       },
       onHandCompleted: (handNumber, scores) => {
         this.broadcastToGame(gameId, 'handCompleted', { 

@@ -266,6 +266,25 @@ export class GameState {
     return this.tricks[this.tricks.length - 1];
   }
 
+  public getCurrentHandScores(): Map<number, number> {
+    const currentHandScores = new Map<number, number>();
+    
+    // 各プレイヤーの初期スコアを0に設定
+    this.players.forEach((player, playerId) => {
+      currentHandScores.set(playerId, 0);
+    });
+
+    // 完了したトリックから現在のハンドスコアを計算
+    this.tricks.forEach(trick => {
+      if (trick.isCompleted && trick.winnerId) {
+        const currentScore = currentHandScores.get(trick.winnerId) || 0;
+        currentHandScores.set(trick.winnerId, currentScore + trick.points);
+      }
+    });
+
+    return currentHandScores;
+  }
+
   public getNextPlayer(currentPlayerId: number): number | null {
     const players = this.getAllPlayers();
     const currentIndex = players.findIndex(p => p.id === currentPlayerId);

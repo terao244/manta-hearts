@@ -45,6 +45,7 @@ export interface ServerToClientEvents {
   playingPhaseStarted: (leadPlayerId: number) => void;
   cardPlayed: (playData: { playerId: number; card: CardInfo }) => void;
   trickCompleted: (trickResult: { trickNumber: number; winnerId: number; points: number }) => void;
+  handScoreUpdate: (currentHandScores: Record<number, number>) => void;
   handCompleted: (handResult: { handNumber: number; scores: Record<number, number> }) => void;
   gameCompleted: (gameResult: { winnerId: number; finalScores: Record<number, number> }) => void;
   error: (error: string) => void;
@@ -126,6 +127,7 @@ export interface GameState {
   heartsBroken: boolean;
   tricks: TrickData[];
   scores: Record<number, number>; // プレイヤーID -> 累積スコア
+  currentHandScores?: Record<number, number>; // プレイヤーID -> 現在ハンドの獲得点数
   handCards?: Record<number, CardInfo[]>; // プレイヤーID -> 手札（現在のプレイヤーのみ）
 }
 

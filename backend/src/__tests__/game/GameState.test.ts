@@ -429,4 +429,99 @@ describe('GameState', () => {
       expect(gameState.getNextPlayer(999)).toBeNull();
     });
   });
+
+  describe('getCurrentHandScores', () => {
+    beforeEach(() => {
+      mockPlayers.forEach(player => gameState.addPlayer(player));
+    });
+
+    it('初期状態では全プレイヤーのスコアが0', () => {
+      const currentHandScores = gameState.getCurrentHandScores();
+      
+      expect(currentHandScores.get(1)).toBe(0);
+      expect(currentHandScores.get(2)).toBe(0);
+      expect(currentHandScores.get(3)).toBe(0);
+      expect(currentHandScores.get(4)).toBe(0);
+    });
+
+    it('完了したトリックから現在ハンドスコアを計算', () => {
+      // トリック1: プレイヤー1が勝利、ハート3枚で3点獲得
+      const trick1: Trick = {
+        trickNumber: 1,
+        cards: [
+          { playerId: 1, card: new Card(1, Suit.HEARTS, Rank.ACE), playOrder: 1 },
+          { playerId: 2, card: new Card(2, Suit.HEARTS, Rank.TWO), playOrder: 2 },
+          { playerId: 3, card: new Card(3, Suit.HEARTS, Rank.THREE), playOrder: 3 },
+          { playerId: 4, card: new Card(4, Suit.CLUBS, Rank.FOUR), playOrder: 4 }
+        ],
+        leadPlayerId: 1,
+        winnerId: 1,
+        points: 3,
+        isCompleted: true
+      };
+
+      // トリック2: プレイヤー2が勝利、スペードのクイーンで13点獲得
+      const trick2: Trick = {
+        trickNumber: 2,
+        cards: [
+          { playerId: 1, card: new Card(5, Suit.CLUBS, Rank.FIVE), playOrder: 1 },
+          { playerId: 2, card: new Card(6, Suit.SPADES, Rank.QUEEN), playOrder: 2 },
+          { playerId: 3, card: new Card(7, Suit.CLUBS, Rank.SEVEN), playOrder: 3 },
+          { playerId: 4, card: new Card(8, Suit.CLUBS, Rank.EIGHT), playOrder: 4 }
+        ],
+        leadPlayerId: 1,
+        winnerId: 2,
+        points: 13,
+        isCompleted: true
+      };
+
+      gameState.tricks = [trick1, trick2];
+
+      const currentHandScores = gameState.getCurrentHandScores();
+      
+      expect(currentHandScores.get(1)).toBe(3);   // プレイヤー1はハート3点
+      expect(currentHandScores.get(2)).toBe(13);  // プレイヤー2はスペードのクイーン13点
+      expect(currentHandScores.get(3)).toBe(0);   // プレイヤー3は0点
+      expect(currentHandScores.get(4)).toBe(0);   // プレイヤー4は0点
+    });
+
+    it('未完了のトリックは計算に含まれない', () => {
+      // 完了したトリック
+      const completedTrick: Trick = {
+        trickNumber: 1,
+        cards: [
+          { playerId: 1, card: new Card(1, Suit.HEARTS, Rank.ACE), playOrder: 1 },
+          { playerId: 2, card: new Card(2, Suit.CLUBS, Rank.TWO), playOrder: 2 },
+          { playerId: 3, card: new Card(3, Suit.CLUBS, Rank.THREE), playOrder: 3 },
+          { playerId: 4, card: new Card(4, Suit.CLUBS, Rank.FOUR), playOrder: 4 }
+        ],
+        leadPlayerId: 1,
+        winnerId: 1,
+        points: 1,
+        isCompleted: true
+      };
+
+      // 未完了のトリック
+      const incompleteTrick: Trick = {
+        trickNumber: 2,
+        cards: [
+          { playerId: 1, card: new Card(5, Suit.HEARTS, Rank.FIVE), playOrder: 1 },
+          { playerId: 2, card: new Card(6, Suit.HEARTS, Rank.SIX), playOrder: 2 }
+        ],
+        leadPlayerId: 1,
+        winnerId: 2,
+        points: 2,
+        isCompleted: false  // 未完了
+      };
+
+      gameState.tricks = [completedTrick, incompleteTrick];
+
+      const currentHandScores = gameState.getCurrentHandScores();
+      
+      expect(currentHandScores.get(1)).toBe(1);   // 完了したトリックのみカウント
+      expect(currentHandScores.get(2)).toBe(0);   // 未完了トリックはカウントしない
+      expect(currentHandScores.get(3)).toBe(0);
+      expect(currentHandScores.get(4)).toBe(0);
+    });
+  });
 });

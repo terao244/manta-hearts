@@ -86,9 +86,46 @@ describe('GameBoard', () => {
       />
     );
     
-    expect(screen.getAllByText('0点')).toHaveLength(4); // プレイヤー1と4がテーブル配置とスコア一覧で各2回
-    expect(screen.getAllByText('5点')).toHaveLength(2); // テーブル配置とスコア一覧
-    expect(screen.getAllByText('10点')).toHaveLength(2); // テーブル配置とスコア一覧
+    expect(screen.getAllByText('合計: 0点')).toHaveLength(2); // プレイヤー1と4がテーブル配置で表示
+    expect(screen.getAllByText('合計: 5点')).toHaveLength(1); // プレイヤー2がテーブル配置で表示
+    expect(screen.getAllByText('合計: 10点')).toHaveLength(1); // プレイヤー3がテーブル配置で表示
+    expect(screen.getAllByText('0点')).toHaveLength(2); // スコア一覧で表示
+    expect(screen.getAllByText('5点')).toHaveLength(1); // スコア一覧で表示
+    expect(screen.getAllByText('10点')).toHaveLength(1); // スコア一覧で表示
+  });
+
+  it('現在ハンドスコアが表示される', () => {
+    const gameStateWithHandScores: GameState = {
+      ...mockGameState,
+      currentHandScores: { 1: 3, 2: 0, 3: 13, 4: 0 }
+    };
+
+    render(
+      <GameBoard 
+        gameState={gameStateWithHandScores}
+        currentPlayerId={1}
+        onCardPlay={mockOnCardPlay}
+        onCardExchange={mockOnCardExchange}
+      />
+    );
+    
+    expect(screen.getByText('ハンド: +3点')).toBeInTheDocument(); // プレイヤー1の現在ハンドスコア
+    expect(screen.getByText('ハンド: +13点')).toBeInTheDocument(); // プレイヤー3の現在ハンドスコア
+    expect(screen.getAllByText('ハンド: +0点')).toHaveLength(2); // プレイヤー2と4も0点が表示される
+  });
+
+  it('現在ハンドスコアが未定義の場合も0点として表示される', () => {
+    // currentHandScoresが未定義の場合
+    render(
+      <GameBoard 
+        gameState={mockGameState}
+        currentPlayerId={1}
+        onCardPlay={mockOnCardPlay}
+        onCardExchange={mockOnCardExchange}
+      />
+    );
+    
+    expect(screen.getAllByText('ハンド: +0点')).toHaveLength(4); // 全プレイヤーに0点が表示される
   });
 
   it('現在のプレイヤーがハイライトされる', () => {

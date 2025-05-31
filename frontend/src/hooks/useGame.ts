@@ -387,6 +387,22 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       console.log('Trick completed:', trickResult);
     };
 
+    // ハンドスコア更新
+    const handleHandScoreUpdate = (currentHandScores: Record<number, number>) => {
+      console.log('Hand scores updated:', currentHandScores);
+      setGameHookState(prev => {
+        if (!prev.gameState) return prev;
+        
+        return {
+          ...prev,
+          gameState: {
+            ...prev.gameState,
+            currentHandScores
+          }
+        };
+      });
+    };
+
     // ハンド完了
     const handleHandCompleted = (handResult: HandResult) => {
       console.log('Hand completed:', handResult);
@@ -420,6 +436,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     on('playingPhaseStarted', handlePlayingPhaseStarted);
     on('cardPlayed', handleCardPlayed);
     on('trickCompleted', handleTrickCompleted);
+    on('handScoreUpdate', handleHandScoreUpdate);
     on('handCompleted', handleHandCompleted);
     on('gameCompleted', handleGameCompleted);
     on('error', handleError);
@@ -439,6 +456,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       off('playingPhaseStarted', handlePlayingPhaseStarted);
       off('cardPlayed', handleCardPlayed);
       off('trickCompleted', handleTrickCompleted);
+      off('handScoreUpdate', handleHandScoreUpdate);
       off('handCompleted', handleHandCompleted);
       off('gameCompleted', handleGameCompleted);
       off('error', handleError);

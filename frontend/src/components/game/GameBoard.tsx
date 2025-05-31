@@ -11,11 +11,14 @@ interface PlayerCardProps {
   currentPlayerId?: number;
   currentTurn?: number;
   scores: Record<number, number>;
+  currentHandScores?: Record<number, number>;
 }
 
-const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, currentTurn, scores }) => {
+const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, currentTurn, scores, currentHandScores }) => {
   const isCurrentPlayer = player.id === currentPlayerId;
   const isCurrentTurn = player.id === currentTurn;
+  const currentHandScore = currentHandScores?.[player.id] || 0;
+  const cumulativeScore = scores[player.id] || 0;
   
   return (
     <div
@@ -31,10 +34,17 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, curren
       }`}>
         {player.displayName}
       </div>
-      <div className={`text-lg font-bold ${
-        isCurrentTurn ? 'text-yellow-600' : 'text-green-600'
-      }`}>
-        {scores[player.id] || 0}点
+      <div className="space-y-1">
+        <div className={`text-sm font-bold ${
+          isCurrentTurn ? 'text-yellow-600' : 'text-green-600'
+        }`}>
+          合計: {cumulativeScore}点
+        </div>
+        <div className={`text-xs ${
+          isCurrentTurn ? 'text-red-400' : 'text-red-500'
+        } font-medium`}>
+          ハンド: +{currentHandScore}点
+        </div>
       </div>
       {isCurrentTurn && (
         <div className="flex items-center justify-center gap-1">
@@ -69,6 +79,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     heartsBroken,
     tricks,
     scores,
+    currentHandScores,
     handCards
   } = gameState;
 
@@ -240,7 +251,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 data-testid={`player-${player.id}`}
                 className="absolute top-2 left-1/2 transform -translate-x-1/2"
               >
-                <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} />
+                <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} />
               </div>
             ))}
 
@@ -251,7 +262,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 data-testid={`player-${player.id}`}
                 className="absolute right-2 top-1/2 transform -translate-y-1/2"
               >
-                <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} />
+                <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} />
               </div>
             ))}
 
@@ -262,7 +273,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 data-testid={`player-${player.id}`}
                 className="absolute bottom-2 left-1/2 transform -translate-x-1/2"
               >
-                <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} />
+                <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} />
               </div>
             ))}
 
@@ -273,7 +284,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 data-testid={`player-${player.id}`}
                 className="absolute left-2 top-1/2 transform -translate-y-1/2"
               >
-                <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} />
+                <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} />
               </div>
             ))}
 
