@@ -3,10 +3,22 @@ import { app } from '../../server';
 import { PlayerRepository } from '../../repositories/PlayerRepository';
 
 // PlayerRepositoryをモック化
-jest.mock('../../repositories/PlayerRepository');
+jest.mock('../../repositories/PlayerRepository', () => {
+  return {
+    PlayerRepository: jest.fn(),
+  };
+});
 
 describe('Players API', () => {
-  let mockPlayerRepository: jest.Mocked<PlayerRepository>;
+  let mockPlayerRepository: {
+    findAll: jest.MockedFunction<(activeOnly?: boolean) => Promise<any[]>>;
+    findById: jest.MockedFunction<(id: number) => Promise<any>>;
+    findByName: jest.MockedFunction<(name: string) => Promise<any>>;
+    create: jest.MockedFunction<(data: any) => Promise<any>>;
+    update: jest.MockedFunction<(id: number, data: any) => Promise<any>>;
+    delete: jest.MockedFunction<(id: number) => Promise<boolean>>;
+    count: jest.MockedFunction<(activeOnly?: boolean) => Promise<number>>;
+  };
 
   const mockPlayers = [
     {
@@ -36,11 +48,13 @@ describe('Players API', () => {
       update: jest.fn(),
       delete: jest.fn(),
       count: jest.fn(),
-    } as jest.Mocked<PlayerRepository>;
+    };
 
     (
       PlayerRepository as jest.MockedClass<typeof PlayerRepository>
-    ).mockImplementation(() => mockPlayerRepository);
+    ).mockImplementation(() => ({
+      ...mockPlayerRepository,
+    } as unknown as PlayerRepository));
   });
 
   afterEach(() => {

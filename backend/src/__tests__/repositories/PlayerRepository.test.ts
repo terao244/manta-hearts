@@ -24,7 +24,12 @@ jest.mock('../../services/PrismaService');
 describe('PlayerRepository', () => {
   let playerRepository: PlayerRepository;
   let mockPrismaClient: MockPrismaClient;
-  let mockPrismaService: jest.Mocked<PrismaService>;
+  let mockPrismaService: {
+    getClient: jest.MockedFunction<() => PrismaClient>;
+    connect: jest.MockedFunction<() => Promise<void>>;
+    disconnect: jest.MockedFunction<() => Promise<void>>;
+    healthCheck: jest.MockedFunction<() => Promise<boolean>>;
+  };
 
   const mockPlayer = {
     id: 1,
@@ -50,10 +55,10 @@ describe('PlayerRepository', () => {
       getClient: jest
         .fn()
         .mockReturnValue(mockPrismaClient as unknown as PrismaClient),
-      connect: jest.fn(),
-      disconnect: jest.fn(),
-      healthCheck: jest.fn(),
-    } as jest.Mocked<PrismaService>;
+      connect: jest.fn().mockResolvedValue(undefined),
+      disconnect: jest.fn().mockResolvedValue(undefined),
+      healthCheck: jest.fn().mockResolvedValue(true),
+    };
 
     (PrismaService.getInstance as jest.Mock).mockReturnValue(mockPrismaService);
 
