@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import type { CardProps } from '@/types';
+import { getCardImagePath } from '@/utils/cardImages';
 
 export const Card: React.FC<CardProps> = ({
   card,
@@ -12,6 +14,7 @@ export const Card: React.FC<CardProps> = ({
   size = 'medium'
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const { suit, rank, pointValue } = card;
 
   const getSuitSymbol = (suit: string): string => {
@@ -49,10 +52,10 @@ export const Card: React.FC<CardProps> = ({
 
   const getCardSize = (size: string) => {
     switch (size) {
-      case 'small': return 'w-12 h-16 text-xs';
-      case 'large': return 'w-20 h-28 text-lg';
+      case 'small': return { container: 'w-12 h-16', image: { width: 48, height: 64 } };
+      case 'large': return { container: 'w-20 h-28', image: { width: 80, height: 112 } };
       case 'medium':
-      default: return 'w-16 h-24 text-sm';
+      default: return { container: 'w-16 h-24', image: { width: 64, height: 96 } };
     }
   };
 
@@ -67,6 +70,7 @@ export const Card: React.FC<CardProps> = ({
   };
 
   const getCardClasses = () => {
+    const cardSize = getCardSize(size);
     const baseClasses = [
       'relative',
       'bg-white',
@@ -74,13 +78,13 @@ export const Card: React.FC<CardProps> = ({
       'shadow-md',
       'border',
       'flex',
-      'flex-col',
-      'justify-between',
-      'font-bold',
+      'items-center',
+      'justify-center',
       'select-none',
       'transition-all',
       'duration-200',
-      getCardSize(size),
+      'overflow-hidden',
+      cardSize.container,
       getCardBorder()
     ];
 
@@ -160,6 +164,54 @@ export const Card: React.FC<CardProps> = ({
   };
 
   const CardElement = onClick ? 'button' : 'div';
+  const cardSize = getCardSize(size);
+
+  const renderCardContent = () => {
+    if (imageError) {
+      // 画像読み込みエラー時は従来のテキスト表示にフォールバック
+      return (
+        <>
+          {/* 左上のランクとスート */}
+          <div className={`absolute top-1 left-1 text-xs leading-none ${getSuitColor(suit)}`}>
+            <div className="text-center">
+              <div>{getRankDisplay(rank)}</div>
+              <div>{getSuitSymbol(suit)}</div>
+            </div>
+          </div>
+
+          {/* 中央のスート */}
+          <div className={`flex items-center justify-center ${getSuitColor(suit)}`}>
+            <span className="text-2xl">{getSuitSymbol(suit)}</span>
+          </div>
+
+          {/* 右下のランクとスート（上下反転） */}
+          <div className={`absolute bottom-1 right-1 text-xs leading-none transform rotate-180 ${getSuitColor(suit)}`}>
+            <div className="text-center">
+              <div>{getRankDisplay(rank)}</div>
+              <div>{getSuitSymbol(suit)}</div>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    try {
+      const imagePath = getCardImagePath(suit, rank);
+      return (
+        <Image
+          src={imagePath}
+          alt={`${suit} ${rank}`}
+          width={cardSize.image.width}
+          height={cardSize.image.height}
+          className="object-contain"
+          onError={() => setImageError(true)}
+        />
+      );
+    } catch {
+      setImageError(true);
+      return null;
+    }
+  };
 
   return (
     <div className="relative inline-block">
@@ -172,33 +224,14 @@ export const Card: React.FC<CardProps> = ({
         disabled={onClick ? !isPlayable : undefined}
         {...(onClick && { role: 'button' })}
       >
-      {/* 左上のランクとスート */}
-      <div className={`p-1 leading-none ${getSuitColor(suit)}`}>
-        <div className="text-center">
-          <div>{getRankDisplay(rank)}</div>
-          <div>{getSuitSymbol(suit)}</div>
-        </div>
-      </div>
+        {renderCardContent()}
 
-      {/* 中央のスート */}
-      <div className={`flex-1 flex items-center justify-center ${getSuitColor(suit)}`}>
-        <span className="text-2xl">{getSuitSymbol(suit)}</span>
-      </div>
-
-      {/* 右下のランクとスート（上下反転） */}
-      <div className={`p-1 leading-none transform rotate-180 ${getSuitColor(suit)}`}>
-        <div className="text-center">
-          <div>{getRankDisplay(rank)}</div>
-          <div>{getSuitSymbol(suit)}</div>
-        </div>
-      </div>
-
-      {/* ポイント値表示（デバッグ用、後で削除可能） */}
-      {pointValue > 0 && (
-        <div className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center -mt-1 -mr-1">
-          {pointValue}
-        </div>
-      )}
+        {/* ポイント値表示（デバッグ用、後で削除可能） */}
+        {pointValue > 0 && (
+          <div className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center -mt-1 -mr-1 z-10">
+            {pointValue}
+          </div>
+        )}
       </CardElement>
 
       {/* ツールチップ */}

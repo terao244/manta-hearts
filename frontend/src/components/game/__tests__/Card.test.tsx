@@ -3,6 +3,14 @@ import { render, screen, fireEvent } from '@/test-utils';
 import { Card } from '../Card';
 import type { CardInfo } from '@/types';
 
+// Next.js Imageコンポーネントのモック
+jest.mock('next/image', () => {
+  return function MockedImage(props: Record<string, unknown>) {
+    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+    return <img {...props} />;
+  };
+});
+
 describe('Card', () => {
   const mockCard: CardInfo = {
     id: 1,
@@ -23,8 +31,9 @@ describe('Card', () => {
   it('カードの基本情報が表示される', () => {
     render(<Card card={mockCard} />);
     
-    expect(screen.getAllByText('A')).toHaveLength(2); // 上下に表示されるため2つ
-    expect(screen.getAllByText('♥')).toHaveLength(3); // 左上、中央、右下で3つ
+    // 画像表示の場合はaltテキストで確認
+    const imageElement = screen.getByAltText('HEARTS ACE');
+    expect(imageElement).toBeInTheDocument();
   });
 
   it('クリック可能な状態でクリックハンドラが動作する', () => {
@@ -91,36 +100,73 @@ describe('Card', () => {
 
   it('スートシンボルが正しく表示される', () => {
     const testCases = [
-      { suit: 'HEARTS' as const, symbol: '♥' },
-      { suit: 'DIAMONDS' as const, symbol: '♦' },
-      { suit: 'CLUBS' as const, symbol: '♣' },
-      { suit: 'SPADES' as const, symbol: '♠' }
+      { suit: 'HEARTS' as const, expectedPath: '/cards/heart_A.svg' },
+      { suit: 'DIAMONDS' as const, expectedPath: '/cards/diamond_A.svg' },
+      { suit: 'CLUBS' as const, expectedPath: '/cards/club_A.svg' },
+      { suit: 'SPADES' as const, expectedPath: '/cards/spade_A.svg' }
     ];
 
-    testCases.forEach(({ suit, symbol }) => {
+    testCases.forEach(({ suit, expectedPath }) => {
       const card: CardInfo = { ...mockCard, suit };
       const { unmount } = render(<Card card={card} />);
       
-      expect(screen.getAllByText(symbol).length).toBeGreaterThan(0);
+      const imageElement = screen.getByAltText(`${suit} ACE`);
+      expect(imageElement).toHaveAttribute('src', expectedPath);
       unmount();
     });
   });
 
   it('ランク表示が正しく変換される', () => {
     const testCases = [
-      { rank: 'ACE' as const, display: 'A' },
-      { rank: 'JACK' as const, display: 'J' },
-      { rank: 'QUEEN' as const, display: 'Q' },
-      { rank: 'KING' as const, display: 'K' },
-      { rank: 'TEN' as const, display: '10' }
+      { rank: 'ACE' as const, expectedPath: '/cards/heart_A.svg' },
+      { rank: 'JACK' as const, expectedPath: '/cards/heart_J.svg' },
+      { rank: 'QUEEN' as const, expectedPath: '/cards/heart_Q.svg' },
+      { rank: 'KING' as const, expectedPath: '/cards/heart_K.svg' },
+      { rank: 'TEN' as const, expectedPath: '/cards/heart_10.svg' }
     ];
 
-    testCases.forEach(({ rank, display }) => {
+    testCases.forEach(({ rank, expectedPath }) => {
       const card: CardInfo = { ...mockCard, rank };
       const { unmount } = render(<Card card={card} />);
       
-      expect(screen.getAllByText(display).length).toBeGreaterThan(0);
+      const imageElement = screen.getByAltText(`HEARTS ${rank}`);
+      expect(imageElement).toHaveAttribute('src', expectedPath);
       unmount();
     });
+  });
+
+  it('カード画像が表示される', () => {
+    render(<Card card={mockCard} />);
+    
+    const imageElement = screen.getByAltText('HEARTS ACE');
+    expect(imageElement).toBeInTheDocument();
+    expect(imageElement).toHaveAttribute('src', '/cards/heart_A.svg');
+  });
+
+  it('画像読み込みエラー時にフォールバック表示される', () => {
+    render(<Card card={mockCard} />);
+    
+    const imageElement = screen.getByAltText('HEARTS ACE');
+    
+    // 画像エラーをシミュレート
+    fireEvent.error(imageElement);
+    
+    // フォールバック表示の確認
+    expect(screen.getAllByText('A')).toHaveLength(2);
+    expect(screen.getAllByText('♥')).toHaveLength(3);
+  });
+
+  it('異なるサイズで正しい画像サイズが設定される', () => {
+    const { rerender } = render(<Card card={mockCard} size="small" />);
+    
+    let imageElement = screen.getByAltText('HEARTS ACE');
+    expect(imageElement).toHaveAttribute('width', '48');
+    expect(imageElement).toHaveAttribute('height', '64');
+    
+    rerender(<Card card={mockCard} size="large" />);
+    
+    imageElement = screen.getByAltText('HEARTS ACE');
+    expect(imageElement).toHaveAttribute('width', '80');
+    expect(imageElement).toHaveAttribute('height', '112');
   });
 });

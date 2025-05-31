@@ -3,6 +3,14 @@ import { render, screen, fireEvent } from '@/test-utils';
 import { Hand } from '../Hand';
 import type { CardInfo } from '@/types';
 
+// Next.js Imageコンポーネントのモック
+jest.mock('next/image', () => {
+  return function MockedImage(props: Record<string, unknown>) {
+    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+    return <img {...props} />;
+  };
+});
+
 describe('Hand', () => {
   const mockCards: CardInfo[] = [
     {
@@ -41,9 +49,10 @@ describe('Hand', () => {
   it('手札のカードが表示される', () => {
     render(<Hand cards={mockCards} />);
     
-    expect(screen.getAllByText('A').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('2').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Q').length).toBeGreaterThan(0);
+    // 画像表示の場合はaltテキストで確認
+    expect(screen.getByAltText('HEARTS ACE')).toBeInTheDocument();
+    expect(screen.getByAltText('CLUBS TWO')).toBeInTheDocument();
+    expect(screen.getByAltText('SPADES QUEEN')).toBeInTheDocument();
   });
 
   it('カード選択ハンドラが動作する', () => {
@@ -161,11 +170,12 @@ describe('Hand', () => {
     const unsortedCards = [...mockCards].reverse();
     render(<Hand cards={unsortedCards} />);
     
-    const cardElements = screen.getAllByTestId('card');
-    const ranks = cardElements.map(card => card.textContent?.charAt(0));
+    // 画像表示の場合、altテキストで順序を確認
+    const images = screen.getAllByRole('img');
+    const altTexts = images.map(img => img.getAttribute('alt'));
     
-    // 新しいソート順: スペード > ハート > クラブ = Q, A, 2
-    expect(ranks).toEqual(['Q', 'A', '2']);
+    // 新しいソート順: スペード > ハート > クラブ = SPADES QUEEN, HEARTS ACE, CLUBS TWO
+    expect(altTexts).toEqual(['SPADES QUEEN', 'HEARTS ACE', 'CLUBS TWO']);
   });
 
   it('空の手札でもエラーが発生しない', () => {

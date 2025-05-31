@@ -3,6 +3,14 @@ import { render, screen } from '@/test-utils';
 import { GameBoard } from '../GameBoard';
 import type { GameState, PlayerInfo, CardInfo } from '@/types';
 
+// Next.js Imageコンポーネントのモック
+jest.mock('next/image', () => {
+  return function MockedImage(props: Record<string, unknown>) {
+    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+    return <img {...props} />;
+  };
+});
+
 describe('GameBoard', () => {
   const mockPlayers: PlayerInfo[] = [
     { id: 1, name: 'Player1', displayName: 'プレイヤー1', displayOrder: 1, isActive: true },
@@ -126,9 +134,10 @@ describe('GameBoard', () => {
       />
     );
     
-    expect(screen.getAllByText('A').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('2').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Q').length).toBeGreaterThan(0);
+    // 画像表示の場合はaltテキストで確認
+    expect(screen.getByAltText('HEARTS ACE')).toBeInTheDocument();
+    expect(screen.getByAltText('CLUBS TWO')).toBeInTheDocument();
+    expect(screen.getByAltText('SPADES QUEEN')).toBeInTheDocument();
   });
 
   it('交換フェーズでカード交換UIが表示される', () => {
