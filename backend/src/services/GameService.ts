@@ -10,6 +10,7 @@ import type {
   SocketData,
   CardInfo,
   GameInfo,
+  GameState as GameStateType,
 } from '../types';
 
 
@@ -47,7 +48,7 @@ export class GameService {
   public async joinGame(playerId: number): Promise<{ success: boolean; gameInfo?: GameInfo }> {
     try {
       // 既存のゲームを探すか新しいゲームを作成
-      let gameId = this.findAvailableGame() || this.createNewGame();
+      let gameId = this.findAvailableGame() || await this.createNewGame();
       
       let gameEngine = this.gameEngines.get(gameId);
       if (!gameEngine) {
@@ -62,7 +63,7 @@ export class GameService {
         where: { id: playerId }
       });
 
-      if (!playerData) {
+      if (!playerData || !playerData.isActive) {
         return { success: false };
       }
 
@@ -89,6 +90,8 @@ export class GameService {
           this.gamePlayersMap.set(gameId, players);
         }
         players.add(playerId);
+
+        // ゲームセッションをデータベースに保存（必要に応じて実装）
 
         const gameInfo = this.getGameInfo(gameId, playerId);
         
@@ -226,9 +229,25 @@ export class GameService {
     return null;
   }
 
-  private createNewGame(): number {
-    // 簡単な実装：タイムスタンプをゲームIDとして使用
-    return Date.now();
+  private async createNewGame(): Promise<number> {
+    try {
+      const prismaService = PrismaService.getInstance();
+      const prisma = prismaService.getClient();
+      
+      // データベースに新しいゲームレコードを作成
+      const game = await prisma.game.create({
+        data: {
+          status: 'PLAYING',
+          startTime: new Date()
+        }
+      });
+      
+      return game.id;
+    } catch (error) {
+      console.error('Error creating new game:', error);
+      // フォールバック: タイムスタンプをゲームIDとして使用
+      return Date.now();
+    }
   }
 
   private createGameEngine(gameId: number): GameEngine {
@@ -278,7 +297,12 @@ export class GameService {
           scores: Object.fromEntries(scores) 
         });
       },
-      onGameCompleted: (winnerId, finalScores) => {
+      onGameCompleted: async (winnerId, finalScores) => {
+        // ゲーム結果をデータベースに保存
+        const gameStartTime = Date.now(); // 実際にはGameEngineから取得する必要がある
+        const duration = Math.floor((Date.now() - gameStartTime) / 60000); // 分単位
+        await this.saveGameResult(gameId, winnerId, duration);
+        
         this.broadcastToGame(gameId, 'gameCompleted', { 
           winnerId, 
           finalScores: Object.fromEntries(finalScores) 
@@ -331,5 +355,33 @@ export class GameService {
         socket.emit(event as any, data);
       }
     });
+  }
+
+  public async saveGameResult(gameId: number, winnerId: number, duration: number): Promise<void> {
+    try {
+      const prismaService = PrismaService.getInstance();
+      const prisma = prismaService.getClient();
+      
+      await prisma.game.update({
+        where: { id: gameId },
+        data: {
+          status: 'FINISHED',
+          winnerId: winnerId,
+          duration: duration,
+          endTime: new Date()
+        }
+      });
+    } catch (error) {
+      console.error(`Error saving game result for game ${gameId}:`, error);
+    }
+  }
+
+  public getActiveGames(): number[] {
+    return Array.from(this.gameEngines.keys());
+  }
+
+  public getPlayerCount(gameId: number): number {
+    const players = this.gamePlayersMap.get(gameId);
+    return players ? players.size : 0;
   }
 }

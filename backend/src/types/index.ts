@@ -49,6 +49,7 @@ export interface ServerToClientEvents {
   connectionStatus: (
     status: 'connected' | 'disconnected' | 'reconnected'
   ) => void;
+  ping: () => void;
 }
 
 export interface ClientToServerEvents {
@@ -68,6 +69,8 @@ export interface ClientToServerEvents {
     callback: (success: boolean, error?: string) => void
   ) => void;
   disconnect: () => void;
+  reconnect: () => void;
+  pong: () => void;
 }
 
 export interface InterServerEvents {
