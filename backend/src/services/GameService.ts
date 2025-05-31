@@ -131,6 +131,9 @@ export class GameService {
         return { success: false, error: 'Invalid move' };
       }
 
+      // カードプレイ成功後、全プレイヤーに更新された手札情報を送信
+      this.sendUpdatedHandsToAllPlayers(gameId, gameEngine);
+
       return { success: true };
     } catch (error) {
       console.error('Error playing card:', error);
@@ -158,6 +161,9 @@ export class GameService {
       if (!success) {
         return { success: false, error: 'Invalid exchange' };
       }
+
+      // 交換成功後、全プレイヤーに更新された手札情報を送信
+      this.sendUpdatedHandsToAllPlayers(gameId, gameEngine);
 
       return { success: true };
     } catch (error) {
@@ -413,5 +419,16 @@ export class GameService {
     return player.hand
       .filter(card => gameState.canPlayCard(playerId, card))
       .map(card => card.id);
+  }
+
+  private sendUpdatedHandsToAllPlayers(gameId: number, gameEngine: GameEngine): void {
+    const players = this.gamePlayersMap.get(gameId);
+    if (!players) return;
+
+    players.forEach(playerId => {
+      const playerHand = gameEngine.getPlayerHand(playerId);
+      const cardInfos = playerHand.map(card => this.cardToCardInfo(card));
+      this.sendToPlayer(playerId, 'handUpdated', cardInfos);
+    });
   }
 }

@@ -19,11 +19,13 @@ export interface CardInfo {
 // Socket.io関連の型定義
 export interface ServerToClientEvents {
   gameState: (gameState: GameState) => void;
+  gameStateChanged: (gameStateUpdate: GameStateUpdate) => void;
   playerJoined: (playerInfo: PlayerInfo) => void;
   playerLeft: (playerId: number) => void;
   gameStarted: (gameId: number) => void;
   handStarted: (handData: HandData) => void;
   cardsDealt: (cards: CardInfo[]) => void;
+  handUpdated: (cards: CardInfo[]) => void;
   exchangePhaseStarted: (direction: 'left' | 'right' | 'across' | 'none') => void;
   exchangeProgress: (progress: { exchangedPlayers: number[]; remainingPlayers: number[] }) => void;
   playingPhaseStarted: (leadPlayerId: number) => void;
@@ -33,6 +35,7 @@ export interface ServerToClientEvents {
   gameCompleted: (gameResult: GameResult) => void;
   error: (error: string) => void;
   connectionStatus: (status: 'connected' | 'disconnected' | 'reconnected') => void;
+  ping: () => void;
 }
 
 export interface ClientToServerEvents {
@@ -42,6 +45,8 @@ export interface ClientToServerEvents {
   exchangeCards: (cardIds: number[], callback: (success: boolean, error?: string) => void) => void;
   getValidCards: (callback: (validCardIds: number[]) => void) => void;
   disconnect: () => void;
+  reconnect: () => void;
+  pong: () => void;
 }
 
 // ゲーム情報の型定義 (バックエンドから取得)
@@ -75,6 +80,16 @@ export interface GameState {
   tricks: TrickData[];
   scores: Record<number, number>; // プレイヤーID -> 累積スコア
   handCards?: Record<number, CardInfo[]>; // プレイヤーID -> 手札（現在のプレイヤーのみ）
+}
+
+export interface GameStateUpdate {
+  gameId: number;
+  status: string;
+  phase: string;
+  currentTurn?: number;
+  heartsBroken: boolean;
+  tricks: TrickData[];
+  scores: Record<number, number>;
 }
 
 export interface HandData {

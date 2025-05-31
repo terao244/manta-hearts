@@ -39,6 +39,7 @@ export interface ServerToClientEvents {
   playerLeft: (playerId: number) => void;
   handStarted: (handNumber: number) => void;
   cardsDealt: (cards: CardInfo[]) => void;
+  handUpdated: (cards: CardInfo[]) => void;
   exchangePhaseStarted: (direction: 'left' | 'right' | 'across' | 'none') => void;
   exchangeProgress: (progress: { exchangedPlayers: number[]; remainingPlayers: number[] }) => void;
   playingPhaseStarted: (leadPlayerId: number) => void;

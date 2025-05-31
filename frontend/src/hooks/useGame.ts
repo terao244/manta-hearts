@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSocket } from './useSocket';
 import type { 
   GameState, 
-  GameInfo,
   PlayerInfo, 
   CardInfo,
   HandData, 
@@ -351,7 +350,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       off('gameCompleted', handleGameCompleted);
       off('error', handleError);
     };
-  }, [socket, on, off]);
+  }, [socket, on, off, currentPlayer]);
 
   return {
     gameState: gameHookState.gameState,

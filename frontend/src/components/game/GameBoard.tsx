@@ -257,29 +257,75 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             <div className="absolute inset-0 flex items-center justify-center">
               <div 
                 data-testid="trick-area"
-                className="bg-green-700 rounded-lg p-4 w-48 h-32 flex flex-col items-center justify-center"
+                className="bg-green-700 rounded-lg p-4 w-64 h-40 flex flex-col items-center justify-center shadow-lg border border-green-600"
               >
-                <h4 className="text-sm font-semibold mb-2 text-center">
+                <h4 className="text-sm font-semibold mb-3 text-center text-white">
                   トリック {currentTrick}
+                  {getCurrentTrickCards().length > 0 && (
+                    <span className="ml-2 text-xs text-yellow-300">
+                      ({getCurrentTrickCards().length}/4)
+                    </span>
+                  )}
                 </h4>
-                <div className="flex flex-wrap justify-center gap-1">
+                <div className="grid grid-cols-2 gap-2 w-full max-w-32">
                   {getCurrentTrickCards().map((cardPlay, index) => {
                     const player = players.find(p => p.id === cardPlay.playerId);
+                    const cardInfo = handCards?.[currentPlayerId || 0]?.find(c => c.id === cardPlay.cardId);
+                    
                     return (
-                      <div key={`${cardPlay.playerId}-${cardPlay.cardId}`} className="text-center">
-                        <div className="text-xs mb-1">{player?.displayName?.slice(0, 3)}</div>
-                        <div className="w-8 h-12 bg-white rounded border flex items-center justify-center text-black text-xs">
-                          #{cardPlay.cardId}
+                      <div 
+                        key={`${cardPlay.playerId}-${cardPlay.cardId}`} 
+                        className="text-center transform transition-all duration-300 hover:scale-105"
+                        style={{
+                          animationDelay: `${index * 200}ms`,
+                          animation: 'fadeInUp 0.5s ease-out forwards'
+                        }}
+                      >
+                        <div className="text-xs mb-1 text-white font-medium">
+                          {player?.displayName?.slice(0, 4)}
+                        </div>
+                        <div className="w-12 h-16 bg-white rounded-md border-2 border-gray-300 flex flex-col items-center justify-center text-black text-xs shadow-md relative">
+                          {cardInfo ? (
+                            <>
+                              <div className={`text-lg font-bold ${cardInfo.suit === 'HEARTS' || cardInfo.suit === 'DIAMONDS' ? 'text-red-600' : 'text-black'}`}>
+                                {cardInfo.suit === 'HEARTS' && '♥'}
+                                {cardInfo.suit === 'DIAMONDS' && '♦'}
+                                {cardInfo.suit === 'CLUBS' && '♣'}
+                                {cardInfo.suit === 'SPADES' && '♠'}
+                              </div>
+                              <div className="text-xs font-bold">
+                                {cardInfo.rank === 'ACE' && 'A'}
+                                {cardInfo.rank === 'KING' && 'K'}
+                                {cardInfo.rank === 'QUEEN' && 'Q'}
+                                {cardInfo.rank === 'JACK' && 'J'}
+                                {['TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'].includes(cardInfo.rank) && 
+                                  ['2', '3', '4', '5', '6', '7', '8', '9', '10'][['TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'].indexOf(cardInfo.rank)]
+                                }
+                              </div>
+                              {cardInfo.pointValue > 0 && (
+                                <div className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs font-bold">
+                                  {cardInfo.pointValue}
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="text-xs">#{cardPlay.cardId}</div>
+                          )}
                         </div>
                       </div>
                     );
                   })}
                   {getCurrentTrickCards().length === 0 && (
-                    <div className="text-center text-gray-300 text-sm">
-                      待機中
+                    <div className="col-span-2 text-center text-gray-300 text-sm py-4">
+                      プレイを待機中...
                     </div>
                   )}
                 </div>
+                {getCurrentTrickCards().length === 4 && (
+                  <div className="mt-2 text-xs text-yellow-300 font-semibold animate-pulse">
+                    トリック完了！
+                  </div>
+                )}
               </div>
             </div>
           </div>
