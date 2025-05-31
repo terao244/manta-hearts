@@ -270,11 +270,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 <div className="grid grid-cols-2 gap-2 w-full max-w-32">
                   {getCurrentTrickCards().map((cardPlay, index) => {
                     const player = players.find(p => p.id === cardPlay.playerId);
-                    const cardInfo = handCards?.[currentPlayerId || 0]?.find(c => c.id === cardPlay.cardId);
+                    const cardInfo = cardPlay.card;
                     
                     return (
                       <div 
-                        key={`${cardPlay.playerId}-${cardPlay.cardId}`} 
+                        key={`${cardPlay.playerId}-${cardInfo.id}`} 
                         className="text-center transform transition-all duration-300 hover:scale-105"
                         style={{
                           animationDelay: `${index * 200}ms`,
@@ -285,31 +285,25 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                           {player?.displayName?.slice(0, 4)}
                         </div>
                         <div className="w-12 h-16 bg-white rounded-md border-2 border-gray-300 flex flex-col items-center justify-center text-black text-xs shadow-md relative">
-                          {cardInfo ? (
-                            <>
-                              <div className={`text-lg font-bold ${cardInfo.suit === 'HEARTS' || cardInfo.suit === 'DIAMONDS' ? 'text-red-600' : 'text-black'}`}>
-                                {cardInfo.suit === 'HEARTS' && '♥'}
-                                {cardInfo.suit === 'DIAMONDS' && '♦'}
-                                {cardInfo.suit === 'CLUBS' && '♣'}
-                                {cardInfo.suit === 'SPADES' && '♠'}
-                              </div>
-                              <div className="text-xs font-bold">
-                                {cardInfo.rank === 'ACE' && 'A'}
-                                {cardInfo.rank === 'KING' && 'K'}
-                                {cardInfo.rank === 'QUEEN' && 'Q'}
-                                {cardInfo.rank === 'JACK' && 'J'}
-                                {['TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'].includes(cardInfo.rank) && 
-                                  ['2', '3', '4', '5', '6', '7', '8', '9', '10'][['TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'].indexOf(cardInfo.rank)]
-                                }
-                              </div>
-                              {cardInfo.pointValue > 0 && (
-                                <div className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs font-bold">
-                                  {cardInfo.pointValue}
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <div className="text-xs">#{cardPlay.cardId}</div>
+                          <div className={`text-lg font-bold ${cardInfo.suit === 'HEARTS' || cardInfo.suit === 'DIAMONDS' ? 'text-red-600' : 'text-black'}`}>
+                            {cardInfo.suit === 'HEARTS' && '♥'}
+                            {cardInfo.suit === 'DIAMONDS' && '♦'}
+                            {cardInfo.suit === 'CLUBS' && '♣'}
+                            {cardInfo.suit === 'SPADES' && '♠'}
+                          </div>
+                          <div className="text-xs font-bold">
+                            {cardInfo.rank === 'ACE' && 'A'}
+                            {cardInfo.rank === 'KING' && 'K'}
+                            {cardInfo.rank === 'QUEEN' && 'Q'}
+                            {cardInfo.rank === 'JACK' && 'J'}
+                            {['TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'].includes(cardInfo.rank) && 
+                              ['2', '3', '4', '5', '6', '7', '8', '9', '10'][['TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'].indexOf(cardInfo.rank)]
+                            }
+                          </div>
+                          {cardInfo.pointValue > 0 && (
+                            <div className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs font-bold">
+                              {cardInfo.pointValue}
+                            </div>
                           )}
                         </div>
                       </div>

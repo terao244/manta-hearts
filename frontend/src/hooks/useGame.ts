@@ -151,6 +151,22 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       }));
     };
 
+    // ゲーム状態変更
+    const handleGameStateChanged = (stateUpdate: Partial<GameState>) => {
+      console.log('Game state changed:', stateUpdate);
+      setGameHookState(prev => {
+        if (!prev.gameState) return prev;
+        
+        return {
+          ...prev,
+          gameState: {
+            ...prev.gameState,
+            ...stateUpdate
+          }
+        };
+      });
+    };
+
     // プレイヤー参加
     const handlePlayerJoined = (playerInfo: PlayerInfo | number) => {
       console.log('Player joined:', playerInfo);
@@ -288,9 +304,74 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       });
     };
 
+    // 手札更新
+    const handleHandUpdated = (cards: CardInfo[]) => {
+      console.log('Hand updated:', cards);
+      if (!currentPlayer) return;
+      
+      setGameHookState(prev => {
+        if (!prev.gameState) return prev;
+        
+        return {
+          ...prev,
+          gameState: {
+            ...prev.gameState,
+            handCards: {
+              ...prev.gameState.handCards,
+              [currentPlayer.id]: cards
+            }
+          }
+        };
+      });
+    };
+
     // カードプレイ
     const handleCardPlayed = (playData: CardPlayData) => {
       console.log('Card played:', playData);
+      
+      setGameHookState(prev => {
+        if (!prev.gameState) return prev;
+        
+        // 現在のトリックを更新
+        const updatedTricks = [...prev.gameState.tricks];
+        const currentTrickIndex = updatedTricks.length - 1;
+        
+        if (currentTrickIndex >= 0) {
+          const currentTrick = updatedTricks[currentTrickIndex];
+          const updatedCards = [...(currentTrick.cards || [])];
+          
+          // プレイされたカードを追加
+          updatedCards.push({
+            playerId: playData.playerId,
+            card: playData.card
+          });
+          
+          updatedTricks[currentTrickIndex] = {
+            ...currentTrick,
+            cards: updatedCards
+          };
+        } else {
+          // 新しいトリックを作成
+          updatedTricks.push({
+            trickNumber: 1,
+            cards: [{
+              playerId: playData.playerId,
+              card: playData.card
+            }],
+            winnerId: null,
+            points: 0,
+            isCompleted: false
+          });
+        }
+        
+        return {
+          ...prev,
+          gameState: {
+            ...prev.gameState,
+            tricks: updatedTricks
+          }
+        };
+      });
     };
 
     // トリック完了
@@ -319,11 +400,13 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
 
     // イベントリスナー登録
     on('gameState', handleGameState);
+    on('gameStateChanged', handleGameStateChanged);
     on('playerJoined', handlePlayerJoined);
     on('playerLeft', handlePlayerLeft);
     on('gameStarted', handleGameStarted);
     on('handStarted', handleHandStarted);
     on('cardsDealt', handleCardsDealt);
+    on('handUpdated', handleHandUpdated);
     on('exchangePhaseStarted', handleExchangePhaseStarted);
     on('exchangeProgress', handleExchangeProgress);
     on('playingPhaseStarted', handlePlayingPhaseStarted);
@@ -336,11 +419,13 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     // クリーンアップ
     return () => {
       off('gameState', handleGameState);
+      off('gameStateChanged', handleGameStateChanged);
       off('playerJoined', handlePlayerJoined);
       off('playerLeft', handlePlayerLeft);
       off('gameStarted', handleGameStarted);
       off('handStarted', handleHandStarted);
       off('cardsDealt', handleCardsDealt);
+      off('handUpdated', handleHandUpdated);
       off('exchangePhaseStarted', handleExchangePhaseStarted);
       off('exchangeProgress', handleExchangeProgress);
       off('playingPhaseStarted', handlePlayingPhaseStarted);

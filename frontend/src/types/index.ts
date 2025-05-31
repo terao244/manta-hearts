@@ -100,17 +100,15 @@ export interface HandData {
 
 export interface CardPlayData {
   playerId: number;
-  cardId: number;
-  trickNumber: number;
-  playOrder: number;
+  card: CardInfo;
 }
 
 export interface TrickData {
   trickNumber: number;
   cards: CardPlayData[];
-  winnerId?: number;
+  winnerId?: number | null;
   points: number;
-  leadPlayerId: number;
+  isCompleted: boolean;
 }
 
 export interface TrickResult {
