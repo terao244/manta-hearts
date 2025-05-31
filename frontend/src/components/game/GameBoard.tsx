@@ -4,6 +4,32 @@ import React, { useState } from 'react';
 import { Hand } from './Hand';
 import type { GameBoardProps, CardInfo, PlayerInfo } from '@/types';
 
+// プレイヤーカードコンポーネント
+interface PlayerCardProps {
+  player: PlayerInfo;
+  currentPlayerId?: number;
+  currentTurn?: number;
+  scores: Record<number, number>;
+}
+
+const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, currentTurn, scores }) => {
+  return (
+    <div
+      className={`
+        p-3 bg-white rounded-lg shadow-md border-2 transition-all min-w-24 text-center
+        ${player.id === currentPlayerId ? 'ring-2 ring-blue-500 border-blue-300' : 'border-gray-200'}
+        ${player.id === currentTurn ? 'bg-yellow-50 border-yellow-300' : ''}
+      `}
+    >
+      <div className="text-xs font-semibold text-gray-800">{player.displayName}</div>
+      <div className="text-lg font-bold text-green-600">{scores[player.id] || 0}点</div>
+      {player.id === currentTurn && (
+        <div className="text-xs text-yellow-600 font-semibold">手番</div>
+      )}
+    </div>
+  );
+};
+
 export const GameBoard: React.FC<GameBoardProps> = ({
   gameState,
   currentPlayerId,
@@ -116,81 +142,121 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       </div>
 
       <div className="container mx-auto p-4">
-        {/* ゲームエリア */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
-          {/* プレイヤー情報 */}
-          <div className="lg:col-span-1">
-            <h3 className="text-lg font-semibold mb-3">プレイヤー</h3>
-            <div className="space-y-2">
-              {players
-                .filter(player => player && player.id != null)
-                .map(player => (
-                  <div
-                    key={player.id}
-                    data-testid={`player-${player.id}`}
-                    className={`
-                      p-3 bg-white rounded-lg shadow-md border-2 transition-all
-                      ${player.id === currentPlayerId ? 'ring-2 ring-blue-500 border-blue-300' : 'border-gray-200'}
-                      ${player.id === currentTurn ? 'bg-yellow-50 border-yellow-300' : ''}
-                    `}
-                  >
-                    <div className="text-center">
-                      <div className="font-semibold text-sm">{player.displayName}</div>
-                      <div className="text-xs text-gray-500">{getPlayerPosition(player.id)}</div>
-                      <div className="text-lg font-bold text-green-600">{scores[player.id] || 0}点</div>
-                      {player.id === currentTurn && (
-                        <div className="text-xs text-yellow-600 font-semibold">手番</div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
+        {/* ゲームテーブルエリア */}
+        <div className="relative w-full max-w-4xl mx-auto mb-6">
+          {/* 卓配置レイアウト */}
+          <div className="relative h-96 bg-green-800 rounded-lg p-4">
+            
+            {/* 北（上）のプレイヤー */}
+            {players.filter(p => getPlayerPosition(p.id) === 'North').map(player => (
+              <div
+                key={player.id}
+                data-testid={`player-${player.id}`}
+                className="absolute top-2 left-1/2 transform -translate-x-1/2"
+              >
+                <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} />
+              </div>
+            ))}
 
-          {/* 中央エリア（トリック表示） */}
-          <div className="lg:col-span-2">
-            <div className="bg-green-800 rounded-lg p-6 min-h-64 flex items-center justify-center">
+            {/* 東（右）のプレイヤー */}
+            {players.filter(p => getPlayerPosition(p.id) === 'East').map(player => (
+              <div
+                key={player.id}
+                data-testid={`player-${player.id}`}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2"
+              >
+                <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} />
+              </div>
+            ))}
+
+            {/* 南（下）のプレイヤー */}
+            {players.filter(p => getPlayerPosition(p.id) === 'South').map(player => (
+              <div
+                key={player.id}
+                data-testid={`player-${player.id}`}
+                className="absolute bottom-2 left-1/2 transform -translate-x-1/2"
+              >
+                <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} />
+              </div>
+            ))}
+
+            {/* 西（左）のプレイヤー */}
+            {players.filter(p => getPlayerPosition(p.id) === 'West').map(player => (
+              <div
+                key={player.id}
+                data-testid={`player-${player.id}`}
+                className="absolute left-2 top-1/2 transform -translate-y-1/2"
+              >
+                <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} />
+              </div>
+            ))}
+
+            {/* 中央エリア（トリック表示） */}
+            <div className="absolute inset-0 flex items-center justify-center">
               <div 
                 data-testid="trick-area"
-                className="w-full"
+                className="bg-green-700 rounded-lg p-4 w-48 h-32 flex flex-col items-center justify-center"
               >
-                <h3 className="text-center text-lg font-semibold mb-4">
-                  現在のトリック
-                </h3>
-                <div className="flex flex-wrap justify-center gap-3">
+                <h4 className="text-sm font-semibold mb-2 text-center">
+                  トリック {currentTrick}
+                </h4>
+                <div className="flex flex-wrap justify-center gap-1">
                   {getCurrentTrickCards().map((cardPlay, index) => {
                     const player = players.find(p => p.id === cardPlay.playerId);
                     return (
                       <div key={`${cardPlay.playerId}-${cardPlay.cardId}`} className="text-center">
-                        <div className="text-xs mb-1">{player?.displayName}</div>
-                        {/* 実際のカード情報が必要な場合は、cardPlay.cardIdからカード情報を取得 */}
-                        <div className="w-16 h-24 bg-white rounded border flex items-center justify-center text-black text-sm">
-                          カード#{cardPlay.cardId}
+                        <div className="text-xs mb-1">{player?.displayName?.slice(0, 3)}</div>
+                        <div className="w-8 h-12 bg-white rounded border flex items-center justify-center text-black text-xs">
+                          #{cardPlay.cardId}
                         </div>
                       </div>
                     );
                   })}
                   {getCurrentTrickCards().length === 0 && (
-                    <div className="text-center text-gray-300">
-                      トリック開始前
+                    <div className="text-center text-gray-300 text-sm">
+                      待機中
                     </div>
                   )}
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* ゲーム情報 */}
-          <div className="lg:col-span-1">
-            <h3 className="text-lg font-semibold mb-3">ゲーム情報</h3>
-            <div className="bg-green-800 rounded-lg p-4 space-y-2 text-sm">
+        {/* ゲーム情報サイドバー */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+          {/* ゲーム状態 */}
+          <div className="bg-green-800 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-3">ゲーム状態</h3>
+            <div className="space-y-2 text-sm">
               <div>ゲームID: {gameId}</div>
-              <div>状態: {status}</div>
               <div>フェーズ: {phase}</div>
               <div>ハンド: {currentHand}</div>
               <div>トリック: {currentTrick}</div>
+              <div className="font-semibold">{getPhaseMessage()}</div>
+            </div>
+          </div>
+
+          {/* ゲームルール情報 */}
+          <div className="bg-green-800 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-3">ルール状態</h3>
+            <div className="space-y-2 text-sm">
               <div>ハートブレイク: {heartsBroken ? 'はい' : 'いいえ'}</div>
               <div>完了トリック: {tricks.length}</div>
+              <div>状態: {status}</div>
+            </div>
+          </div>
+
+          {/* スコア一覧 */}
+          <div className="bg-green-800 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-3">スコア</h3>
+            <div className="space-y-1 text-sm">
+              {players.map(player => (
+                <div key={player.id} className="flex justify-between">
+                  <span>{player.displayName}</span>
+                  <span className="font-bold">{scores[player.id] || 0}点</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

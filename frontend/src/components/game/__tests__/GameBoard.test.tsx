@@ -64,7 +64,7 @@ describe('GameBoard', () => {
     );
     
     mockPlayers.forEach(player => {
-      expect(screen.getByText(player.displayName)).toBeInTheDocument();
+      expect(screen.getAllByText(player.displayName).length).toBeGreaterThan(0);
     });
   });
 
@@ -78,9 +78,9 @@ describe('GameBoard', () => {
       />
     );
     
-    expect(screen.getAllByText('0点')).toHaveLength(2); // プレイヤー1と4
-    expect(screen.getByText('5点')).toBeInTheDocument();
-    expect(screen.getByText('10点')).toBeInTheDocument();
+    expect(screen.getAllByText('0点')).toHaveLength(4); // プレイヤー1と4がテーブル配置とスコア一覧で各2回
+    expect(screen.getAllByText('5点')).toHaveLength(2); // テーブル配置とスコア一覧
+    expect(screen.getAllByText('10点')).toHaveLength(2); // テーブル配置とスコア一覧
   });
 
   it('現在のプレイヤーがハイライトされる', () => {
@@ -94,7 +94,8 @@ describe('GameBoard', () => {
     );
     
     const currentPlayerElement = screen.getByTestId('player-1');
-    expect(currentPlayerElement).toHaveClass('ring-blue-500');
+    const playerCard = currentPlayerElement.querySelector('div');
+    expect(playerCard).toHaveClass('ring-blue-500');
   });
 
   it('ハートブレイク状態が表示される', () => {
@@ -145,7 +146,7 @@ describe('GameBoard', () => {
       />
     );
     
-    expect(screen.getByText('3枚のカードを選択してください')).toBeInTheDocument();
+    expect(screen.getByText(/交換するカードを3枚選択してください/)).toBeInTheDocument();
   });
 
   it('トリック情報が表示される', () => {
@@ -191,7 +192,7 @@ describe('GameBoard', () => {
       />
     );
     
-    expect(screen.getByText('ゲーム終了')).toBeInTheDocument();
+    expect(screen.getAllByText('ゲーム終了')).toHaveLength(2); // ヘッダーとゲーム状態エリア
   });
 
   it('待機状態が表示される', () => {
@@ -209,6 +210,6 @@ describe('GameBoard', () => {
       />
     );
     
-    expect(screen.getByText('他のプレイヤーを待っています...')).toBeInTheDocument();
+    expect(screen.getAllByText('他のプレイヤーを待っています...')).toHaveLength(2); // ヘッダーとゲーム状態エリア
   });
 });
