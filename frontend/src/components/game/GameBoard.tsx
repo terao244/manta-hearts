@@ -13,18 +13,34 @@ interface PlayerCardProps {
 }
 
 const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, currentTurn, scores }) => {
+  const isCurrentPlayer = player.id === currentPlayerId;
+  const isCurrentTurn = player.id === currentTurn;
+  
   return (
     <div
       className={`
-        p-3 bg-white rounded-lg shadow-md border-2 transition-all min-w-24 text-center
-        ${player.id === currentPlayerId ? 'ring-2 ring-blue-500 border-blue-300' : 'border-gray-200'}
-        ${player.id === currentTurn ? 'bg-yellow-50 border-yellow-300' : ''}
+        p-3 bg-white rounded-lg shadow-md border-2 transition-all min-w-24 text-center transform
+        ${isCurrentPlayer ? 'ring-2 ring-blue-500 border-blue-300 scale-105' : 'border-gray-200'}
+        ${isCurrentTurn && !isCurrentPlayer ? 'bg-yellow-50 border-yellow-300 ring-2 ring-yellow-400 scale-110 animate-pulse' : ''}
+        ${isCurrentTurn && isCurrentPlayer ? 'bg-green-50 border-green-300 ring-2 ring-green-400 scale-110 animate-pulse' : ''}
       `}
     >
-      <div className="text-xs font-semibold text-gray-800">{player.displayName}</div>
-      <div className="text-lg font-bold text-green-600">{scores[player.id] || 0}点</div>
-      {player.id === currentTurn && (
-        <div className="text-xs text-yellow-600 font-semibold">手番</div>
+      <div className={`text-xs font-semibold ${
+        isCurrentTurn ? 'text-yellow-800' : 'text-gray-800'
+      }`}>
+        {player.displayName}
+      </div>
+      <div className={`text-lg font-bold ${
+        isCurrentTurn ? 'text-yellow-600' : 'text-green-600'
+      }`}>
+        {scores[player.id] || 0}点
+      </div>
+      {isCurrentTurn && (
+        <div className="flex items-center justify-center gap-1">
+          <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce"></div>
+          <div className="text-xs text-yellow-600 font-bold">手番</div>
+          <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+        </div>
       )}
     </div>
   );
@@ -162,8 +178,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm">
+            <div className={`text-sm ${
+              phase === 'playing' && currentTurn === currentPlayerId 
+                ? 'text-yellow-300 font-bold animate-pulse' 
+                : ''
+            }`}>
               {status === 'FINISHED' ? 'ゲーム終了' : getPhaseMessage()}
+              {phase === 'playing' && currentTurn === currentPlayerId && (
+                <span className="ml-2 text-yellow-400">👆</span>
+              )}
             </div>
             {phase === 'exchanging' && exchangeDirection && (
               <div className="text-yellow-300 text-sm font-semibold flex items-center justify-end gap-2 mt-1">
@@ -375,11 +398,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               maxSelectableCards={3}
               showConfirmButton={phase === 'exchanging' && selectedCards.length === 3}
               isExchangeCompleted={
-                phase === 'exchanging' && 
+                !!(phase === 'exchanging' && 
                 exchangeProgress && 
                 currentPlayerId && 
-                exchangeProgress.exchangedPlayers.includes(currentPlayerId)
+                exchangeProgress.exchangedPlayers.includes(currentPlayerId))
               }
+              isPlayerTurn={currentTurn === currentPlayerId}
               onCardSelect={handleCardSelect}
               onCardPlay={handleCardPlay}
               onConfirm={handleExchangeConfirm}

@@ -180,4 +180,73 @@ describe('Hand', () => {
     const handContainer = screen.getByTestId('hand-container');
     expect(handContainer).toHaveClass('flex-wrap', 'justify-center');
   });
+
+  it('手番でない時にカードがグレーアウトされる', () => {
+    render(
+      <Hand 
+        cards={mockCards} 
+        mode="play"
+        isPlayerTurn={false}
+      />
+    );
+    
+    const handContainer = screen.getByTestId('hand-container');
+    expect(handContainer).toHaveClass('bg-gray-100', 'opacity-60');
+  });
+
+  it('手番でない時にカードクリックが無効化される', () => {
+    render(
+      <Hand 
+        cards={mockCards} 
+        mode="play"
+        isPlayerTurn={false}
+        onCardPlay={mockOnCardPlay}
+      />
+    );
+    
+    const firstCard = screen.getAllByRole('button')[0];
+    fireEvent.click(firstCard);
+    
+    expect(mockOnCardPlay).not.toHaveBeenCalled();
+  });
+
+  it('手番でない時に適切なメッセージが表示される', () => {
+    render(
+      <Hand 
+        cards={mockCards} 
+        mode="play"
+        isPlayerTurn={false}
+      />
+    );
+    
+    expect(screen.getByText(/他のプレイヤーの手番です。お待ちください/)).toBeInTheDocument();
+  });
+
+  it('手番の時は正常にカードプレイできる', () => {
+    render(
+      <Hand 
+        cards={mockCards} 
+        mode="play"
+        isPlayerTurn={true}
+        onCardPlay={mockOnCardPlay}
+        playableCardIds={[39]}
+      />
+    );
+    
+    const firstCard = screen.getAllByRole('button')[0];
+    fireEvent.click(firstCard);
+    
+    const sortedCards = [...mockCards].sort((a, b) => {
+      const suitOrder = { 'SPADES': 1, 'HEARTS': 2, 'DIAMONDS': 3, 'CLUBS': 4 };
+      const rankOrder = {
+        'TWO': 2, 'THREE': 3, 'FOUR': 4, 'FIVE': 5, 'SIX': 6, 'SEVEN': 7, 'EIGHT': 8,
+        'NINE': 9, 'TEN': 10, 'JACK': 11, 'QUEEN': 12, 'KING': 13, 'ACE': 14
+      };
+      if (a.suit !== b.suit) {
+        return suitOrder[a.suit] - suitOrder[b.suit];
+      }
+      return rankOrder[a.rank] - rankOrder[b.rank];
+    });
+    expect(mockOnCardPlay).toHaveBeenCalledWith(sortedCards[0]);
+  });
 });

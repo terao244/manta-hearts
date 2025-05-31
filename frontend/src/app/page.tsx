@@ -15,6 +15,7 @@ export default function Home() {
     isLoggedIn: false,
     isLoading: false
   });
+  const [shouldAutoJoin, setShouldAutoJoin] = useState(false);
 
   const { 
     gameState, 
@@ -37,6 +38,26 @@ export default function Home() {
     }
   }, [isInGame, gameState, updateValidCards, loginState.playerInfo?.id]);
 
+  // 自動ゲーム参加処理
+  useEffect(() => {
+    if (shouldAutoJoin && loginState.isLoggedIn && loginState.playerInfo && !isInGame) {
+      console.log('Auto-joining game for player:', loginState.playerInfo);
+      setShouldAutoJoin(false); // フラグをリセット
+      
+      const autoJoin = async () => {
+        try {
+          await joinGame();
+          console.log('Auto join successful');
+        } catch (joinError) {
+          console.error('Auto join game error:', joinError);
+          // エラーが発生した場合、フォールバックとしてロビー画面が表示される
+        }
+      };
+      
+      autoJoin();
+    }
+  }, [shouldAutoJoin, loginState.isLoggedIn, loginState.playerInfo, isInGame, joinGame]);
+
   const handlePlayerSelect = async (playerName: string) => {
     setLoginState(prev => ({ ...prev, isLoading: true, error: undefined }));
 
@@ -49,6 +70,9 @@ export default function Home() {
           playerInfo: result.playerInfo,
           isLoading: false
         });
+        
+        // 自動参加フラグを設定（useEffectで実際のゲーム参加が実行される）
+        setShouldAutoJoin(true);
       } else {
         setLoginState({
           isLoggedIn: false,
@@ -80,17 +104,34 @@ export default function Home() {
     );
   }
 
-  // ゲーム参加前のロビー画面
+  // ゲーム参加前の状態（自動参加中またはエラー時のみロビー表示）
   if (!isInGame && loginState.playerInfo) {
+    // ゲーム参加にエラーがある場合のみロビー画面を表示
+    if (gameError) {
+      return (
+        <>
+          <ConnectionStatus connectionState={connectionState} />
+          <GameLobby
+            currentPlayer={loginState.playerInfo}
+            onJoinGame={joinGame}
+            isLoading={gameLoading}
+            error={gameError || undefined}
+          />
+        </>
+      );
+    }
+    
+    // 通常は自動参加中の読み込み画面を表示
     return (
       <>
         <ConnectionStatus connectionState={connectionState} />
-        <GameLobby
-          currentPlayer={loginState.playerInfo}
-          onJoinGame={joinGame}
-          isLoading={gameLoading}
-          error={gameError || undefined}
-        />
+        <div className="min-h-screen bg-green-900 text-white flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-lg mb-2">ゲームに参加中...</p>
+            <p className="text-sm text-gray-300">4人のプレイヤーが揃うまでお待ちください</p>
+          </div>
+        </div>
       </>
     );
   }

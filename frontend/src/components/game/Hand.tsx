@@ -12,6 +12,7 @@ interface HandProps {
   maxSelectableCards?: number;
   showConfirmButton?: boolean;
   isExchangeCompleted?: boolean;
+  isPlayerTurn?: boolean;
   onCardSelect?: (card: CardInfo) => void;
   onCardPlay?: (card: CardInfo) => void;
   onConfirm?: () => void;
@@ -26,6 +27,7 @@ export const Hand: React.FC<HandProps> = ({
   maxSelectableCards = 3,
   showConfirmButton = false,
   isExchangeCompleted = false,
+  isPlayerTurn = true,
   onCardSelect,
   onCardPlay,
   onConfirm,
@@ -48,6 +50,11 @@ export const Hand: React.FC<HandProps> = ({
 
 
   const handleCardClick = (card: CardInfo) => {
+    // 手番制御: プレイモードでは手番でない場合は操作を無効化
+    if (mode === 'play' && !isPlayerTurn) {
+      return;
+    }
+    
     if (mode === 'exchange' && onCardSelect) {
       onCardSelect(card);
     } else if (mode === 'play' && onCardPlay) {
@@ -61,6 +68,8 @@ export const Hand: React.FC<HandProps> = ({
     if (mode === 'view') return false;
     if (mode === 'exchange') return true;
     if (mode === 'play') {
+      // 手番でない場合は全てのカードをプレイ不可にする
+      if (!isPlayerTurn) return false;
       return playableCardIds.length === 0 || playableCardIds.includes(card.id);
     }
     return false;
@@ -83,7 +92,9 @@ export const Hand: React.FC<HandProps> = ({
         return `選択できるのは${maxSelectableCards}枚までです`;
       }
     } else if (mode === 'play') {
-      if (playableCardIds.length === 0) {
+      if (!isPlayerTurn) {
+        return '他のプレイヤーの手番です。お待ちください';
+      } else if (playableCardIds.length === 0) {
         return '任意のカードをプレイできます';
       } else {
         return 'プレイ可能なカードから選択してください';
@@ -160,11 +171,18 @@ export const Hand: React.FC<HandProps> = ({
       {/* 手札表示エリア */}
       <div 
         data-testid="hand-container"
-        className="flex flex-wrap justify-center gap-2 p-4 bg-green-100 rounded-lg min-h-32 border-2 border-green-200"
+        className={`
+          flex flex-wrap justify-center gap-2 p-4 rounded-lg min-h-32 border-2 transition-all duration-300
+          ${mode === 'play' && !isPlayerTurn 
+            ? 'bg-gray-100 border-gray-300 opacity-60' 
+            : 'bg-green-100 border-green-200'
+          }
+        `}
       >
         {sortedCards.map((card, index) => {
           const isSelected = isCardSelected(card);
           const isPlayable = isCardPlayable(card);
+          const isDisabledByTurn = mode === 'play' && !isPlayerTurn;
           
           return (
             <div
@@ -173,9 +191,11 @@ export const Hand: React.FC<HandProps> = ({
                 transition-all duration-300 ease-in-out transform-gpu
                 ${isSelected 
                   ? 'translate-y-[-12px] scale-105 z-10 shadow-lg border-2 border-blue-400 rounded-lg' 
-                  : 'hover:translate-y-[-8px] hover:scale-102'
+                  : isDisabledByTurn 
+                    ? 'opacity-50 cursor-not-allowed filter grayscale' 
+                    : 'hover:translate-y-[-8px] hover:scale-102'
                 }
-                ${!isPlayable && mode === 'play' 
+                ${!isPlayable && mode === 'play' && !isDisabledByTurn
                   ? 'hover:translate-y-[-2px] opacity-60' 
                   : ''
                 }
@@ -183,14 +203,19 @@ export const Hand: React.FC<HandProps> = ({
                   ? 'hover:shadow-md hover:border hover:border-blue-200 hover:rounded-lg' 
                   : ''
                 }
+                ${isDisabledByTurn 
+                  ? 'pointer-events-none' 
+                  : ''
+                }
               `}
               style={{
                 animationDelay: `${index * 50}ms`
               }}
+              title={isDisabledByTurn ? '他のプレイヤーの手番です' : undefined}
             >
               <Card
                 card={card}
-                isPlayable={isPlayable}
+                isPlayable={isPlayable && !isDisabledByTurn}
                 isSelected={isSelected}
                 onClick={() => handleCardClick(card)}
                 size="medium"
@@ -203,8 +228,14 @@ export const Hand: React.FC<HandProps> = ({
       {/* モード別のメッセージ表示 */}
       {(mode === 'exchange' || mode === 'play') && (
         <div className="mt-2 text-center">
-          <div className="text-sm text-gray-700 bg-blue-50 rounded-lg px-3 py-2 inline-block">
-            💡 {getSelectionMessage()}
+          <div className={`
+            text-sm rounded-lg px-3 py-2 inline-block
+            ${mode === 'play' && !isPlayerTurn 
+              ? 'text-gray-600 bg-gray-50 border border-gray-200' 
+              : 'text-gray-700 bg-blue-50'
+            }
+          `}>
+            {mode === 'play' && !isPlayerTurn ? '⏳' : '💡'} {getSelectionMessage()}
           </div>
         </div>
       )}
@@ -296,7 +327,7 @@ export const Hand: React.FC<HandProps> = ({
       )}
 
       {/* プレイモード時の情報表示 */}
-      {mode === 'play' && playableCardIds.length > 0 && (
+      {mode === 'play' && playableCardIds.length > 0 && isPlayerTurn && (
         <div className="mt-2 text-center">
           <span className="text-sm text-blue-600">
             プレイできるカードをクリックしてください

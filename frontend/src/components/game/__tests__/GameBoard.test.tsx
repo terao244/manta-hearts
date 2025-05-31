@@ -155,12 +155,18 @@ describe('GameBoard', () => {
       tricks: [{
         trickNumber: 1,
         cards: [
-          { playerId: 1, cardId: 1, trickNumber: 1, playOrder: 1 },
-          { playerId: 2, cardId: 14, trickNumber: 1, playOrder: 2 }
+          { 
+            playerId: 1, 
+            card: { id: 1, suit: 'HEARTS', rank: 'ACE', code: 'AH', pointValue: 1, sortOrder: 1 }
+          },
+          { 
+            playerId: 2, 
+            card: { id: 14, suit: 'CLUBS', rank: 'TWO', code: '2C', pointValue: 0, sortOrder: 14 }
+          }
         ],
         winnerId: 1,
         points: 1,
-        leadPlayerId: 1
+        isCompleted: true
       }]
     };
 
@@ -211,5 +217,53 @@ describe('GameBoard', () => {
     );
     
     expect(screen.getAllByText('他のプレイヤーを待っています...')).toHaveLength(2); // ヘッダーとゲーム状態エリア
+  });
+
+  it('現在の手番プレイヤーが強調表示される', () => {
+    render(
+      <GameBoard 
+        gameState={mockGameState}
+        currentPlayerId={1}
+        onCardPlay={mockOnCardPlay}
+        onCardExchange={mockOnCardExchange}
+      />
+    );
+    
+    const currentTurnPlayerElement = screen.getByTestId('player-1');
+    const playerCard = currentTurnPlayerElement.querySelector('div');
+    expect(playerCard).toHaveClass('animate-pulse');
+    expect(screen.getByText('手番')).toBeInTheDocument();
+  });
+
+  it('手番でないプレイヤーのメッセージが表示される', () => {
+    const gameStateWithDifferentTurn = {
+      ...mockGameState,
+      currentTurn: 2 // プレイヤー2の手番
+    };
+
+    render(
+      <GameBoard 
+        gameState={gameStateWithDifferentTurn}
+        currentPlayerId={1}
+        onCardPlay={mockOnCardPlay}
+        onCardExchange={mockOnCardExchange}
+      />
+    );
+    
+    expect(screen.getAllByText('他のプレイヤーの番です')).toHaveLength(2);
+  });
+
+  it('自分の手番時にメッセージが強調表示される', () => {
+    render(
+      <GameBoard 
+        gameState={mockGameState}
+        currentPlayerId={1}
+        onCardPlay={mockOnCardPlay}
+        onCardExchange={mockOnCardExchange}
+      />
+    );
+    
+    expect(screen.getAllByText('あなたの番です')).toHaveLength(2);
+    expect(screen.getByText('👆')).toBeInTheDocument();
   });
 });

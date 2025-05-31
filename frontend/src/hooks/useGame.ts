@@ -236,6 +236,12 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     // ハンド開始
     const handleHandStarted = (handData: HandData) => {
       console.log('Hand started:', handData);
+      
+      setGameHookState(prev => ({
+        ...prev,
+        isInGame: true, // ハンド開始でゲームに参加状態にする
+        error: null
+      }));
     };
 
     // カード配布
@@ -255,7 +261,9 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
               [currentPlayer.id]: cards
             },
             phase: 'exchanging' as const
-          }
+          },
+          isInGame: true, // カード配布でゲームに参加状態にする
+          error: null
         };
       });
     };

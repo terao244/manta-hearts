@@ -23,7 +23,7 @@ export const PlayerSelect: React.FC<PlayerSelectProps> = ({
             ハーツゲーム
           </h1>
           <p className="text-gray-600">
-            プレイヤーを選択してください
+            プレイヤーを選択すると自動的にゲームに参加します
           </p>
         </div>
 
@@ -56,7 +56,7 @@ export const PlayerSelect: React.FC<PlayerSelectProps> = ({
           <div className="text-center">
             <div className="inline-flex items-center">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-              <span className="text-gray-600">接続中...</span>
+              <span className="text-gray-600">ゲームに参加中...</span>
             </div>
           </div>
         )}
