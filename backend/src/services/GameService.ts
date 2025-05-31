@@ -356,12 +356,15 @@ export class GameService {
     console.log(`Sending event '${event}' to player ${playerId}:`, data);
 
     // Socket.ioのルームやソケット管理を通じてプレイヤーに送信
-    this.io.sockets.sockets.forEach(socket => {
-      if (socket.data.playerId === playerId) {
-        console.log(`Found socket ${socket.id} for player ${playerId}, emitting event '${event}'`);
-        socket.emit(event as any, data);
-      }
-    });
+    // setTimeoutで次のイベントループでの送信を保証（タイミング問題対策）
+    setTimeout(() => {
+      this.io!.sockets.sockets.forEach(socket => {
+        if (socket.data.playerId === playerId) {
+          console.log(`Found socket ${socket.id} for player ${playerId}, emitting event '${event}'`);
+          socket.emit(event as any, data);
+        }
+      });
+    }, 0);
   }
 
   public async saveGameResult(gameId: number, winnerId: number, duration: number): Promise<void> {

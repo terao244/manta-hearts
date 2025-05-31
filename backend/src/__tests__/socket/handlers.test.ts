@@ -178,6 +178,13 @@ describe('SocketHandlers', () => {
     it('should handle successful game join', async () => {
       // Arrange
       const playerId = 1;
+      const playerData = {
+        id: playerId,
+        name: 'TestPlayer',
+        displayName: 'Test Player',
+        displayOrder: 1,
+        isActive: true,
+      };
       const gameInfo = { 
         gameId: 123, 
         status: 'waiting', 
@@ -190,13 +197,14 @@ describe('SocketHandlers', () => {
       const callback = jest.fn();
 
       mockSocket.data.playerId = playerId;
+      mockPrismaClient.player.findUnique.mockResolvedValue(playerData);
       mockGameService.joinGame.mockResolvedValue({
         success: true,
         gameInfo,
       });
 
       // Act
-      await joinGameHandler(callback);
+      await joinGameHandler(playerId, callback);
 
       // Assert
       expect(mockGameService.joinGame).toHaveBeenCalledWith(playerId);
@@ -205,11 +213,12 @@ describe('SocketHandlers', () => {
 
     it('should handle game join failure when not logged in', async () => {
       // Arrange
+      const playerId = 1;
       const callback = jest.fn();
-      // playerId is not set
+      // socket.data.playerId is not set (simulating not logged in state)
 
       // Act
-      await joinGameHandler(callback);
+      await joinGameHandler(playerId, callback);
 
       // Assert
       expect(mockGameService.joinGame).not.toHaveBeenCalled();
@@ -219,15 +228,23 @@ describe('SocketHandlers', () => {
     it('should handle game join failure from service', async () => {
       // Arrange
       const playerId = 1;
+      const playerData = {
+        id: playerId,
+        name: 'TestPlayer',
+        displayName: 'Test Player',
+        displayOrder: 1,
+        isActive: true,
+      };
       const callback = jest.fn();
 
       mockSocket.data.playerId = playerId;
+      mockPrismaClient.player.findUnique.mockResolvedValue(playerData);
       mockGameService.joinGame.mockResolvedValue({
         success: false,
       });
 
       // Act
-      await joinGameHandler(callback);
+      await joinGameHandler(playerId, callback);
 
       // Assert
       expect(mockGameService.joinGame).toHaveBeenCalledWith(playerId);
