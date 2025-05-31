@@ -319,6 +319,56 @@ describe('GameState', () => {
       const clubsCard = new Card(1, Suit.CLUBS, Rank.TWO);
       expect(gameState.canPlayCard(1, clubsCard)).toBe(true);
     });
+
+    it('2ハンド目以降でもクラブの2を持つプレイヤーは最初のトリックでクラブの2を出さなければならない', () => {
+      // 2ハンド目のセットアップ
+      gameState.currentHand = 2;
+      gameState.currentTrick = 1;
+      gameState.currentTurn = 1;
+      
+      const player1 = gameState.getPlayer(1)!;
+      player1.hand = [
+        new Card(1, Suit.CLUBS, Rank.TWO),
+        new Card(2, Suit.CLUBS, Rank.THREE),
+        new Card(3, Suit.DIAMONDS, Rank.KING)
+      ];
+      
+      // クラブの2以外は出せない
+      const clubsThree = new Card(2, Suit.CLUBS, Rank.THREE);
+      expect(gameState.canPlayCard(1, clubsThree)).toBe(false);
+      
+      const diamondsKing = new Card(3, Suit.DIAMONDS, Rank.KING);
+      expect(gameState.canPlayCard(1, diamondsKing)).toBe(false);
+      
+      // クラブの2は出せる
+      const clubsTwo = new Card(1, Suit.CLUBS, Rank.TWO);
+      expect(gameState.canPlayCard(1, clubsTwo)).toBe(true);
+    });
+
+    it('3ハンド目以降でもクラブの2を持つプレイヤーは最初のトリックでクラブの2を出さなければならない', () => {
+      // 3ハンド目のセットアップ
+      gameState.currentHand = 3;
+      gameState.currentTrick = 1;
+      gameState.currentTurn = 2;
+      
+      const player2 = gameState.getPlayer(2)!;
+      player2.hand = [
+        new Card(1, Suit.CLUBS, Rank.TWO),
+        new Card(4, Suit.SPADES, Rank.KING),
+        new Card(5, Suit.HEARTS, Rank.QUEEN)
+      ];
+      
+      // クラブの2以外は出せない
+      const spadesKing = new Card(4, Suit.SPADES, Rank.KING);
+      expect(gameState.canPlayCard(2, spadesKing)).toBe(false);
+      
+      const heartsQueen = new Card(5, Suit.HEARTS, Rank.QUEEN);
+      expect(gameState.canPlayCard(2, heartsQueen)).toBe(false);
+      
+      // クラブの2は出せる
+      const clubsTwo = new Card(1, Suit.CLUBS, Rank.TWO);
+      expect(gameState.canPlayCard(2, clubsTwo)).toBe(true);
+    });
   });
 
   describe('isGameCompleted', () => {

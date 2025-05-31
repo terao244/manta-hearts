@@ -290,7 +290,7 @@ export class GameState {
     }
 
     // クラブの2を持っている場合は最初に出さなければならない
-    if (this.currentTrick === 1 && this.currentHand === 1) {
+    if (this.currentTrick === 1) {
       const hasClubTwo = player.hand.some(c => c.isTwoOfClubs());
       if (hasClubTwo && !card.isTwoOfClubs()) return false;
     }
