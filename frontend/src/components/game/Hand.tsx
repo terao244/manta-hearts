@@ -31,6 +31,7 @@ export const Hand: React.FC<HandProps> = ({
 }) => {
   const sortedCards = [...cards].sort((a, b) => a.sortOrder - b.sortOrder);
 
+
   const handleCardClick = (card: CardInfo) => {
     if (mode === 'exchange' && onCardSelect) {
       onCardSelect(card);

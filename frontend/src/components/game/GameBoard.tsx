@@ -28,6 +28,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   const currentPlayerCards = currentPlayerId ? handCards?.[currentPlayerId] || [] : [];
 
+  const getCurrentTrickCards = () => {
+    if (tricks.length === 0) return [];
+    const currentTrick = tricks[tricks.length - 1];
+    return currentTrick.cards || [];
+  };
+
+
   const handleCardSelect = (card: CardInfo) => {
     if (phase !== 'exchanging') return;
 
@@ -84,40 +91,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     }
   };
 
-  const getCurrentTrickCards = () => {
-    if (tricks.length === 0) return [];
-    const currentTrick = tricks[tricks.length - 1];
-    return currentTrick.cards || [];
-  };
-
-  const renderPlayer = (player: PlayerInfo) => {
-    const position = getPlayerPosition(player.id);
-    const isCurrentPlayer = player.id === currentPlayerId;
-    const isCurrentTurn = player.id === currentTurn;
-    const score = scores[player.id] || 0;
-
-    return (
-      <div
-        key={player.id}
-        data-testid={`player-${player.id}`}
-        className={`
-          p-3 bg-white rounded-lg shadow-md border-2 transition-all
-          ${isCurrentPlayer ? 'ring-2 ring-blue-500 border-blue-300' : 'border-gray-200'}
-          ${isCurrentTurn ? 'bg-yellow-50 border-yellow-300' : ''}
-        `}
-      >
-        <div className="text-center">
-          <div className="font-semibold text-sm">{player.displayName}</div>
-          <div className="text-xs text-gray-500">{position}</div>
-          <div className="text-lg font-bold text-green-600">{score}点</div>
-          {isCurrentTurn && (
-            <div className="text-xs text-yellow-600 font-semibold">手番</div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-green-900 text-white">
       {/* ヘッダー */}
@@ -149,7 +122,28 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           <div className="lg:col-span-1">
             <h3 className="text-lg font-semibold mb-3">プレイヤー</h3>
             <div className="space-y-2">
-              {players.map(renderPlayer)}
+              {players
+                .filter(player => player && player.id != null)
+                .map(player => (
+                  <div
+                    key={player.id}
+                    data-testid={`player-${player.id}`}
+                    className={`
+                      p-3 bg-white rounded-lg shadow-md border-2 transition-all
+                      ${player.id === currentPlayerId ? 'ring-2 ring-blue-500 border-blue-300' : 'border-gray-200'}
+                      ${player.id === currentTurn ? 'bg-yellow-50 border-yellow-300' : ''}
+                    `}
+                  >
+                    <div className="text-center">
+                      <div className="font-semibold text-sm">{player.displayName}</div>
+                      <div className="text-xs text-gray-500">{getPlayerPosition(player.id)}</div>
+                      <div className="text-lg font-bold text-green-600">{scores[player.id] || 0}点</div>
+                      {player.id === currentTurn && (
+                        <div className="text-xs text-yellow-600 font-semibold">手番</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
             </div>
           </div>
 
@@ -167,7 +161,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   {getCurrentTrickCards().map((cardPlay, index) => {
                     const player = players.find(p => p.id === cardPlay.playerId);
                     return (
-                      <div key={index} className="text-center">
+                      <div key={`${cardPlay.playerId}-${cardPlay.cardId}`} className="text-center">
                         <div className="text-xs mb-1">{player?.displayName}</div>
                         {/* 実際のカード情報が必要な場合は、cardPlay.cardIdからカード情報を取得 */}
                         <div className="w-16 h-24 bg-white rounded border flex items-center justify-center text-black text-sm">

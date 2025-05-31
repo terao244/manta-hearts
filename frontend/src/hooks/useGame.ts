@@ -135,19 +135,35 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     };
 
     // プレイヤー参加
-    const handlePlayerJoined = (playerInfo: PlayerInfo) => {
+    const handlePlayerJoined = (playerInfo: PlayerInfo | number) => {
       console.log('Player joined:', playerInfo);
+      
       setGameHookState(prev => {
         if (!prev.gameState) return prev;
         
+        // playerInfoが数値の場合は、PlayerInfoオブジェクトを作成
+        let playerObject: PlayerInfo;
+        if (typeof playerInfo === 'number') {
+          playerObject = {
+            id: playerInfo,
+            name: `Player ${playerInfo}`,
+            displayName: `Player ${playerInfo}`,
+            displayOrder: playerInfo,
+            isActive: true
+          };
+        } else {
+          playerObject = playerInfo;
+        }
+        
         const updatedPlayers = [...prev.gameState.players];
-        const existingIndex = updatedPlayers.findIndex(p => p.id === playerInfo.id);
+        const existingIndex = updatedPlayers.findIndex(p => p.id === playerObject.id);
         
         if (existingIndex >= 0) {
-          updatedPlayers[existingIndex] = playerInfo;
+          updatedPlayers[existingIndex] = playerObject;
         } else {
-          updatedPlayers.push(playerInfo);
+          updatedPlayers.push(playerObject);
         }
+
 
         return {
           ...prev,
