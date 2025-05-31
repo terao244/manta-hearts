@@ -20,6 +20,8 @@ interface GameHookState {
   isLoading: boolean;
   error: string | null;
   validCardIds: number[];
+  exchangeDirection?: 'left' | 'right' | 'across' | 'none';
+  exchangeProgress?: { exchangedPlayers: number[]; remainingPlayers: number[] };
 }
 
 export const useGame = (currentPlayer: PlayerInfo | null) => {
@@ -243,6 +245,50 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       });
     };
 
+    // 交換フェーズ開始
+    const handleExchangePhaseStarted = (direction: 'left' | 'right' | 'across' | 'none') => {
+      console.log('Exchange phase started:', direction);
+      setGameHookState(prev => {
+        if (!prev.gameState) return prev;
+        
+        return {
+          ...prev,
+          gameState: {
+            ...prev.gameState,
+            phase: 'exchanging' as const
+          },
+          exchangeDirection: direction
+        };
+      });
+    };
+
+    // 交換進捗更新
+    const handleExchangeProgress = (progress: { exchangedPlayers: number[]; remainingPlayers: number[] }) => {
+      console.log('Exchange progress:', progress);
+      setGameHookState(prev => ({
+        ...prev,
+        exchangeProgress: progress
+      }));
+    };
+
+    // プレイングフェーズ開始
+    const handlePlayingPhaseStarted = (leadPlayerId: number) => {
+      console.log('Playing phase started, lead player:', leadPlayerId);
+      setGameHookState(prev => {
+        if (!prev.gameState) return prev;
+        
+        return {
+          ...prev,
+          gameState: {
+            ...prev.gameState,
+            phase: 'playing' as const,
+            currentTurn: leadPlayerId
+          },
+          exchangeProgress: undefined // プレイングフェーズ開始時に交換進捗をクリア
+        };
+      });
+    };
+
     // カードプレイ
     const handleCardPlayed = (playData: CardPlayData) => {
       console.log('Card played:', playData);
@@ -279,6 +325,9 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     on('gameStarted', handleGameStarted);
     on('handStarted', handleHandStarted);
     on('cardsDealt', handleCardsDealt);
+    on('exchangePhaseStarted', handleExchangePhaseStarted);
+    on('exchangeProgress', handleExchangeProgress);
+    on('playingPhaseStarted', handlePlayingPhaseStarted);
     on('cardPlayed', handleCardPlayed);
     on('trickCompleted', handleTrickCompleted);
     on('handCompleted', handleHandCompleted);
@@ -293,6 +342,9 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       off('gameStarted', handleGameStarted);
       off('handStarted', handleHandStarted);
       off('cardsDealt', handleCardsDealt);
+      off('exchangePhaseStarted', handleExchangePhaseStarted);
+      off('exchangeProgress', handleExchangeProgress);
+      off('playingPhaseStarted', handlePlayingPhaseStarted);
       off('cardPlayed', handleCardPlayed);
       off('trickCompleted', handleTrickCompleted);
       off('handCompleted', handleHandCompleted);
@@ -307,6 +359,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     isLoading: gameHookState.isLoading,
     error: gameHookState.error,
     validCardIds: gameHookState.validCardIds,
+    exchangeDirection: gameHookState.exchangeDirection,
+    exchangeProgress: gameHookState.exchangeProgress,
     joinGame: handleJoinGame,
     playCard: handleCardPlay,
     exchangeCards: handleCardExchange,

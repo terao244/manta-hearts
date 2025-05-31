@@ -153,7 +153,7 @@ describe('Hand', () => {
       />
     );
     
-    const confirmButton = screen.getByText('交換確定');
+    const confirmButton = screen.getByText('🔄 交換確定');
     expect(confirmButton).not.toBeDisabled();
   });
 

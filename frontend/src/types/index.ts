@@ -24,6 +24,9 @@ export interface ServerToClientEvents {
   gameStarted: (gameId: number) => void;
   handStarted: (handData: HandData) => void;
   cardsDealt: (cards: CardInfo[]) => void;
+  exchangePhaseStarted: (direction: 'left' | 'right' | 'across' | 'none') => void;
+  exchangeProgress: (progress: { exchangedPlayers: number[]; remainingPlayers: number[] }) => void;
+  playingPhaseStarted: (leadPlayerId: number) => void;
   cardPlayed: (playData: CardPlayData) => void;
   trickCompleted: (trickResult: TrickResult) => void;
   handCompleted: (handResult: HandResult) => void;
@@ -156,6 +159,8 @@ export interface GameBoardProps {
   gameState: GameState;
   currentPlayerId?: number;
   validCardIds?: number[];
+  exchangeDirection?: 'left' | 'right' | 'across' | 'none';
+  exchangeProgress?: { exchangedPlayers: number[]; remainingPlayers: number[] };
   onCardPlay: (cardId: number) => void;
   onCardExchange: (cardIds: number[]) => void;
 }

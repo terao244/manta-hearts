@@ -11,6 +11,7 @@ interface HandProps {
   mode?: 'play' | 'exchange' | 'view';
   maxSelectableCards?: number;
   showConfirmButton?: boolean;
+  isExchangeCompleted?: boolean;
   onCardSelect?: (card: CardInfo) => void;
   onCardPlay?: (card: CardInfo) => void;
   onConfirm?: () => void;
@@ -24,6 +25,7 @@ export const Hand: React.FC<HandProps> = ({
   mode = 'view',
   maxSelectableCards = 3,
   showConfirmButton = false,
+  isExchangeCompleted = false,
   onCardSelect,
   onCardPlay,
   onConfirm,
@@ -168,13 +170,17 @@ export const Hand: React.FC<HandProps> = ({
             <div
               key={card.id}
               className={`
-                transition-all duration-300 ease-in-out
+                transition-all duration-300 ease-in-out transform-gpu
                 ${isSelected 
-                  ? 'translate-y-[-12px] scale-105 z-10 animate-pulse' 
-                  : 'hover:translate-y-[-8px]'
+                  ? 'translate-y-[-12px] scale-105 z-10 shadow-lg border-2 border-blue-400 rounded-lg' 
+                  : 'hover:translate-y-[-8px] hover:scale-102'
                 }
                 ${!isPlayable && mode === 'play' 
-                  ? 'hover:translate-y-[-2px]' 
+                  ? 'hover:translate-y-[-2px] opacity-60' 
+                  : ''
+                }
+                ${mode === 'exchange' && isPlayable 
+                  ? 'hover:shadow-md hover:border hover:border-blue-200 hover:rounded-lg' 
                   : ''
                 }
               `}
@@ -234,15 +240,30 @@ export const Hand: React.FC<HandProps> = ({
         </div>
       )}
 
+      {/* 交換完了メッセージ */}
+      {mode === 'exchange' && isExchangeCompleted && (
+        <div className="mt-4 text-center">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="text-green-700 font-semibold mb-2 flex items-center justify-center gap-2">
+              <span className="text-xl">✅</span>
+              <span>カード交換が完了しました</span>
+            </div>
+            <div className="text-sm text-green-600">
+              他のプレイヤーの交換完了をお待ちください...
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 交換モード時のコントロール */}
-      {mode === 'exchange' && showConfirmButton && (
+      {mode === 'exchange' && showConfirmButton && !isExchangeCompleted && (
         <div className="mt-4 text-center">
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
             <div className="text-sm text-yellow-800 mb-2">
               選択されたカード: {selectedCardIds.length}/{maxSelectableCards}枚
             </div>
             {selectedCardIds.length === maxSelectableCards && (
-              <div className="text-xs text-green-700">
+              <div className="text-xs text-green-700 animate-pulse">
                 ✓ 交換の準備が完了しました
               </div>
             )}
@@ -261,13 +282,13 @@ export const Hand: React.FC<HandProps> = ({
               <button
                 onClick={onConfirm}
                 disabled={!isConfirmEnabled()}
-                className={`px-4 py-2 rounded-lg transition-colors ${
+                className={`px-4 py-2 rounded-lg transition-all duration-300 ${
                   isConfirmEnabled()
-                    ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-lg'
+                    ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-lg hover:scale-105 active:scale-95'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                {isConfirmEnabled() ? '交換確定' : '3枚選択してください'}
+                {isConfirmEnabled() ? '🔄 交換確定' : '3枚選択してください'}
               </button>
             )}
           </div>

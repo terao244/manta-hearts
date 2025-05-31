@@ -286,6 +286,9 @@ export class GameService {
       onExchangePhaseStarted: (direction) => {
         this.broadcastToGame(gameId, 'exchangePhaseStarted', direction);
       },
+      onExchangeProgress: (exchangedPlayers, remainingPlayers) => {
+        this.broadcastToGame(gameId, 'exchangeProgress', { exchangedPlayers, remainingPlayers });
+      },
       onPlayingPhaseStarted: (leadPlayerId) => {
         this.broadcastToGame(gameId, 'playingPhaseStarted', leadPlayerId);
       },

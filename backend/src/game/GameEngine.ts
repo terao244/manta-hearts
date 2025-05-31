@@ -10,6 +10,7 @@ export interface GameEngineEvents {
   onHandStarted: (handNumber: number) => void;
   onCardsDealt: (playerHands: Map<number, Card[]>) => void;
   onExchangePhaseStarted: (direction: ExchangeDirection) => void;
+  onExchangeProgress: (exchangedPlayers: number[], remainingPlayers: number[]) => void;
   onPlayingPhaseStarted: (leadPlayerId: number) => void;
   onCardPlayed: (playerId: number, card: Card) => void;
   onTrickCompleted: (trickNumber: number, winnerId: number, points: number) => void;
@@ -146,6 +147,12 @@ export class GameEngine {
 
       const success = this.playerManager.setExchangeCards(playerId, cardIds);
       if (!success) return false;
+
+      // 交換進捗を通知
+      const allPlayerIds = Array.from(this.gameState.players.keys());
+      const exchangedPlayers = allPlayerIds.filter(id => this.playerManager.hasPlayerExchanged(id));
+      const remainingPlayers = allPlayerIds.filter(id => !this.playerManager.hasPlayerExchanged(id));
+      this.eventListeners.onExchangeProgress?.(exchangedPlayers, remainingPlayers);
 
       // 全プレイヤーが交換完了した場合、カード配布を実行
       if (this.playerManager.allPlayersExchanged()) {

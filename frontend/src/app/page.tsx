@@ -22,6 +22,8 @@ export default function Home() {
     isLoading: gameLoading, 
     error: gameError,
     validCardIds,
+    exchangeDirection,
+    exchangeProgress,
     joinGame,
     playCard,
     exchangeCards,
@@ -102,6 +104,8 @@ export default function Home() {
           gameState={gameState}
           currentPlayerId={loginState.playerInfo.id}
           validCardIds={validCardIds}
+          exchangeDirection={exchangeDirection}
+          exchangeProgress={exchangeProgress}
           onCardPlay={playCard}
           onCardExchange={exchangeCards}
         />

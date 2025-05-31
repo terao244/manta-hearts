@@ -183,6 +183,11 @@ export class PlayerManager {
     return Array.from(this.players.values()).every(player => player.hasExchanged);
   }
 
+  public hasPlayerExchanged(playerId: number): boolean {
+    const player = this.players.get(playerId);
+    return player ? player.hasExchanged : false;
+  }
+
   public allPlayersPlayedInTrick(): boolean {
     return Array.from(this.players.values()).every(player => player.hasPlayedInTrick);
   }
