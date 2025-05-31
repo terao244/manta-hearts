@@ -1,5 +1,6 @@
 import { Card } from './Card';
 import { GamePlayer, PlayerPosition } from './Player';
+import { getGameConfig } from '../config/gameConfig';
 
 export enum GamePhase {
   WAITING = 'waiting',
@@ -235,9 +236,10 @@ export class GameState {
   }
 
   public isGameCompleted(): boolean {
-    // 誰かが100点以上に達したかチェック
+    // 誰かが設定された終了点数以上に達したかチェック
+    const config = getGameConfig();
     for (const score of this.cumulativeScores.values()) {
-      if (score >= 100) {
+      if (score >= config.endScore) {
         return true;
       }
     }

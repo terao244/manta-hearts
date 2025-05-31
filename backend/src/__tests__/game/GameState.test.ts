@@ -2,6 +2,11 @@ import { GameState, GamePhase, GameStatus, ExchangeDirection, Trick } from '../.
 import { GamePlayer, PlayerPosition } from '../../game/Player';
 import { Card, Suit, Rank } from '../../game/Card';
 
+// gameConfig をモック化
+jest.mock('../../config/gameConfig', () => ({
+  getGameConfig: jest.fn(() => ({ endScore: 100 }))
+}));
+
 describe('GameState', () => {
   let gameState: GameState;
   let mockPlayers: GamePlayer[];
