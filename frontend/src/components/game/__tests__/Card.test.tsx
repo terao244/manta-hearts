@@ -23,8 +23,8 @@ describe('Card', () => {
   it('カードの基本情報が表示される', () => {
     render(<Card card={mockCard} />);
     
-    expect(screen.getByText('A')).toBeInTheDocument();
-    expect(screen.getByText('♥')).toBeInTheDocument();
+    expect(screen.getAllByText('A')).toHaveLength(2); // 上下に表示されるため2つ
+    expect(screen.getAllByText('♥')).toHaveLength(3); // 左上、中央、右下で3つ
   });
 
   it('クリック可能な状態でクリックハンドラが動作する', () => {
@@ -101,7 +101,7 @@ describe('Card', () => {
       const card: CardInfo = { ...mockCard, suit };
       const { unmount } = render(<Card card={card} />);
       
-      expect(screen.getByText(symbol)).toBeInTheDocument();
+      expect(screen.getAllByText(symbol).length).toBeGreaterThan(0);
       unmount();
     });
   });
@@ -119,7 +119,7 @@ describe('Card', () => {
       const card: CardInfo = { ...mockCard, rank };
       const { unmount } = render(<Card card={card} />);
       
-      expect(screen.getByText(display)).toBeInTheDocument();
+      expect(screen.getAllByText(display).length).toBeGreaterThan(0);
       unmount();
     });
   });

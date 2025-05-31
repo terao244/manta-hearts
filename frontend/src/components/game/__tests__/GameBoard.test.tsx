@@ -78,7 +78,7 @@ describe('GameBoard', () => {
       />
     );
     
-    expect(screen.getByText('0点')).toBeInTheDocument();
+    expect(screen.getAllByText('0点')).toHaveLength(2); // プレイヤー1と4
     expect(screen.getByText('5点')).toBeInTheDocument();
     expect(screen.getByText('10点')).toBeInTheDocument();
   });
@@ -125,9 +125,9 @@ describe('GameBoard', () => {
       />
     );
     
-    expect(screen.getByText('A')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByText('Q')).toBeInTheDocument();
+    expect(screen.getAllByText('A').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('2').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Q').length).toBeGreaterThan(0);
   });
 
   it('交換フェーズでカード交換UIが表示される', () => {

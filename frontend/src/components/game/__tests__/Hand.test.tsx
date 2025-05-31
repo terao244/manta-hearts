@@ -41,9 +41,9 @@ describe('Hand', () => {
   it('手札のカードが表示される', () => {
     render(<Hand cards={mockCards} />);
     
-    expect(screen.getByText('A')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByText('Q')).toBeInTheDocument();
+    expect(screen.getAllByText('A').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('2').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Q').length).toBeGreaterThan(0);
   });
 
   it('カード選択ハンドラが動作する', () => {
@@ -117,6 +117,7 @@ describe('Hand', () => {
   });
 
   it('確認ボタンが正しい条件で有効化される', () => {
+    const mockOnConfirm = jest.fn();
     render(
       <Hand 
         cards={mockCards} 
@@ -124,6 +125,7 @@ describe('Hand', () => {
         selectedCardIds={[1, 14, 39]}
         maxSelectableCards={3}
         showConfirmButton={true}
+        onConfirm={mockOnConfirm}
       />
     );
     
