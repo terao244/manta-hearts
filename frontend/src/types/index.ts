@@ -23,6 +23,7 @@ export interface ServerToClientEvents {
   playerLeft: (playerId: number) => void;
   gameStarted: (gameId: number) => void;
   handStarted: (handData: HandData) => void;
+  cardsDealt: (cards: CardInfo[]) => void;
   cardPlayed: (playData: CardPlayData) => void;
   trickCompleted: (trickResult: TrickResult) => void;
   handCompleted: (handResult: HandResult) => void;

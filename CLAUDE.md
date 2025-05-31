@@ -159,6 +159,11 @@ docker-compose logs -f   # ログ表示
 - **Phase 2**: Prismaスキーマ、シードデータ、カードマスターデータ
 - **Phase 3**: Express + Socket.io、REST API（Players）、Repository層、テスト
 - **Phase 4**: ゲームロジック（Card、Deck、Player、GameState、GameEngine）
+- **Phase 5**: Socket.io通信層（GameServiceとSocket.ioハンドラー統合）
+- **Phase 6**: バックエンドサービス層（ゲーム永続化、依存性注入パターン）
+- **Phase 7**: フロントエンドゲーム画面（ゲームボード、カード操作UI）
+- **Phase 7.1**: 通信問題修正（Socket.io複数接続問題解決）
+- **Phase 7.2**: UI表示問題修正（Reactコンポーネントkey警告エラー解決）
 
 ### 実装済みAPI
 - `GET /health`: ヘルスチェック
@@ -172,15 +177,34 @@ docker-compose logs -f   # ログ表示
 - **Player、GamePlayer**: プレイヤー管理とゲーム状態
 - **GameState**: ゲーム状態管理（フェーズ、トリック、スコア）
 - **GameEngine**: ゲーム制御（カード配布、交換、プレイ、スコア計算）
-- **テスト**: 101個のユニットテスト（全て合格）
+- **テスト**: 166個のユニットテスト（全て合格）
 
-### Socket.ioイベント（設計済み）
+### Socket.ioイベント（実装済み）
 - `login`: プレイヤーログイン
 - `joinGame`: ゲーム参加
 - `playCard`: カードプレイ
 - `exchangeCards`: カード交換
+- `gameState`: ゲーム状態更新
+- `playerJoined`: プレイヤー参加通知
+- `ping`/`pong`: ハートビート機能
+
+### フロントエンド実装済み
+- **React App Router**: Next.js 14 App Router構成
+- **Socket.ioクライアント**: 型安全な通信
+- **ゲーム画面**: GameBoard、Hand、Cardコンポーネント
+- **プレイヤー選択**: 4名固定プレイヤー選択UI
+- **ゲームロビー**: ゲーム参加・待機機能
+- **リアルタイム同期**: Socket.ioによる状態管理
+
+### 現在動作可能な機能
+- http://localhost:3000 でプレイヤー選択画面表示
+- Socket.io接続状態のリアルタイム表示
+- 4名固定プレイヤーでのログイン機能
+- ゲームロビー画面（ゲーム参加機能）
+- ゲームボード画面（手札表示、プレイヤー情報、スコア表示）
+- カードコンポーネント（スート、ランク、ポイント表示）
+- 手札コンポーネント（カード選択、交換機能）
+- 複数プレイヤー参加時のリアルタイム同期
 
 ### 次の実装領域
-- **Phase 5**: Socket.ioハンドラーとGameEngineの統合
-- **Phase 6**: バックエンドサービス層の実装
-- **Phase 7**: フロントエンドゲーム画面（カード操作UI）
+- **Phase 8**: ゲーム画面実装（詳細機能、カードアニメーション、交換フェーズ）

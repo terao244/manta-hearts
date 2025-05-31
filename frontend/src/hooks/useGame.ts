@@ -6,6 +6,7 @@ import type {
   GameState, 
   GameInfo,
   PlayerInfo, 
+  CardInfo,
   HandData, 
   CardPlayData, 
   TrickResult, 
@@ -205,6 +206,28 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       console.log('Hand started:', handData);
     };
 
+    // カード配布
+    const handleCardsDealt = (cards: CardInfo[]) => {
+      console.log('Cards dealt:', cards);
+      if (!currentPlayer) return;
+      
+      setGameHookState(prev => {
+        if (!prev.gameState) return prev;
+        
+        return {
+          ...prev,
+          gameState: {
+            ...prev.gameState,
+            handCards: {
+              ...prev.gameState.handCards,
+              [currentPlayer.id]: cards
+            },
+            phase: 'exchanging' as const
+          }
+        };
+      });
+    };
+
     // カードプレイ
     const handleCardPlayed = (playData: CardPlayData) => {
       console.log('Card played:', playData);
@@ -240,6 +263,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     on('playerLeft', handlePlayerLeft);
     on('gameStarted', handleGameStarted);
     on('handStarted', handleHandStarted);
+    on('cardsDealt', handleCardsDealt);
     on('cardPlayed', handleCardPlayed);
     on('trickCompleted', handleTrickCompleted);
     on('handCompleted', handleHandCompleted);
@@ -253,6 +277,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       off('playerLeft', handlePlayerLeft);
       off('gameStarted', handleGameStarted);
       off('handStarted', handleHandStarted);
+      off('cardsDealt', handleCardsDealt);
       off('cardPlayed', handleCardPlayed);
       off('trickCompleted', handleTrickCompleted);
       off('handCompleted', handleHandCompleted);

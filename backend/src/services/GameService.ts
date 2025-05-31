@@ -353,9 +353,12 @@ export class GameService {
   private sendToPlayer(playerId: number, event: string, data: any): void {
     if (!this.io) return;
 
+    console.log(`Sending event '${event}' to player ${playerId}:`, data);
+
     // Socket.ioのルームやソケット管理を通じてプレイヤーに送信
     this.io.sockets.sockets.forEach(socket => {
       if (socket.data.playerId === playerId) {
+        console.log(`Found socket ${socket.id} for player ${playerId}, emitting event '${event}'`);
         socket.emit(event as any, data);
       }
     });
