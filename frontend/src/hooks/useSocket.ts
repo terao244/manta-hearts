@@ -7,7 +7,7 @@ import type {
   ClientToServerEvents, 
   ConnectionState,
   PlayerInfo,
-  GameState 
+  GameInfo 
 } from '@/types';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
@@ -23,8 +23,14 @@ export const useSocket = () => {
   const socketRef = useRef<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
 
   useEffect(() => {
-    if (socketRef.current) {
+    if (socketRef.current?.connected) {
       return;
+    }
+
+    // 既存の接続をクリーンアップ
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
     }
 
     console.log('Initializing socket connection to:', BACKEND_URL);
@@ -35,6 +41,7 @@ export const useSocket = () => {
       timeout: 10000,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
+      forceNew: true, // 強制的に新しい接続を作成
     });
 
     socketRef.current = socket;
@@ -120,6 +127,8 @@ export const useSocket = () => {
 
       socketRef.current.emit('login', playerName, (success, playerInfo) => {
         if (success && playerInfo) {
+          // ログイン成功時にlocalStorageに保存
+          localStorage.setItem('currentPlayer', JSON.stringify(playerInfo));
           resolve({ success: true, playerInfo });
         } else {
           resolve({ success: false, error: 'Login failed' });
@@ -129,16 +138,34 @@ export const useSocket = () => {
   };
 
   // ゲーム参加関数
-  const joinGame = async (): Promise<{ success: boolean; gameState?: GameState; error?: string }> => {
+  const joinGame = async (): Promise<{ success: boolean; gameInfo?: GameInfo; error?: string }> => {
     return new Promise((resolve) => {
       if (!socketRef.current?.connected) {
+        console.error('Socket not connected');
         resolve({ success: false, error: 'Not connected to server' });
         return;
       }
 
-      socketRef.current.emit('joinGame', (success, gameState) => {
-        if (success && gameState) {
-          resolve({ success: true, gameState });
+      // localStorageからプレイヤー情報を取得
+      const currentPlayerStr = localStorage.getItem('currentPlayer');
+      if (!currentPlayerStr) {
+        console.error('No current player found in localStorage');
+        resolve({ success: false, error: 'Not logged in' });
+        return;
+      }
+
+      const currentPlayer = JSON.parse(currentPlayerStr);
+      const playerId = currentPlayer.id;
+
+      console.log('Emitting joinGame event...');
+      console.log('Socket ID:', socketRef.current.id);
+      console.log('Socket connected:', socketRef.current.connected);
+      console.log('Player ID:', playerId);
+      
+      socketRef.current.emit('joinGame', playerId, (success, gameInfo) => {
+        console.log('JoinGame callback received:', { success, gameInfo });
+        if (success && gameInfo) {
+          resolve({ success: true, gameInfo });
         } else {
           resolve({ success: false, error: 'Failed to join game' });
         }

@@ -33,10 +33,28 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
   login: (playerName: string, callback: (success: boolean, playerInfo?: PlayerInfo) => void) => void;
-  joinGame: (callback: (success: boolean, gameState?: GameState) => void) => void;
+  joinGame: (playerId: number, callback: (success: boolean, gameInfo?: GameInfo) => void) => void;
   playCard: (cardId: number, callback: (success: boolean, error?: string) => void) => void;
   exchangeCards: (cardIds: number[], callback: (success: boolean, error?: string) => void) => void;
   disconnect: () => void;
+}
+
+// ゲーム情報の型定義 (バックエンドから取得)
+export interface GameInfo {
+  gameId: number;
+  status: string;
+  players: Array<{
+    id: number;
+    name: string;
+    position: 'North' | 'East' | 'South' | 'West';
+    score: number;
+  }>;
+  phase: string;
+  currentTurn?: number;
+  heartsBroken: boolean;
+  tricks: TrickData[];
+  scores: Record<number, number>;
+  hand?: CardInfo[];
 }
 
 // ゲーム状態関連の型定義

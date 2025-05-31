@@ -47,11 +47,15 @@ export class GameService {
 
   public async joinGame(playerId: number): Promise<{ success: boolean; gameInfo?: GameInfo }> {
     try {
+      console.log(`GameService.joinGame called for player ${playerId}`);
+      
       // 既存のゲームを探すか新しいゲームを作成
       let gameId = this.findAvailableGame() || await this.createNewGame();
+      console.log(`Using game ID: ${gameId}`);
       
       let gameEngine = this.gameEngines.get(gameId);
       if (!gameEngine) {
+        console.log(`Creating new game engine for game ${gameId}`);
         gameEngine = this.createGameEngine(gameId);
         this.gameEngines.set(gameId, gameEngine);
       }

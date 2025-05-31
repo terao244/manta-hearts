@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSocket } from './useSocket';
 import type { 
   GameState, 
+  GameInfo,
   PlayerInfo, 
   HandData, 
   CardPlayData, 
@@ -37,9 +38,28 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     try {
       const result = await joinGame();
       
-      if (result.success && result.gameState) {
+      if (result.success && result.gameInfo) {
+        // GameInfoをGameStateに変換
+        const gameState: GameState = {
+          gameId: result.gameInfo.gameId,
+          status: result.gameInfo.status as 'PLAYING' | 'FINISHED' | 'PAUSED' | 'ABANDONED',
+          players: result.gameInfo.players.map(p => ({
+            id: p.id,
+            name: p.name,
+            displayName: p.name, // TODO: displayNameがGameInfoにない場合の対応
+            displayOrder: 0, // TODO: 適切な値を設定
+            isActive: true
+          })),
+          phase: result.gameInfo.phase as 'waiting' | 'dealing' | 'exchanging' | 'playing' | 'completed',
+          currentTurn: result.gameInfo.currentTurn,
+          heartsBroken: result.gameInfo.heartsBroken,
+          tricks: result.gameInfo.tricks || [],
+          scores: result.gameInfo.scores,
+          handCards: result.gameInfo.hand ? { [currentPlayer.id]: result.gameInfo.hand } : undefined
+        };
+        
         setGameHookState({
-          gameState: result.gameState,
+          gameState,
           isInGame: true,
           isLoading: false,
           error: null

@@ -14,6 +14,8 @@ type SocketType = Socket<ClientToServerEvents, ServerToClientEvents, InterServer
 export class SocketHandlers {
   private gameService: GameService;
   private prisma: PrismaClient;
+  private static playerSocketMap: Map<number, string> = new Map(); // プレイヤーID -> ソケットID
+  private static socketPlayerMap: Map<string, number> = new Map(); // ソケットID -> プレイヤーID
 
   constructor() {
     this.gameService = GameService.getInstance();
@@ -29,7 +31,7 @@ export class SocketHandlers {
     // ログイン処理
     socket.on('login', async (playerName, callback) => {
       try {
-        console.log(`Login attempt: ${playerName}`);
+        console.log(`Login attempt: ${playerName} on socket ${socket.id}`);
 
         // プレイヤー情報を取得
         const player = await this.prisma.player.findUnique({
@@ -37,7 +39,7 @@ export class SocketHandlers {
         });
 
         if (!player || !player.isActive) {
-          console.log(`Login failed for: ${playerName} (player not found or inactive)`);
+          console.log(`Login failed for: ${playerName} (player not found or inactive) on socket ${socket.id}`);
           callback(false);
           return;
         }
@@ -46,13 +48,17 @@ export class SocketHandlers {
         socket.data.playerId = player.id;
         socket.data.playerName = player.name;
 
+        // グローバルマッピングを更新
+        SocketHandlers.playerSocketMap.set(player.id, socket.id);
+        SocketHandlers.socketPlayerMap.set(socket.id, player.id);
+
         // プレイヤーの最終アクティブ時刻を更新
         await this.prisma.player.update({
           where: { id: player.id },
           data: { updatedAt: new Date() }
         });
 
-        console.log(`Player logged in: ${player.name} (ID: ${player.id})`);
+        console.log(`Player logged in: ${player.name} (ID: ${player.id}) on socket ${socket.id}`);
 
         callback(true, {
           id: player.id,
@@ -68,24 +74,47 @@ export class SocketHandlers {
     });
 
     // ゲーム参加処理
-    socket.on('joinGame', async (callback) => {
+    socket.on('joinGame', async (playerId: number, callback) => {
       try {
-        const playerId = socket.data.playerId;
+        console.log(`JoinGame event received on socket ${socket.id} for player ${playerId}`);
+        
         if (!playerId) {
+          console.log(`Invalid player ID on socket ${socket.id}`);
           callback(false);
           return;
         }
+        
+        // プレイヤーIDの有効性を確認
+        const player = await this.prisma.player.findUnique({
+          where: { id: playerId, isActive: true }
+        });
+        
+        if (!player) {
+          console.log(`Player ${playerId} not found or inactive on socket ${socket.id}`);
+          callback(false);
+          return;
+        }
+        
+        // 新しいソケットのマッピングを更新
+        SocketHandlers.playerSocketMap.set(playerId, socket.id);
+        SocketHandlers.socketPlayerMap.set(socket.id, playerId);
+        socket.data.playerId = playerId;
+        socket.data.playerName = player.name;
 
-        console.log(`Player ${playerId} attempting to join game`);
+        console.log(`Player ${playerId} attempting to join game on socket ${socket.id}`);
 
         const result = await this.gameService.joinGame(playerId);
+        console.log(`Game service result for socket ${socket.id}:`, result);
+        
         if (result.success && result.gameInfo) {
+          console.log(`Successful join, sending gameInfo back on socket ${socket.id}`);
           callback(true, result.gameInfo);
         } else {
+          console.log(`Failed to join game on socket ${socket.id}`);
           callback(false);
         }
       } catch (error) {
-        console.error('Join game error:', error);
+        console.error(`Join game error on socket ${socket.id}:`, error);
         callback(false);
       }
     });
@@ -145,6 +174,14 @@ export class SocketHandlers {
     // 切断処理
     socket.on('disconnect', (reason) => {
       console.log(`Socket disconnected: ${socket.id}, reason: ${reason}`);
+
+      // マッピングから削除
+      const playerId = SocketHandlers.socketPlayerMap.get(socket.id);
+      if (playerId) {
+        SocketHandlers.playerSocketMap.delete(playerId);
+        SocketHandlers.socketPlayerMap.delete(socket.id);
+        console.log(`Removed mappings for player ${playerId} on socket ${socket.id}`);
+      }
 
       if (socket.data.playerId) {
         console.log(`Player ${socket.data.playerId} disconnected`);

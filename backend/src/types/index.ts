@@ -58,6 +58,7 @@ export interface ClientToServerEvents {
     callback: (success: boolean, playerInfo?: PlayerInfo) => void
   ) => void;
   joinGame: (
+    playerId: number,
     callback: (success: boolean, gameInfo?: GameInfo) => void
   ) => void;
   playCard: (

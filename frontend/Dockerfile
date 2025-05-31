@@ -6,13 +6,13 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
 
-# Build Next.js app
-RUN npm run build
+# Build Next.js app (skip for development)
+# RUN npm run build
 
 # Expose port
 EXPOSE 3000
