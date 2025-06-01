@@ -25,6 +25,7 @@ export default function Home() {
     validCardIds,
     exchangeDirection,
     exchangeProgress,
+    scoreHistory,
     joinGame,
     playCard,
     exchangeCards,
@@ -147,6 +148,7 @@ export default function Home() {
           validCardIds={validCardIds}
           exchangeDirection={exchangeDirection}
           exchangeProgress={exchangeProgress}
+          scoreHistory={scoreHistory}
           onCardPlay={playCard}
           onCardExchange={exchangeCards}
         />

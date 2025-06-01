@@ -176,6 +176,8 @@ export interface GameBoardProps {
   validCardIds?: number[];
   exchangeDirection?: 'left' | 'right' | 'across' | 'none';
   exchangeProgress?: { exchangedPlayers: number[]; remainingPlayers: number[] };
+  scoreHistory?: ScoreHistoryEntry[];
+  showScoreGraph?: boolean;
   onCardPlay: (cardId: number) => void;
   onCardExchange: (cardIds: number[]) => void;
 }
@@ -193,4 +195,17 @@ export interface ScoreDisplayProps {
   scores: Record<number, number>;
   players: PlayerInfo[];
   winner?: number;
+}
+
+// スコアグラフ関連の型定義
+export interface ScoreHistoryEntry {
+  hand: number;
+  scores: Record<number, number>;
+}
+
+export interface ScoreGraphProps {
+  players: PlayerInfo[];
+  scoreHistory: ScoreHistoryEntry[];
+  currentPlayerId?: number;
+  className?: string;
 }

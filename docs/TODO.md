@@ -638,14 +638,45 @@ if (this.currentTrick === 1) {
 
 ---
 
-## Phase 10: 利便性向上機能
+## Phase 11: 利便性向上機能
 
-### 35. スコアグラフ
-- [ ] 🔧 Chart.js設定
-- [ ] 🧪 ScoreGraphコンポーネントテスト
-- [ ] 📝 ScoreGraphコンポーネント実装
-- [ ] 📝 リアルタイム更新処理
-- [ ] 📝 グラフオプション調整
+### 35. スコアグラフ ✅ **完了**
+- [x] 🔧 Chart.js設定（既存パッケージ使用）
+- [x] 🧪 ScoreGraphコンポーネントテスト（7テストケース作成）
+- [x] 📝 ScoreGraphコンポーネント実装（Chart.js + react-chartjs-2）
+- [x] 📝 リアルタイム更新処理（useGameフックでスコア履歴管理）
+- [x] 📝 グラフオプション調整（アニメーション、レスポンシブ対応、統計情報表示）
+
+**実装完了した機能:**
+- プレイヤー4人のスコア推移をリアルタイム表示する線グラフ
+- 各プレイヤーに色分けされた線（現在のプレイヤーは太線で強調）
+- ハンド完了毎に自動更新されるスコア履歴
+- GameBoardから表示/非表示を切り替え可能なボタン
+- スコア統計情報（順位表示、スコア変化、ゲーム終了条件）
+- Chart.jsによる高度なグラフ表示（アニメーション、ツールチップ）
+- 型安全なTypeScript実装（全7テスト正常通過）
+
+**技術的実装詳細:**
+1. **型定義**: ScoreHistoryEntry、ScoreGraphPropsをtypes/index.tsに追加
+2. **コンポーネント**: frontend/src/components/game/ScoreGraph.tsx
+3. **テスト**: frontend/src/components/game/__tests__/ScoreGraph.test.tsx
+4. **データ管理**: useGameフックでhandCompletedイベント時にスコア履歴更新
+5. **UI統合**: GameBoardコンポーネントでスコアグラフ表示切り替え機能
+6. **レスポンシブ**: 複数画面サイズに対応したグラフレイアウト
+7. **安全性修正**: スコアオブジェクトのundefined対策（オプショナルチェーン、デフォルト値設定）
+
+### バグ修正: ハンド終了時のスコア表示エラー ✅ **完了**
+**問題**: `TypeError: Cannot read properties of undefined (reading '1')` - scoresオブジェクトがundefinedでアクセスエラー
+
+**修正内容:**
+- GameBoardコンポーネントでscoresとcurrentHandScoresにデフォルト値`{}`を設定
+- PlayerCardコンポーネントでデフォルト引数パラメーターを追加
+- useGameフックでGameInfo.scoresとhandResult.cumulativeScoresに安全なアクセス追加
+- handleGameStateChangedでスコア保持ロジック追加
+
+**修正ファイル:**
+- `frontend/src/components/game/GameBoard.tsx` - オプショナルチェーンとデフォルト値追加
+- `frontend/src/hooks/useGame.ts` - スコア更新の安全性向上
 
 ### 36. 切断・再接続
 - [x] 🧪 セッション管理テスト

@@ -10,7 +10,8 @@ import type {
   CardPlayData, 
   TrickResult, 
   HandResult, 
-  GameResult 
+  GameResult,
+  ScoreHistoryEntry
 } from '@/types';
 
 interface GameHookState {
@@ -21,6 +22,7 @@ interface GameHookState {
   validCardIds: number[];
   exchangeDirection?: 'left' | 'right' | 'across' | 'none';
   exchangeProgress?: { exchangedPlayers: number[]; remainingPlayers: number[] };
+  scoreHistory: ScoreHistoryEntry[];
 }
 
 export const useGame = (currentPlayer: PlayerInfo | null) => {
@@ -30,7 +32,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     isInGame: false,
     isLoading: false,
     error: null,
-    validCardIds: []
+    validCardIds: [],
+    scoreHistory: []
   });
 
   // ゲーム参加
@@ -58,7 +61,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
           currentTurn: result.gameInfo.currentTurn,
           heartsBroken: result.gameInfo.heartsBroken,
           tricks: result.gameInfo.tricks || [],
-          scores: result.gameInfo.scores,
+          scores: result.gameInfo.scores || {},
           handCards: result.gameInfo.hand ? { [currentPlayer.id]: result.gameInfo.hand } : undefined
         };
         
@@ -67,7 +70,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
           isInGame: true,
           isLoading: false,
           error: null,
-          validCardIds: []
+          validCardIds: [],
+          scoreHistory: []
         });
       } else {
         setGameHookState(prev => ({
@@ -136,6 +140,29 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     });
   }, [socket, currentPlayer]);
 
+  // スコア履歴更新ヘルパー関数
+  const updateScoreHistory = useCallback((handNumber: number, scores: Record<number, number>) => {
+    setGameHookState(prev => {
+      const existingEntryIndex = prev.scoreHistory.findIndex(entry => entry.hand === handNumber);
+      
+      if (existingEntryIndex >= 0) {
+        // 既存のエントリを更新
+        const updatedHistory = [...prev.scoreHistory];
+        updatedHistory[existingEntryIndex] = { hand: handNumber, scores };
+        return {
+          ...prev,
+          scoreHistory: updatedHistory
+        };
+      } else {
+        // 新しいエントリを追加
+        return {
+          ...prev,
+          scoreHistory: [...prev.scoreHistory, { hand: handNumber, scores }].sort((a, b) => a.hand - b.hand)
+        };
+      }
+    });
+  }, []);
+
   // Socket.ioイベントリスナー
   useEffect(() => {
     if (!socket) return;
@@ -161,7 +188,9 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
           ...prev,
           gameState: {
             ...prev.gameState,
-            ...stateUpdate
+            ...stateUpdate,
+            // scoresが既に存在する場合は保持、新しいscoresがあれば更新
+            scores: stateUpdate.scores || prev.gameState.scores || {}
           }
         };
       });
@@ -406,6 +435,23 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     // ハンド完了
     const handleHandCompleted = (handResult: HandResult) => {
       console.log('Hand completed:', handResult);
+      
+      // スコア履歴を更新
+      updateScoreHistory(handResult.handNumber, handResult.cumulativeScores || {});
+      
+      // ゲーム状態のスコアも更新
+      setGameHookState(prev => {
+        if (!prev.gameState) return prev;
+        
+        return {
+          ...prev,
+          gameState: {
+            ...prev.gameState,
+            scores: handResult.cumulativeScores || prev.gameState.scores || {},
+            currentHandScores: {}  // ハンド完了時に現在ハンドスコアをリセット
+          }
+        };
+      });
     };
 
     // ゲーム完了
@@ -461,7 +507,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       off('gameCompleted', handleGameCompleted);
       off('error', handleError);
     };
-  }, [socket, on, off, currentPlayer]);
+  }, [socket, on, off, currentPlayer, updateScoreHistory]);
 
   return {
     gameState: gameHookState.gameState,
@@ -471,6 +517,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     validCardIds: gameHookState.validCardIds,
     exchangeDirection: gameHookState.exchangeDirection,
     exchangeProgress: gameHookState.exchangeProgress,
+    scoreHistory: gameHookState.scoreHistory,
     joinGame: handleJoinGame,
     playCard: handleCardPlay,
     exchangeCards: handleCardExchange,

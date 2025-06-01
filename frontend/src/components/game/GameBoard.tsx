@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Hand } from './Hand';
 import { Card } from './Card';
+import { ScoreGraph } from './ScoreGraph';
 import type { GameBoardProps, CardInfo, PlayerInfo } from '@/types';
 
 // プレイヤーカードコンポーネント
@@ -10,14 +11,14 @@ interface PlayerCardProps {
   player: PlayerInfo;
   currentPlayerId?: number;
   currentTurn?: number;
-  scores: Record<number, number>;
+  scores?: Record<number, number>;
   currentHandScores?: Record<number, number>;
 }
 
-const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, currentTurn, scores, currentHandScores }) => {
+const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, currentTurn, scores = {}, currentHandScores = {} }) => {
   const isCurrentPlayer = player.id === currentPlayerId;
   const isCurrentTurn = player.id === currentTurn;
-  const currentHandScore = currentHandScores?.[player.id] || 0;
+  const currentHandScore = currentHandScores[player.id] || 0;
   const cumulativeScore = scores[player.id] || 0;
   
   return (
@@ -63,10 +64,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   validCardIds = [],
   exchangeDirection,
   exchangeProgress,
+  scoreHistory = [],
+  showScoreGraph = false,
   onCardPlay,
   onCardExchange
 }) => {
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
+  const [isScoreGraphVisible, setIsScoreGraphVisible] = useState<boolean>(showScoreGraph);
 
   const {
     gameId,
@@ -78,8 +82,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     phase,
     heartsBroken,
     tricks,
-    scores,
-    currentHandScores,
+    scores = {},
+    currentHandScores = {},
     handCards
   } = gameState;
 
@@ -367,9 +371,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             </div>
           </div>
 
-          {/* スコア一覧 */}
+          {/* スコア一覧とコントロール */}
           <div className="bg-green-800 rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-3">スコア</h3>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-semibold">スコア</h3>
+              <button
+                onClick={() => setIsScoreGraphVisible(!isScoreGraphVisible)}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
+                title={isScoreGraphVisible ? 'グラフを非表示' : 'グラフを表示'}
+              >
+                {isScoreGraphVisible ? '📊→📋' : '📋→📊'}
+              </button>
+            </div>
             <div className="space-y-1 text-sm">
               {players.map(player => (
                 <div key={player.id} className="flex justify-between">
@@ -380,6 +393,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             </div>
           </div>
         </div>
+
+        {/* スコアグラフエリア */}
+        {isScoreGraphVisible && (
+          <div className="mb-6">
+            <ScoreGraph
+              players={players}
+              scoreHistory={scoreHistory}
+              currentPlayerId={currentPlayerId}
+              className="w-full"
+            />
+          </div>
+        )}
 
         {/* 手札エリア */}
         <div className="bg-white rounded-lg p-4">
