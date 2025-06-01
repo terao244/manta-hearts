@@ -1,6 +1,7 @@
 import { GameEngine, GameEngineEvents } from '../game/GameEngine';
 import { GamePlayer, PlayerPosition } from '../game/Player';
 import { Card } from '../game/Card';
+import { GameStatus } from '../game/GameState';
 import { PrismaService } from './PrismaService';
 import { Server } from 'socket.io';
 import type {
@@ -49,9 +50,40 @@ export class GameService {
     try {
       console.log(`GameService.joinGame called for player ${playerId}`);
       
-      // 既存のゲームを探すか新しいゲームを作成
-      let gameId = this.findAvailableGame() || await this.createNewGame();
-      console.log(`Using game ID: ${gameId}`);
+      let gameId: number;
+      let isRejoining = false;
+      
+      // 1. まず既存のゲームを確認
+      const existingGameId = this.playerGameMap.get(playerId);
+      if (existingGameId && this.gameEngines.has(existingGameId)) {
+        const existingEngine = this.gameEngines.get(existingGameId)!;
+        const gameState = existingEngine.getGameState();
+        
+        // ゲームが終了していない場合のみ復帰
+        if (gameState.status !== GameStatus.FINISHED) {
+          console.log(`Player ${playerId} rejoining existing game ${existingGameId}`);
+          gameId = existingGameId;
+          isRejoining = true;
+        } else {
+          // 終了済みゲームの場合、マッピングをクリア
+          console.log(`Player ${playerId} leaving completed game ${existingGameId}`);
+          this.playerGameMap.delete(playerId);
+          const players = this.gamePlayersMap.get(existingGameId);
+          if (players) {
+            players.delete(playerId);
+            if (players.size === 0) {
+              this.gameEngines.delete(existingGameId);
+              this.gamePlayersMap.delete(existingGameId);
+            }
+          }
+          gameId = this.findAvailableGame() || await this.createNewGame();
+        }
+      } else {
+        // 2. 新規ゲーム参加
+        gameId = this.findAvailableGame() || await this.createNewGame();
+      }
+      
+      console.log(`Using game ID: ${gameId}, isRejoining: ${isRejoining}`);
       
       let gameEngine = this.gameEngines.get(gameId);
       if (!gameEngine) {
@@ -71,36 +103,57 @@ export class GameService {
         return { success: false };
       }
 
-      // ゲームにプレイヤーを追加
-      const position = this.assignPlayerPosition(gameId);
-      const gamePlayer: Omit<GamePlayer, 'hand' | 'exchangeCards' | 'hasExchanged' | 'hasPlayedInTrick'> = {
-        id: playerId,
-        name: playerData.name,
-        displayName: playerData.displayName,
-        position,
-        score: 0,
-        cumulativeScore: 0,
-        isConnected: true,
-        lastActiveAt: new Date()
-      };
-
-      const success = gameEngine.addPlayer(gamePlayer);
-      if (success) {
-        this.playerGameMap.set(playerId, gameId);
-        
-        let players = this.gamePlayersMap.get(gameId);
-        if (!players) {
-          players = new Set();
-          this.gamePlayersMap.set(gameId, players);
+      let success = true;
+      
+      if (isRejoining) {
+        // 復帰時：既存プレイヤーの接続状態を更新
+        console.log(`Updating connection status for rejoining player ${playerId}`);
+        const gameState = gameEngine.getGameState();
+        const existingPlayer = gameState.getPlayer(playerId);
+        if (existingPlayer) {
+          existingPlayer.isConnected = true;
+          existingPlayer.lastActiveAt = new Date();
+          console.log(`Player ${playerId} reconnected to game ${gameId}`);
+        } else {
+          console.warn(`Player ${playerId} not found in existing game ${gameId}`);
+          success = false;
         }
-        players.add(playerId);
+      } else {
+        // 新規参加：ゲームにプレイヤーを追加
+        const position = this.assignPlayerPosition(gameId);
+        const gamePlayer: Omit<GamePlayer, 'hand' | 'exchangeCards' | 'hasExchanged' | 'hasPlayedInTrick'> = {
+          id: playerId,
+          name: playerData.name,
+          displayName: playerData.displayName,
+          position,
+          score: 0,
+          cumulativeScore: 0,
+          isConnected: true,
+          lastActiveAt: new Date()
+        };
 
+        success = gameEngine.addPlayer(gamePlayer);
+        if (success) {
+          this.playerGameMap.set(playerId, gameId);
+          
+          let players = this.gamePlayersMap.get(gameId);
+          if (!players) {
+            players = new Set();
+            this.gamePlayersMap.set(gameId, players);
+          }
+          players.add(playerId);
+
+          console.log(`Player ${playerId} joined new game ${gameId}`);
+        }
+      }
+
+      if (success) {
         // ゲームセッションをデータベースに保存（必要に応じて実装）
 
         const gameInfo = this.getGameInfo(gameId, playerId);
         
-        // ゲームが満員になった場合、自動でゲーム開始
-        if (gameEngine.getGameState().isFull()) {
+        // 新規参加でゲームが満員になった場合、自動でゲーム開始
+        if (!isRejoining && gameEngine.getGameState().isFull()) {
           gameEngine.startGame();
         }
 

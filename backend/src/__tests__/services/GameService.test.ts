@@ -1,6 +1,7 @@
 import { GameService } from '../../services/GameService';
 import { PrismaService } from '../../services/PrismaService';
 import { GameEngine } from '../../game/GameEngine';
+import { GameStatus } from '../../game/GameState';
 import { Server } from 'socket.io';
 
 // Prismaのモック
@@ -14,6 +15,11 @@ describe('GameService', () => {
   let mockSocketIO: jest.Mocked<Server>;
 
   beforeEach(() => {
+    // consoleのモック設定
+    jest.spyOn(console, 'log').mockImplementation();
+    jest.spyOn(console, 'warn').mockImplementation();
+    jest.spyOn(console, 'error').mockImplementation();
+
     // PrismaServiceのモック設定
     mockPrismaClient = {
       player: {
@@ -68,6 +74,7 @@ describe('GameService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
     // シングルトンインスタンスをリセット
     (GameService as any).instance = undefined;
   });
@@ -335,6 +342,181 @@ describe('GameService', () => {
 
       // Assert
       expect(activeGames).toContain(123);
+    });
+  });
+
+  describe('game resume functionality', () => {
+    let mockGameEngine: any;
+    let mockGameState: any;
+
+    beforeEach(() => {
+      // 高度なGameEngineモック設定
+      mockGameState = {
+        isFull: jest.fn().mockReturnValue(false),
+        status: 'waiting',
+        phase: 'waiting',
+        currentTurn: undefined,
+        heartsBroken: false,
+        tricks: [],
+        cumulativeScores: new Map(),
+        getAllPlayers: jest.fn().mockReturnValue([]),
+        getPlayer: jest.fn(),
+      };
+
+      mockGameEngine = {
+        addPlayer: jest.fn().mockReturnValue(true),
+        getGameState: jest.fn().mockReturnValue(mockGameState),
+        getPlayerHand: jest.fn().mockReturnValue([]),
+        getScore: jest.fn().mockReturnValue(0),
+        startGame: jest.fn(),
+        playCard: jest.fn().mockReturnValue(true),
+        exchangeCards: jest.fn().mockReturnValue(true),
+        removePlayer: jest.fn().mockReturnValue(true),
+      };
+
+      (GameEngine as jest.MockedClass<typeof GameEngine>).mockImplementation(() => mockGameEngine);
+    });
+
+    it('should allow player to rejoin existing active game', async () => {
+      // Arrange
+      const playerId = 1;
+      const gameId = 123;
+      const playerData = {
+        id: playerId,
+        name: 'TestPlayer',
+        displayName: 'Test Player',
+        isActive: true,
+      };
+
+      // プレイヤーを最初にゲームに参加させる
+      mockPrismaClient.player.findUnique.mockResolvedValue(playerData);
+      mockPrismaClient.game.create.mockResolvedValue({ id: gameId });
+
+      // 既存プレイヤーオブジェクトを設定
+      const existingPlayer = {
+        id: playerId,
+        name: 'TestPlayer',
+        isConnected: false,
+        lastActiveAt: new Date(),
+      };
+      mockGameState.getPlayer.mockReturnValue(existingPlayer);
+      mockGameState.status = 'playing';
+
+      // 最初の参加
+      await gameService.joinGame(playerId);
+
+      // ゲーム状態を進行中に変更
+      mockGameState.status = 'playing';
+
+      // Act - 2回目の参加（復帰）
+      const result = await gameService.joinGame(playerId);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.gameInfo).toBeDefined();
+      expect(existingPlayer.isConnected).toBe(true);
+      expect(mockGameEngine.addPlayer).toHaveBeenCalledTimes(1); // 2回目は呼ばれない
+      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('rejoining existing game'));
+    });
+
+    it('should start new game when rejoining completed game', async () => {
+      // Arrange
+      const playerId = 1;
+      const gameId = 123;
+      const newGameId = 456;
+      const playerData = {
+        id: playerId,
+        name: 'TestPlayer',
+        displayName: 'Test Player',
+        isActive: true,
+      };
+
+      mockPrismaClient.player.findUnique.mockResolvedValue(playerData);
+      mockPrismaClient.game.create
+        .mockResolvedValueOnce({ id: gameId })
+        .mockResolvedValueOnce({ id: newGameId });
+
+      // 最初の参加
+      await gameService.joinGame(playerId);
+
+      // ゲームを完了状態に変更
+      mockGameState.status = GameStatus.FINISHED;
+
+      // Act - 2回目の参加（新しいゲーム）
+      const result = await gameService.joinGame(playerId);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.gameInfo).toBeDefined();
+      expect(mockGameEngine.addPlayer).toHaveBeenCalledTimes(2); // 2回呼ばれる
+      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('leaving completed game'));
+    });
+
+    it('should handle rejoin when player not found in existing game', async () => {
+      // Arrange
+      const playerId = 1;
+      const gameId = 123;
+      const playerData = {
+        id: playerId,
+        name: 'TestPlayer',
+        displayName: 'Test Player',
+        isActive: true,
+      };
+
+      mockPrismaClient.player.findUnique.mockResolvedValue(playerData);
+      mockPrismaClient.game.create.mockResolvedValue({ id: gameId });
+
+      // 最初の参加
+      await gameService.joinGame(playerId);
+
+      // プレイヤーが存在しない状態に設定
+      mockGameState.getPlayer.mockReturnValue(null);
+      mockGameState.status = 'playing';
+
+      // Act - 2回目の参加（復帰試行）
+      const result = await gameService.joinGame(playerId);
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('not found in existing game'));
+    });
+
+    it('should not start game automatically when rejoining', async () => {
+      // Arrange
+      const playerId = 1;
+      const gameId = 123;
+      const playerData = {
+        id: playerId,
+        name: 'TestPlayer',
+        displayName: 'Test Player',
+        isActive: true,
+      };
+
+      mockPrismaClient.player.findUnique.mockResolvedValue(playerData);
+      mockPrismaClient.game.create.mockResolvedValue({ id: gameId });
+
+      // 既存プレイヤーオブジェクトを設定
+      const existingPlayer = {
+        id: playerId,
+        name: 'TestPlayer',
+        isConnected: false,
+        lastActiveAt: new Date(),
+      };
+      mockGameState.getPlayer.mockReturnValue(existingPlayer);
+      mockGameState.status = 'playing';
+      mockGameState.isFull.mockReturnValue(true); // 満員状態
+
+      // 最初の参加
+      await gameService.joinGame(playerId);
+
+      // startGameをリセット
+      mockGameEngine.startGame.mockClear();
+
+      // Act - 2回目の参加（復帰）
+      await gameService.joinGame(playerId);
+
+      // Assert
+      expect(mockGameEngine.startGame).not.toHaveBeenCalled(); // 復帰時は自動開始しない
     });
   });
 });
