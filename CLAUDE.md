@@ -43,12 +43,11 @@ manta/
 ### フロントエンド
 ```bash
 cd frontend
-npm install              # 依存関係のインストール
 npm run dev             # 開発サーバー起動 (http://localhost:3000)
 npm run build           # プロダクションビルド
 npm run lint            # ESLint実行
 npm run type-check      # TypeScriptの型チェック
-npm test               # テスト実行
+npm test               # テスト実行（30テスト）
 npm run test:watch     # テスト監視モード
 npm run format         # Prettierでコード整形
 npm run format:check   # Prettierでフォーマットチェック
@@ -57,13 +56,12 @@ npm run format:check   # Prettierでフォーマットチェック
 ### バックエンド
 ```bash
 cd backend
-npm install              # 依存関係のインストール
 npm run dev             # 開発サーバー起動 (http://localhost:3001)
 npm run build           # TypeScriptビルド
 npm run start           # プロダクション実行
 npm run lint            # ESLint実行
 npm run type-check      # TypeScriptの型チェック
-npm test               # テスト実行
+npm test               # テスト実行（168テスト）
 npm run test:watch     # テスト監視モード
 npm run format         # Prettierでコード整形
 npm run format:check   # Prettierでフォーマットチェック
@@ -81,6 +79,19 @@ npm run prisma:seed     # シードデータ投入
 docker-compose up -d     # 全サービス起動
 docker-compose down      # 全サービス停止
 docker-compose logs -f   # ログ表示
+```
+
+### テスト実行推奨順序
+```bash
+# バックエンドテスト（168テスト）
+cd backend && npm test
+
+# フロントエンドテスト（30テスト）
+cd frontend && npm test
+
+# 型チェック・lint確認
+cd backend && npm run type-check && npm run lint
+cd frontend && npm run type-check && npm run lint
 ```
 
 ## アーキテクチャ概要
@@ -126,31 +137,13 @@ docker-compose logs -f   # ログ表示
 
 ## 開発ガイドライン
 
-### テスト駆動開発
-- 新機能実装前にテストを作成
-- テストがパスするよう実装
-- リファクタリング時はテスト結果を維持
-- テスト環境（NODE_ENV=test）ではサーバー自動起動を無効化
-
-### テスト構造
-- **ユニットテスト**: services/, repositories/, middleware/
-- **統合テスト**: routes/, server.ts
-- **モック戦略**: PrismaService, Repository層のモック化
-- **型安全なモック**: TypeScript型定義を活用
-
-### Gitコミット
-- 各TODO完了時にコミット
-- 意味のある単位でコミットメッセージを記述
-
-### セキュリティ
-- 環境変数で機密情報を管理（.env.local）
-- APIキー等は絶対にコミットしない
-
-### コード品質
-- **Prettier**: 自動コード整形（プロジェクトルートの.prettierrc）
-- **ESLint**: 静的解析とコード規約
-- **TypeScript**: 厳密な型チェック
-- **エラーハンドリング**: asyncHandler, AppError型を活用
+### テスト駆動開発・品質管理
+- **テスト先行**: 新機能実装前にテストを作成、実装完了時は全テストがパス状態を維持
+- **モック戦略**: PrismaService、Repository層の型安全なモック、依存性注入パターン活用
+- **テスト環境**: NODE_ENV=test時はサーバー自動起動無効、mockHelpers.ts活用
+- **コード品質**: Prettier（自動整形）、ESLint、TypeScript厳密型チェック必須
+- **Gitコミット**: TODO完了毎にコミット、意味のある単位でメッセージ記述
+- **セキュリティ**: 環境変数管理（.env.local）、APIキー等のコミット禁止
 
 ## 現在の実装状況
 
@@ -213,6 +206,13 @@ docker-compose logs -f   # ログ表示
 - 複数プレイヤー参加時のリアルタイム同期
 - 4人揃った時の自動手札配布
 
-### 次の実装領域
-- **Phase 9**: カード操作UI残り機能（カードプレイアニメーション、交換アニメーション、獲得カード表示）
-- **Phase 10**: ゲーム進行機能（カードプレイ処理、トリック勝者判定、スコア計算）
+### 完了済み実装（2025/06/01最新）
+- **手札ソート順変更**: クラブ→ダイヤ→スペード→ハートに変更済み
+- **現在ハンド点数表示**: プレイヤーエリアでの現在ハンド累積点数表示実装済み
+- **ゲーム終了点数設定**: 環境変数GAME_END_SCOREで30点設定可能
+- **ゲーム復帰機能**: ブラウザ再起動時の進行中ゲーム復帰機能実装済み
+- **全テスト正常通過**: バックエンド168テスト、フロントエンド30テスト
+
+### 開発中機能（Phase 11以降）
+- **データ永続化詳細**: ゲーム保存処理、統計機能
+- **UI/UX改善**: カード回収ウェイト、アニメーション強化
