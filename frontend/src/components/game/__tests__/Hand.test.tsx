@@ -67,9 +67,9 @@ describe('Hand', () => {
     const firstCard = screen.getAllByRole('button')[0];
     fireEvent.click(firstCard);
     
-    // ソート後の最初のカード（スペードのQ）で検証
+    // ソート後の最初のカード（クラブの2）で検証
     const sortedCards = [...mockCards].sort((a, b) => {
-      const suitOrder = { 'SPADES': 1, 'HEARTS': 2, 'DIAMONDS': 3, 'CLUBS': 4 };
+      const suitOrder = { 'CLUBS': 1, 'DIAMONDS': 2, 'SPADES': 3, 'HEARTS': 4 };
       const rankOrder = {
         'TWO': 2, 'THREE': 3, 'FOUR': 4, 'FIVE': 5, 'SIX': 6, 'SEVEN': 7, 'EIGHT': 8,
         'NINE': 9, 'TEN': 10, 'JACK': 11, 'QUEEN': 12, 'KING': 13, 'ACE': 14
@@ -92,12 +92,12 @@ describe('Hand', () => {
       />
     );
     
-    const firstCard = screen.getAllByRole('button')[0]; // ソート後の最初のカード（スペードのQ）
-    fireEvent.click(firstCard);
+    const playableCard = screen.getAllByRole('button')[1]; // ソート後の2番目のカード（スペードのQ、プレイ可能）
+    fireEvent.click(playableCard);
     
     // プレイ可能なカード（スペードのQ）で検証
     const sortedCards = [...mockCards].sort((a, b) => {
-      const suitOrder = { 'SPADES': 1, 'HEARTS': 2, 'DIAMONDS': 3, 'CLUBS': 4 };
+      const suitOrder = { 'CLUBS': 1, 'DIAMONDS': 2, 'SPADES': 3, 'HEARTS': 4 };
       const rankOrder = {
         'TWO': 2, 'THREE': 3, 'FOUR': 4, 'FIVE': 5, 'SIX': 6, 'SEVEN': 7, 'EIGHT': 8,
         'NINE': 9, 'TEN': 10, 'JACK': 11, 'QUEEN': 12, 'KING': 13, 'ACE': 14
@@ -107,7 +107,7 @@ describe('Hand', () => {
       }
       return rankOrder[a.rank] - rankOrder[b.rank];
     });
-    expect(mockOnCardPlay).toHaveBeenCalledWith(sortedCards[0]);
+    expect(mockOnCardPlay).toHaveBeenCalledWith(sortedCards[1]); // スペードのQ
   });
 
   it('選択されたカードにハイライトが適用される', () => {
@@ -119,7 +119,7 @@ describe('Hand', () => {
     );
     
     const cardElements = screen.getAllByTestId('card');
-    expect(cardElements[0]).toHaveClass('ring-blue-500'); // ソート後の最初のカード
+    expect(cardElements[1]).toHaveClass('ring-blue-500'); // ソート後の2番目のカード（スペードのQ）
   });
 
   it('プレイ不可能なカードが無効化される', () => {
@@ -132,8 +132,8 @@ describe('Hand', () => {
     );
     
     const cardElements = screen.getAllByTestId('card');
-    expect(cardElements[1]).toHaveClass('opacity-50'); // ハートのA（プレイ不可）
-    expect(cardElements[2]).toHaveClass('opacity-50'); // クラブの2（プレイ不可）
+    expect(cardElements[0]).toHaveClass('opacity-50'); // クラブの2（プレイ不可）
+    expect(cardElements[2]).toHaveClass('opacity-50'); // ハートのA（プレイ不可）
   });
 
   it('交換モードで最大選択数を超えるとエラーメッセージが表示される', () => {
@@ -174,8 +174,8 @@ describe('Hand', () => {
     const images = screen.getAllByRole('img');
     const altTexts = images.map(img => img.getAttribute('alt'));
     
-    // 新しいソート順: スペード > ハート > クラブ = SPADES QUEEN, HEARTS ACE, CLUBS TWO
-    expect(altTexts).toEqual(['SPADES QUEEN', 'HEARTS ACE', 'CLUBS TWO']);
+    // 新しいソート順: クラブ > スペード > ハート = CLUBS TWO, SPADES QUEEN, HEARTS ACE
+    expect(altTexts).toEqual(['CLUBS TWO', 'SPADES QUEEN', 'HEARTS ACE']);
   });
 
   it('空の手札でもエラーが発生しない', () => {
@@ -243,11 +243,11 @@ describe('Hand', () => {
       />
     );
     
-    const firstCard = screen.getAllByRole('button')[0];
-    fireEvent.click(firstCard);
+    const playableCard = screen.getAllByRole('button')[1]; // ソート後の2番目のカード（スペードのQ、プレイ可能）
+    fireEvent.click(playableCard);
     
     const sortedCards = [...mockCards].sort((a, b) => {
-      const suitOrder = { 'SPADES': 1, 'HEARTS': 2, 'DIAMONDS': 3, 'CLUBS': 4 };
+      const suitOrder = { 'CLUBS': 1, 'DIAMONDS': 2, 'SPADES': 3, 'HEARTS': 4 };
       const rankOrder = {
         'TWO': 2, 'THREE': 3, 'FOUR': 4, 'FIVE': 5, 'SIX': 6, 'SEVEN': 7, 'EIGHT': 8,
         'NINE': 9, 'TEN': 10, 'JACK': 11, 'QUEEN': 12, 'KING': 13, 'ACE': 14
@@ -257,6 +257,6 @@ describe('Hand', () => {
       }
       return rankOrder[a.rank] - rankOrder[b.rank];
     });
-    expect(mockOnCardPlay).toHaveBeenCalledWith(sortedCards[0]);
+    expect(mockOnCardPlay).toHaveBeenCalledWith(sortedCards[1]); // スペードのQ
   });
 });

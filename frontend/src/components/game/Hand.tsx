@@ -35,8 +35,8 @@ export const Hand: React.FC<HandProps> = ({
 }) => {
   // カードを直感的にソート（スート別、ランク順）
   const sortedCards = [...cards].sort((a, b) => {
-    // スート優先度: スペード > ハート > ダイヤ > クラブ
-    const suitOrder = { 'SPADES': 1, 'HEARTS': 2, 'DIAMONDS': 3, 'CLUBS': 4 };
+    // スート優先度: クラブ > ダイヤ > スペード > ハート
+    const suitOrder = { 'CLUBS': 1, 'DIAMONDS': 2, 'SPADES': 3, 'HEARTS': 4 };
     const rankOrder = {
       'TWO': 2, 'THREE': 3, 'FOUR': 4, 'FIVE': 5, 'SIX': 6, 'SEVEN': 7, 'EIGHT': 8,
       'NINE': 9, 'TEN': 10, 'JACK': 11, 'QUEEN': 12, 'KING': 13, 'ACE': 14
