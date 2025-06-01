@@ -192,7 +192,7 @@ export const Hand: React.FC<HandProps> = ({
                 ${isSelected 
                   ? 'translate-y-[-12px] scale-105 z-10 shadow-lg border-2 border-blue-400 rounded-lg' 
                   : isDisabledByTurn 
-                    ? 'opacity-50 cursor-not-allowed filter grayscale' 
+                    ? 'opacity-60 cursor-not-allowed brightness-75 contrast-75' 
                     : 'hover:translate-y-[-8px] hover:scale-102'
                 }
                 ${!isPlayable && mode === 'play' && !isDisabledByTurn
