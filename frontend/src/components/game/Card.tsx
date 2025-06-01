@@ -116,7 +116,7 @@ export const Card: React.FC<CardProps> = ({
     }
 
     if (!isPlayable) {
-      baseClasses.push('opacity-50', 'grayscale');
+      baseClasses.push('opacity-60', 'brightness-75', 'contrast-75');
     }
 
     if (isSelected) {

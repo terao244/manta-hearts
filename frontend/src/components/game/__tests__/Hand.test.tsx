@@ -132,8 +132,8 @@ describe('Hand', () => {
     );
     
     const cardElements = screen.getAllByTestId('card');
-    expect(cardElements[0]).toHaveClass('opacity-50'); // クラブの2（プレイ不可）
-    expect(cardElements[2]).toHaveClass('opacity-50'); // ハートのA（プレイ不可）
+    expect(cardElements[0]).toHaveClass('opacity-60', 'brightness-75', 'contrast-75'); // クラブの2（プレイ不可）
+    expect(cardElements[2]).toHaveClass('opacity-60', 'brightness-75', 'contrast-75'); // ハートのA（プレイ不可）
   });
 
   it('交換モードで最大選択数を超えるとエラーメッセージが表示される', () => {

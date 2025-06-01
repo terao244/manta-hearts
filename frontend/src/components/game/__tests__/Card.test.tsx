@@ -56,7 +56,7 @@ describe('Card', () => {
     render(<Card card={mockCard} isPlayable={false} />);
     
     const cardElement = screen.getByTestId('card');
-    expect(cardElement).toHaveClass('opacity-50');
+    expect(cardElement).toHaveClass('opacity-60', 'brightness-75', 'contrast-75');
   });
 
   it('ホバーハンドラが動作する', () => {
