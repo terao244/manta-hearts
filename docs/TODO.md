@@ -839,6 +839,47 @@ if (this.currentTrick === 1) {
 - 全60フロントエンドテスト正常通過
 - TypeScript型チェック・ESLint正常通過
 
+### 56. 他プレイヤー手番待ち時のカード表示改善 ✅ **完了**
+**問題の詳細**: 他のプレイヤーの手番待ち状態で、手札全体にグレイアウト処理が適用されているが、55.と同様にスーツの色判別ができない状態になっている。
+
+**解決方針**: 手番待ち状態でも55.と同じ視覚表現を適用し、スーツの色判別を可能にする
+
+- [x] 📝 他プレイヤー手番時の手札表示状態調査
+  - Hand.tsx の`isDisabledByTurn`条件での`filter grayscale`適用を特定
+  - 195行目の`opacity-50 cursor-not-allowed filter grayscale`スタイルが原因
+- [x] 📝 現在の手番判定ロジック確認（Hand.tsx、GameBoard.tsx）
+  - `isPlayerTurn={currentTurn === currentPlayerId}`で手番状態管理
+  - `mode === 'play' && !isPlayerTurn`の条件でgrayscale適用
+- [x] 📝 55.と同じ代替視覚表現の適用
+  - `opacity-60` + `brightness-75` + `contrast-75`による待機表現
+  - grayscaleフィルター削除
+- [x] 📝 手番待ち状態での操作無効化処理確認
+  - `pointer-events-none`と`cursor-not-allowed`で操作無効化維持
+  - isPlayableプロパティも適切に`false`設定
+- [x] 🧪 手番待ち状態のテストケース作成・更新
+  - 既存テスト（Hand.test.tsx 194-205行目）は影響なし確認
+- [x] 📝 UI/UX一貫性確認（isPlayable=falseと手番待ち状態の統一）
+  - isPlayable=false時とisDisabledByTurn時で同じ視覚効果に統一
+- [x] 🧪 既存テスト正常通過確認
+  - 全60フロントエンドテスト正常通過
+  - TypeScript型チェック・ESLint正常通過
+
+**実装完了した修正:**
+```typescript
+// 修正前（Hand.tsx 195行目）：
+? 'opacity-50 cursor-not-allowed filter grayscale'
+
+// 修正後：
+? 'opacity-60 cursor-not-allowed brightness-75 contrast-75'
+```
+
+**技術的成果:**
+- 手番待ち状態でもスーツの色判別が可能（ハート・ダイヤの赤色、クラブ・スペードの黒色）
+- 55.のisPlayable=false時の視覚表現と統一
+- 操作無効化処理は維持（pointer-events-none、cursor-not-allowed）
+- 全60フロントエンドテスト正常通過
+- UI/UX一貫性の向上
+
 ---
 
 ## 完了基準
