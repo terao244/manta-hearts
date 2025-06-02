@@ -71,7 +71,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
           isLoading: false,
           error: null,
           validCardIds: [],
-          scoreHistory: []
+          scoreHistory: result.gameInfo.scoreHistory || []
         });
       } else {
         setGameHookState(prev => ({
@@ -436,9 +436,6 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     const handleHandCompleted = (handResult: HandResult) => {
       console.log('Hand completed:', handResult);
       
-      // スコア履歴を更新
-      updateScoreHistory(handResult.handNumber, handResult.cumulativeScores || {});
-      
       // ゲーム状態のスコアも更新
       setGameHookState(prev => {
         if (!prev.gameState) return prev;
@@ -452,6 +449,15 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
           }
         };
       });
+    };
+
+    // スコア履歴更新
+    const handleScoreHistoryUpdate = (scoreHistory: ScoreHistoryEntry[]) => {
+      console.log('Score history updated:', scoreHistory);
+      setGameHookState(prev => ({
+        ...prev,
+        scoreHistory
+      }));
     };
 
     // ゲーム完了
@@ -484,6 +490,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     on('trickCompleted', handleTrickCompleted);
     on('handScoreUpdate', handleHandScoreUpdate);
     on('handCompleted', handleHandCompleted);
+    on('scoreHistoryUpdate', handleScoreHistoryUpdate);
     on('gameCompleted', handleGameCompleted);
     on('error', handleError);
 
@@ -504,10 +511,11 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       off('trickCompleted', handleTrickCompleted);
       off('handScoreUpdate', handleHandScoreUpdate);
       off('handCompleted', handleHandCompleted);
+      off('scoreHistoryUpdate', handleScoreHistoryUpdate);
       off('gameCompleted', handleGameCompleted);
       off('error', handleError);
     };
-  }, [socket, on, off, currentPlayer, updateScoreHistory]);
+  }, [socket, on, off, currentPlayer]);
 
   return {
     gameState: gameHookState.gameState,

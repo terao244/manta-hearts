@@ -33,6 +33,7 @@ export interface ServerToClientEvents {
   trickCompleted: (trickResult: TrickResult) => void;
   handScoreUpdate: (currentHandScores: Record<number, number>) => void;
   handCompleted: (handResult: HandResult) => void;
+  scoreHistoryUpdate: (scoreHistory: ScoreHistoryEntry[]) => void;
   gameCompleted: (gameResult: GameResult) => void;
   error: (error: string) => void;
   connectionStatus: (status: 'connected' | 'disconnected' | 'reconnected') => void;
@@ -65,6 +66,7 @@ export interface GameInfo {
   heartsBroken: boolean;
   tricks: TrickData[];
   scores: Record<number, number>;
+  scoreHistory: ScoreHistoryEntry[];
   hand?: CardInfo[];
 }
 

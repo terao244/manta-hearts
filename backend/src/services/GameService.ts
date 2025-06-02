@@ -20,6 +20,7 @@ export class GameService {
   private gameEngines: Map<number, GameEngine> = new Map();
   private playerGameMap: Map<number, number> = new Map();
   private gamePlayersMap: Map<number, Set<number>> = new Map();
+  private gameScoreHistory: Map<number, Array<{ hand: number; scores: Record<number, number> }>> = new Map();
   private io?: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
   
   private constructor() {}
@@ -245,7 +246,8 @@ export class GameService {
       currentTurn: gameState.currentTurn,
       heartsBroken: gameState.heartsBroken,
       tricks: gameState.tricks,
-      scores: Object.fromEntries(gameState.cumulativeScores)
+      scores: Object.fromEntries(gameState.cumulativeScores),
+      scoreHistory: this.gameScoreHistory.get(gameId) || []
     };
 
     // プレイヤーIDが指定されている場合、手札情報を追加
@@ -366,10 +368,26 @@ export class GameService {
         }
       },
       onHandCompleted: (handNumber, scores) => {
+        // スコア履歴を更新
+        const scoreEntry = {
+          hand: handNumber,
+          scores: Object.fromEntries(scores)
+        };
+        
+        let history = this.gameScoreHistory.get(gameId);
+        if (!history) {
+          history = [];
+          this.gameScoreHistory.set(gameId, history);
+        }
+        history.push(scoreEntry);
+        
         this.broadcastToGame(gameId, 'handCompleted', { 
           handNumber, 
           scores: Object.fromEntries(scores) 
         });
+        
+        // スコア履歴も送信
+        this.broadcastToGame(gameId, 'scoreHistoryUpdate', history);
       },
       onGameCompleted: async (winnerId, finalScores) => {
         // ゲーム結果をデータベースに保存

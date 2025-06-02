@@ -192,7 +192,8 @@ describe('SocketHandlers', () => {
         phase: 'waiting',
         heartsBroken: false,
         tricks: [],
-        scores: {}
+        scores: {},
+        scoreHistory: []
       };
       const callback = jest.fn();
 
