@@ -298,9 +298,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             <div className="absolute inset-0 flex items-center justify-center">
               <div 
                 data-testid="trick-area"
-                className="bg-green-700 rounded-lg p-4 w-64 h-40 flex flex-col items-center justify-center shadow-lg border border-green-600"
+                className="bg-green-700 rounded-lg p-6 w-80 h-56 flex flex-col items-center justify-center shadow-lg border border-green-600"
               >
-                <h4 className="text-sm font-semibold mb-3 text-center text-white">
+                <h4 className="text-sm font-semibold mb-4 text-center text-white">
                   トリック {currentTrick}
                   {getCurrentTrickCards().length > 0 && (
                     <span className="ml-2 text-xs text-yellow-300">
@@ -308,7 +308,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     </span>
                   )}
                 </h4>
-                <div className="grid grid-cols-2 gap-2 w-full max-w-40">
+                <div className="grid grid-cols-2 gap-3 w-full">
                   {getCurrentTrickCards().map((cardPlay, index) => {
                     const player = players.find(p => p.id === cardPlay.playerId);
                     const cardInfo = cardPlay.card;
@@ -323,7 +323,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                         }}
                       >
                         <div className="text-xs mb-1 text-white font-medium">
-                          {player?.displayName?.slice(0, 4)}
+                          {player?.displayName}
                         </div>
                         <Card 
                           card={cardInfo} 
@@ -340,7 +340,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   )}
                 </div>
                 {getCurrentTrickCards().length === 4 && (
-                  <div className="mt-2 text-xs text-yellow-300 font-semibold animate-pulse">
+                  <div className="mt-3 text-xs text-yellow-300 font-semibold animate-pulse">
                     トリック完了！
                   </div>
                 )}
