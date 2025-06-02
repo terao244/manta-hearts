@@ -76,9 +76,9 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
         data: cumulativeData[index],
         borderColor: color,
         backgroundColor: color + '20', // 透明度20%
-        borderWidth: isCurrentPlayer ? 4 : 2,
-        pointRadius: isCurrentPlayer ? 6 : 4,
-        pointHoverRadius: isCurrentPlayer ? 8 : 6,
+        borderWidth: isCurrentPlayer ? 2 : 1,
+        pointRadius: 0, // データポイントを非表示
+        pointHoverRadius: 2, // ホバー時のみ小さく表示
         tension: 0.1,
         fill: false,
       };
@@ -95,8 +95,7 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
     responsive: true,
     maintainAspectRatio: false,
     animation: {
-      duration: 1000,
-      easing: 'easeInOutQuart' as const,
+      duration: 0, // アニメーション無効化
     },
     plugins: {
       legend: {
@@ -104,13 +103,13 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
         align: 'center' as const,
         labels: {
           font: {
-            size: 13,
+            size: 10,
             weight: 'bold' as const,
           },
           usePointStyle: true,
           pointStyle: 'circle',
-          pointStyleWidth: 12,
-          padding: 20,
+          pointStyleWidth: 8,
+          padding: 10,
           // generateLabels: function(chart: any) {
           //   const original = ChartJS.defaults.plugins.legend.labels.generateLabels;
           //   const labels = original.call(this, chart);
@@ -132,13 +131,13 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
         display: true,
         text: 'スコア推移グラフ',
         font: {
-          size: 18,
+          size: 14,
           weight: 'bold' as const,
         },
         color: '#1f2937', // gray-800
         padding: {
-          top: 10,
-          bottom: 20,
+          top: 5,
+          bottom: 10,
         },
       },
       tooltip: {
@@ -183,7 +182,7 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
           display: true,
           text: 'ハンド番号',
           font: {
-            size: 14,
+            size: 11,
             weight: 'bold' as const,
           },
           color: '#374151', // gray-700
@@ -196,7 +195,7 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
         ticks: {
           color: '#6b7280', // gray-500
           font: {
-            size: 12,
+            size: 10,
           },
           maxTicksLimit: 11, // 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20の11個
           callback: function (value: any, index: number) {
@@ -211,7 +210,7 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
           display: true,
           text: '累積スコア (点)',
           font: {
-            size: 14,
+            size: 11,
             weight: 'bold' as const,
           },
           color: '#374151', // gray-700
@@ -227,7 +226,7 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
           stepSize: 25,
           color: '#6b7280', // gray-500
           font: {
-            size: 12,
+            size: 10,
           },
           // callback: function(value: any) {
           //   return value + '点';
@@ -242,11 +241,11 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
     },
     elements: {
       point: {
-        radius: 4,
-        hoverRadius: 8,
+        radius: 0,
+        hoverRadius: 2,
         hoverBackgroundColor: '#ffffff',
-        hoverBorderWidth: 3,
-        borderWidth: 2,
+        hoverBorderWidth: 1,
+        borderWidth: 0,
       },
       line: {
         tension: 0.2, // 少し曲線にする
@@ -258,16 +257,16 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
   }), []);
 
   return (
-    <div className={`bg-white rounded-lg p-4 shadow-md ${className}`}>
-      <div className="h-64 w-full">
+    <div className={`bg-white rounded-lg p-2 shadow-md ${className}`} style={{ width: '270px' }}>
+      <div className="h-96 w-full">
         <Line data={chartData} options={chartOptions} />
       </div>
 
       {/* データなしの場合の表示 */}
       {scoreHistory.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          <div className="text-lg font-medium">まだスコアデータがありません</div>
-          <div className="text-sm">ゲームが進行するとスコア推移が表示されます</div>
+        <div className="text-center py-4 text-gray-500">
+          <div className="text-sm font-medium">まだスコアデータがありません</div>
+          <div className="text-xs">ゲームが進行するとスコア推移が表示されます</div>
         </div>
       )}
     </div>

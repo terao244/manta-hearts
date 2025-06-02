@@ -243,10 +243,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       </div>
 
       <div className="container mx-auto p-4">
-        {/* ゲームテーブルエリア */}
-        <div className="relative w-full max-w-4xl mx-auto mb-6">
-          {/* 卓配置レイアウト */}
-          <div className="relative h-96 bg-green-800 rounded-lg p-4">
+        {/* メインコンテンツエリア（ゲームテーブル＋スコアグラフ） */}
+        <div className="flex gap-4 justify-center mb-6">
+          {/* ゲームテーブルエリア */}
+          <div className="relative w-full max-w-4xl">
+            {/* 卓配置レイアウト */}
+            <div className="relative h-96 bg-green-800 rounded-lg p-4">
             
             {/* 北（上）のプレイヤー */}
             {players.filter(p => getPlayerPosition(p.id) === 'North').map(player => (
@@ -345,6 +347,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               </div>
             </div>
           </div>
+          </div>
+
+          {/* スコアグラフエリア（右側固定） */}
+          {isScoreGraphVisible && (
+            <div className="flex-shrink-0">
+              <ScoreGraph
+                players={players}
+                scoreHistory={scoreHistory}
+                currentPlayerId={currentPlayerId}
+              />
+            </div>
+          )}
         </div>
 
         {/* ゲーム情報サイドバー */}
@@ -393,18 +407,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             </div>
           </div>
         </div>
-
-        {/* スコアグラフエリア */}
-        {isScoreGraphVisible && (
-          <div className="mb-6">
-            <ScoreGraph
-              players={players}
-              scoreHistory={scoreHistory}
-              currentPlayerId={currentPlayerId}
-              className="w-full"
-            />
-          </div>
-        )}
 
         {/* 手札エリア */}
         <div className="bg-white rounded-lg p-4">
