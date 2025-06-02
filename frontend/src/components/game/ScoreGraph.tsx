@@ -45,12 +45,16 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
 }) => {
   // チャートデータの生成
   const chartData = React.useMemo(() => {
-    if (!scoreHistory || scoreHistory.length === 0) {
+    // ハンド0（全員0点）を開始点として追加
+    const initialEntry = { hand: 0, scores: Object.fromEntries(players.map(p => [p.id, 0])) };
+    const fullHistory = [initialEntry, ...(scoreHistory || [])];
+    
+    if (fullHistory.length === 0) {
       return {
-        labels: [],
+        labels: ['ハンド 0'],
         datasets: players.map((player, index) => ({
           label: player.displayName,
-          data: [],
+          data: [0],
           borderColor: PLAYER_COLORS[index % PLAYER_COLORS.length],
           backgroundColor: PLAYER_COLORS[index % PLAYER_COLORS.length] + '20',
           borderWidth: currentPlayerId === player.id ? 4 : 2,
@@ -62,10 +66,10 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
       };
     }
 
-    const labels = scoreHistory.map(entry => `ハンド ${entry.hand}`);
+    const labels = fullHistory.map(entry => `ハンド ${entry.hand}`);
     
     const datasets = players.map((player, index) => {
-      const data = scoreHistory.map(entry => entry.scores?.[player.id] || 0);
+      const data = fullHistory.map(entry => entry.scores?.[player.id] || 0);
       const color = PLAYER_COLORS[index % PLAYER_COLORS.length];
       const isCurrentPlayer = currentPlayerId === player.id;
       
@@ -210,13 +214,14 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
           color: '#374151', // gray-700
         },
         min: 0,
+        max: 125,
         grid: {
           display: true,
           color: 'rgba(156, 163, 175, 0.3)', // gray-400 with opacity
           lineWidth: 1,
         },
         ticks: {
-          stepSize: 10,
+          stepSize: 25,
           color: '#6b7280', // gray-500
           font: {
             size: 12,

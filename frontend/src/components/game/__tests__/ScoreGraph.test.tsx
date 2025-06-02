@@ -76,16 +76,16 @@ describe('ScoreGraph', () => {
     );
 
     const chartData = JSON.parse(screen.getByTestId('chart-data').textContent || '{}');
-    expect(chartData.labels).toEqual(['ハンド 1', 'ハンド 2', 'ハンド 3']);
+    expect(chartData.labels).toEqual(['ハンド 0', 'ハンド 1', 'ハンド 2', 'ハンド 3']);
     
-    // プレイヤー1のスコア推移
-    expect(chartData.datasets[0].data).toEqual([0, 5, 10]);
-    // プレイヤー2のスコア推移
-    expect(chartData.datasets[1].data).toEqual([0, 3, 8]);
-    // プレイヤー3のスコア推移
-    expect(chartData.datasets[2].data).toEqual([0, 8, 15]);
-    // プレイヤー4のスコア推移
-    expect(chartData.datasets[3].data).toEqual([0, 2, 7]);
+    // プレイヤー1のスコア推移（ハンド0から開始）
+    expect(chartData.datasets[0].data).toEqual([0, 0, 5, 10]);
+    // プレイヤー2のスコア推移（ハンド0から開始）
+    expect(chartData.datasets[1].data).toEqual([0, 0, 3, 8]);
+    // プレイヤー3のスコア推移（ハンド0から開始）
+    expect(chartData.datasets[2].data).toEqual([0, 0, 8, 15]);
+    // プレイヤー4のスコア推移（ハンド0から開始）
+    expect(chartData.datasets[3].data).toEqual([0, 0, 2, 7]);
   });
 
   it('各プレイヤーに異なる色が割り当てられる', () => {
@@ -113,8 +113,9 @@ describe('ScoreGraph', () => {
     );
 
     const chartData = JSON.parse(screen.getByTestId('chart-data').textContent || '{}');
-    expect(chartData.labels).toEqual([]);
-    expect(chartData.datasets[0].data).toEqual([]);
+    // 空の場合でもハンド0から開始
+    expect(chartData.labels).toEqual(['ハンド 0']);
+    expect(chartData.datasets[0].data).toEqual([0]);
   });
 
   it('グラフオプションが正しく設定される', () => {
