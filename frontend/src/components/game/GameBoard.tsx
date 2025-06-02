@@ -361,8 +361,39 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           )}
         </div>
 
+
+        {/* 手札エリア */}
+        <div className="bg-white rounded-lg p-4 mb-6">
+          <h3 className="text-black text-lg font-semibold mb-3">あなたの手札</h3>
+          {currentPlayerCards.length > 0 ? (
+            <Hand
+              cards={currentPlayerCards}
+              selectedCardIds={selectedCards}
+              playableCardIds={validCardIds}
+              mode={phase === 'exchanging' ? 'exchange' : phase === 'playing' ? 'play' : 'view'}
+              maxSelectableCards={3}
+              showConfirmButton={phase === 'exchanging' && selectedCards.length === 3}
+              isExchangeCompleted={
+                !!(phase === 'exchanging' && 
+                exchangeProgress && 
+                currentPlayerId && 
+                exchangeProgress.exchangedPlayers.includes(currentPlayerId))
+              }
+              isPlayerTurn={currentTurn === currentPlayerId}
+              onCardSelect={handleCardSelect}
+              onCardPlay={handleCardPlay}
+              onConfirm={handleExchangeConfirm}
+              onCancel={handleExchangeCancel}
+            />
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              手札がありません
+            </div>
+          )}
+        </div>
+
         {/* ゲーム情報サイドバー */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* ゲーム状態 */}
           <div className="bg-green-800 rounded-lg p-4">
             <h3 className="text-lg font-semibold mb-3">ゲーム状態</h3>
@@ -406,36 +437,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               ))}
             </div>
           </div>
-        </div>
-
-        {/* 手札エリア */}
-        <div className="bg-white rounded-lg p-4">
-          <h3 className="text-black text-lg font-semibold mb-3">あなたの手札</h3>
-          {currentPlayerCards.length > 0 ? (
-            <Hand
-              cards={currentPlayerCards}
-              selectedCardIds={selectedCards}
-              playableCardIds={validCardIds}
-              mode={phase === 'exchanging' ? 'exchange' : phase === 'playing' ? 'play' : 'view'}
-              maxSelectableCards={3}
-              showConfirmButton={phase === 'exchanging' && selectedCards.length === 3}
-              isExchangeCompleted={
-                !!(phase === 'exchanging' && 
-                exchangeProgress && 
-                currentPlayerId && 
-                exchangeProgress.exchangedPlayers.includes(currentPlayerId))
-              }
-              isPlayerTurn={currentTurn === currentPlayerId}
-              onCardSelect={handleCardSelect}
-              onCardPlay={handleCardPlay}
-              onConfirm={handleExchangeConfirm}
-              onCancel={handleExchangeCancel}
-            />
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              手札がありません
-            </div>
-          )}
         </div>
       </div>
     </div>
