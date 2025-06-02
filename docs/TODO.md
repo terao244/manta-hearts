@@ -3,7 +3,7 @@
 このドキュメントは、Mantaプロジェクトの詳細な開発タスクリストです。
 各タスクは完了時にチェックし、git commitを行います。
 
-## 🎯 現在の進捗状況（2025/05/31更新）
+## 🎯 現在の進捗状況（2025/06/02更新）
 
 ### ✅ 完了したPhase
 - **Phase 1: 基盤構築** - Docker環境、TypeScript設定、プロジェクト構造、Prettier・Jest設定完了
@@ -19,7 +19,7 @@
 - **Phase 9: カード操作UI詳細（完了）** - 有効カードハイライト、カードホバー効果、カード選択UI改善、カード交換フェーズUI実装
 - **Phase 10: ゲーム進行機能（完了）** - カードプレイ処理強化、トリック勝者判定、スコア計算、アニメーション追加
 
-### ✅ 最新の完了項目（2025/06/01）
+### ✅ 最新の完了項目（2025/06/02）
 - **手札ソート順変更機能** - スート順序をクラブ→ダイヤ→スペード→ハートに変更、全60フロントエンドテスト正常通過
 - **現在ハンド点数表示機能実装** - プレイヤーカードに累積点数と現在ハンド点数を区別表示、リアルタイム更新、0点も常時表示
 - **Phase 10ゲーム進行機能完全実装** - カードプレイ処理強化、トリック表示改善、アニメーション追加、全171+30テスト正常通過
@@ -27,6 +27,8 @@
 - **バグ修正: クラブの2強制プレイルール** - 2ハンド目以降で正常にクラブの2が強制される問題を修正
 - **スコアグラフ機能完全実装** - Chart.jsによるリアルタイムスコア推移グラフ、統計情報表示、レスポンシブ対応（全7テスト正常通過）
 - **バグ修正: ハンド終了時のスコア表示エラー** - undefinedアクセスエラー解決、オプショナルチェーンとデフォルト値で安全性向上
+- **バックエンド位置情報を使用したプレイヤー配置機能** - getPlayerPosition関数改修、playerJoined イベント問題修正、専用テスト4個追加（全168+71テスト正常通過）
+- **バグ修正: スコアグラフでスコア履歴が表示されない問題** - GameServiceにスコア履歴管理機能追加、フロントエンドでscoreHistoryUpdateイベント受信処理追加（全175+67テスト正常通過）
 
 ### 🚧 進行中のPhase  
 なし（Phase 11完了）
@@ -913,6 +915,132 @@ if (this.currentTrick === 1) {
 - 操作無効化処理は維持（pointer-events-none、cursor-not-allowed）
 - 全60フロントエンドテスト正常通過
 - UI/UX一貫性の向上
+
+---
+
+## 最新の追加実装（2025/06/02）
+
+### 57. バックエンド位置情報を使用したプレイヤー配置機能 ✅ **完了**
+
+**実装目的**: 現在の相対位置計算から、バックエンドで決定された絶対位置（North/East/South/West）を使用したプレイヤー配置への変更
+
+#### 主要な変更内容
+- [x] 📝 **getPlayerPosition関数の改修**
+  - 相対位置計算ロジックからバックエンドの絶対位置使用に変更
+  - `frontend/src/components/game/GameBoard.tsx:156-162`
+  - プレイヤーの`position`プロパティを直接参照する実装
+
+- [x] 🔧 **playerJoined イベント処理の問題修正**  
+  - `frontend/src/hooks/useGame.ts:200-241`での位置情報保持問題解決
+  - 既存プレイヤーの位置情報が失われる問題を修正
+  - 新規プレイヤーのみ追加、既存プレイヤーは保持する安全な実装
+
+- [x] 📝 **型定義の拡張**
+  - `frontend/src/types/index.ts:8` PlayerInfoに`position`プロパティ追加
+  - バックエンドとフロントエンドの型整合性確保
+
+- [x] 🧪 **専用テストケースの追加**（4個）
+  - プレイヤーの絶対位置が正しく返されることの確認
+  - 位置情報がないプレイヤーは表示されないことの確認  
+  - 同じ位置に複数プレイヤーが配置された場合の動作確認
+  - 全ての位置にプレイヤーが配置された場合の表示確認
+
+#### 技術的解決詳細
+
+**解決した問題:**
+1. **playerJoined イベントでの位置情報消失**
+   - バックエンドから数値（playerId）のみ送信される問題
+   - フロントエンドで位置情報なしの新しいPlayerInfoオブジェクト作成問題
+   - 既存プレイヤーの位置情報が上書きされる問題
+
+**修正前のデータフロー:**
+```
+Backend: playerJoined(playerId: number) 
+→ Frontend: 新しいPlayerInfoオブジェクト作成（position未設定）
+→ 既存プレイヤー情報を位置情報なしで上書き
+→ getPlayerPosition()で位置情報取得不可
+```
+
+**修正後のデータフロー:**
+```  
+Backend: playerJoined(playerId: number)
+→ Frontend: 既存プレイヤーの場合は変更せず位置情報保持
+→ 新規プレイヤーのみ追加（位置情報は後続で設定）
+→ getPlayerPosition()でバックエンドの絶対位置使用
+```
+
+**実装した解決策:**
+1. **既存プレイヤー保護ロジック**: `handlePlayerJoined`で既存プレイヤーは変更しない
+2. **絶対位置使用**: `getPlayerPosition`でプレイヤーの`position`プロパティを直接参照
+3. **安全な型変換**: バックエンドで`position as 'North' | 'East' | 'South' | 'West'`型変換追加
+
+#### テスト結果
+- **バックエンドテスト**: 168個 ✅ 正常通過
+- **フロントエンドテスト**: 71個（67→71に増加）✅ 正常通過  
+- **型チェック・lint**: ✅ エラーなし
+- **位置情報の保持と表示**: ✅ 確認済み
+
+#### 影響範囲
+- **プレイヤー配置ロジック**: 相対位置から絶対位置への一貫した変更
+- **Socket.ioイベント処理**: playerJoinedイベントの安全性向上
+- **UI表示**: より正確で安定したプレイヤー配置表示
+- **テスト品質**: getPlayerPosition関数の専用テストで信頼性向上
+
+### 58. スコアグラフでスコア履歴が表示されない問題修正 ✅ **完了**
+
+**問題の詳細**: 1トリック終了後にスコアグラフを見ても、全員0点のまま表示される問題が発生。
+
+**根本原因調査結果:**
+- [x] 🔍 GameServiceでハンド完了時にスコア履歴を累積管理する機能がない
+- [x] 🔍 フロントエンドでscoreHistoryUpdateイベントを受信する処理がない  
+- [x] 🔍 型定義にscoreHistoryプロパティが含まれていない
+
+**実装した修正:**
+- [x] 📝 **GameServiceにスコア履歴管理機能追加**
+  - `gameScoreHistory: Map<number, Array<{ hand: number; scores: Record<number, number> }>>`追加
+  - `onHandCompleted`でスコア履歴を累積・ブロードキャスト
+  - `GameInfo`にscoreHistoryプロパティを含める処理追加
+
+- [x] 📝 **型定義拡張**  
+  - `ServerToClientEvents`に`scoreHistoryUpdate`イベント追加
+  - `GameInfo`インターフェースに`scoreHistory`プロパティ追加
+  - バックエンド・フロントエンド両方の型定義更新
+
+- [x] 📝 **フロントエンドでのスコア履歴受信処理追加**
+  - `useGame`フックに`scoreHistoryUpdate`イベントハンドラー追加
+  - ゲーム参加時にスコア履歴を初期化する処理
+  - イベントリスナーの登録とクリーンアップ処理
+
+- [x] 🧪 **テスト修正**
+  - `handlers.test.ts`のGameInfoオブジェクトに`scoreHistory: []`追加
+  - 全175個のバックエンドテスト正常通過
+  - 全67個のフロントエンドテスト正常通過
+
+**技術的解決詳細:**
+```typescript
+// GameServiceでのスコア履歴管理
+onHandCompleted: (handNumber, scores) => {
+  const scoreEntry = { hand: handNumber, scores: Object.fromEntries(scores) };
+  let history = this.gameScoreHistory.get(gameId);
+  if (!history) {
+    history = [];
+    this.gameScoreHistory.set(gameId, history);
+  }
+  history.push(scoreEntry);
+  this.broadcastToGame(gameId, 'scoreHistoryUpdate', history);
+}
+
+// フロントエンドでのイベント受信
+const handleScoreHistoryUpdate = (scoreHistory: ScoreHistoryEntry[]) => {
+  setGameHookState(prev => ({ ...prev, scoreHistory }));
+};
+```
+
+**修正結果:**
+- ハンド完了時にスコアグラフが正しく更新されるように修正
+- 全テスト正常通過（バックエンド175個、フロントエンド67個）
+- 型チェック・lint正常通過
+- スコア履歴の累積表示が正常動作
 
 ---
 
