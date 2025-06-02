@@ -47,15 +47,15 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
   const chartData = React.useMemo(() => {
     // ハンド0-20の固定ラベルを作成
     const fixedLabels = Array.from({ length: 21 }, (_, i) => `ハンド ${i}`);
-    
+
     // 累積スコアを計算
     const cumulativeData = players.map(player => {
-      const playerData = new Array(21).fill(0); // ハンド0-20の配列
+      const playerData = new Array(21).fill(NaN); // ハンド0-20の配列
       let cumulativeScore = 0;
-      
+
       // ハンド0は0点
       playerData[0] = 0;
-      
+
       // scoreHistoryから累積スコアを計算
       scoreHistory.forEach(entry => {
         if (entry.hand >= 1 && entry.hand <= 20) {
@@ -63,19 +63,14 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
           playerData[entry.hand] = cumulativeScore;
         }
       });
-      
-      // 未完了ハンドは最後の累積スコアで埋める
-      for (let i = scoreHistory.length + 1; i <= 20; i++) {
-        playerData[i] = cumulativeScore;
-      }
-      
+
       return playerData;
     });
-    
+
     const datasets = players.map((player, index) => {
       const color = PLAYER_COLORS[index % PLAYER_COLORS.length];
       const isCurrentPlayer = currentPlayerId === player.id;
-      
+
       return {
         label: player.displayName,
         data: cumulativeData[index],
@@ -204,7 +199,7 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
             size: 12,
           },
           maxTicksLimit: 11, // 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20の11個
-          callback: function(value: any, index: number) {
+          callback: function (value: any, index: number) {
             // 2ハンドおきに表示
             return index % 2 === 0 ? `ハンド ${index}` : '';
           },
@@ -267,7 +262,7 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
       <div className="h-64 w-full">
         <Line data={chartData} options={chartOptions} />
       </div>
-      
+
       {/* スコア統計情報 */}
       {scoreHistory.length > 0 && (
         <div className="mt-6">
@@ -277,7 +272,7 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
               ハンド {scoreHistory.length} 完了
             </div>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {players
               .map((player, index) => {
@@ -286,54 +281,51 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
                 scoreHistory.forEach(entry => {
                   cumulativeScore += entry.scores?.[player.id] || 0;
                 });
-                
+
                 const color = PLAYER_COLORS[index % PLAYER_COLORS.length];
                 const isCurrentPlayer = currentPlayerId === player.id;
-                
+
                 return { player, index, cumulativeScore, color, isCurrentPlayer };
               })
               .sort((a, b) => a.cumulativeScore - b.cumulativeScore) // スコアの昇順（低い順）
               .map(({ player, cumulativeScore, color, isCurrentPlayer }, rank) => {
                 const isWinning = rank === 0; // 最低スコアが勝利
-                
+
                 return (
                   <div
                     key={player.id}
-                    className={`relative text-center p-3 rounded-lg shadow-sm transition-all duration-200 ${
-                      isCurrentPlayer 
-                        ? 'ring-2 ring-blue-500 bg-blue-50 transform scale-105' 
-                        : isWinning
-                          ? 'bg-green-50 border border-green-200'
-                          : 'bg-gray-50 border border-gray-200'
-                    }`}
+                    className={`relative text-center p-3 rounded-lg shadow-sm transition-all duration-200 ${isCurrentPlayer
+                      ? 'ring-2 ring-blue-500 bg-blue-50 transform scale-105'
+                      : isWinning
+                        ? 'bg-green-50 border border-green-200'
+                        : 'bg-gray-50 border border-gray-200'
+                      }`}
                   >
                     {/* 順位表示 */}
                     <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center text-xs font-bold">
                       {rank + 1}
                     </div>
-                    
+
                     {/* プレイヤー色インジケータ */}
                     <div
                       className="w-5 h-5 rounded-full mx-auto mb-2 shadow-sm"
                       style={{ backgroundColor: color }}
                     />
-                    
+
                     {/* プレイヤー名 */}
-                    <div className={`text-sm font-medium mb-1 ${
-                      isCurrentPlayer ? 'text-blue-800' : isWinning ? 'text-green-800' : 'text-gray-700'
-                    }`}>
+                    <div className={`text-sm font-medium mb-1 ${isCurrentPlayer ? 'text-blue-800' : isWinning ? 'text-green-800' : 'text-gray-700'
+                      }`}>
                       {isCurrentPlayer && '👤 '}
                       {player.displayName}
                       {isWinning && ' 🏆'}
                     </div>
-                    
+
                     {/* スコア */}
-                    <div className={`text-lg font-bold ${
-                      isCurrentPlayer ? 'text-blue-900' : isWinning ? 'text-green-900' : 'text-gray-900'
-                    }`}>
+                    <div className={`text-lg font-bold ${isCurrentPlayer ? 'text-blue-900' : isWinning ? 'text-green-900' : 'text-gray-900'
+                      }`}>
                       {cumulativeScore}点
                     </div>
-                    
+
                     {/* スコア変化表示 */}
                     {scoreHistory.length > 1 && (
                       <div className="text-xs text-gray-500 mt-1">
@@ -348,7 +340,7 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
                 );
               })}
           </div>
-          
+
           {/* ゲーム終了条件表示 */}
           {scoreHistory.length > 0 && (
             <div className="mt-4 text-center">
@@ -357,7 +349,7 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
               </div>
               {(() => {
                 if (scoreHistory.length === 0) return null;
-                
+
                 // 各プレイヤーの累計スコアを計算
                 const cumulativeScores = players.map(player => {
                   let cumulativeScore = 0;
@@ -366,7 +358,7 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
                   });
                   return cumulativeScore;
                 });
-                
+
                 const maxScore = Math.max(...cumulativeScores);
                 if (maxScore >= 100) {
                   return (
@@ -386,7 +378,7 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
           )}
         </div>
       )}
-      
+
       {/* データなしの場合の表示 */}
       {scoreHistory.length === 0 && (
         <div className="text-center py-8 text-gray-500">
