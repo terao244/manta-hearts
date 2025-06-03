@@ -103,20 +103,6 @@ export const Hand: React.FC<HandProps> = ({
     return '';
   };
 
-  const getHandSummary = (): string => {
-    const cardCount = cards.length;
-    const suitCounts = cards.reduce((acc, card) => {
-      const suitName = { 'SPADES': 'スペード', 'HEARTS': 'ハート', 'DIAMONDS': 'ダイヤ', 'CLUBS': 'クラブ' }[card.suit];
-      acc[suitName] = (acc[suitName] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
-    const suitSummary = Object.entries(suitCounts)
-      .map(([suit, count]) => `${suit}${count}`)
-      .join(' ');
-    
-    return `手札${cardCount}枚 (${suitSummary})`;
-  };
 
   const isConfirmEnabled = (): boolean => {
     return mode === 'exchange' && selectedCardIds.length === maxSelectableCards;

@@ -1,5 +1,5 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
-import useGameDetail from '../useGameDetail';
+import { useGameDetail } from '../useGameDetail';
 import { fetchGameByIdWithRetry } from '../../lib/api/games';
 import { GameDetailData } from '../../types';
 

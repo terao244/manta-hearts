@@ -188,7 +188,7 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
             size: 10,
           },
           maxTicksLimit: 11, // 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20の11個
-          callback: function (value: any, index: number) {
+          callback: function (value: string | number, index: number) {
             // 2ハンドおきに表示
             return index % 2 === 0 ? `ハンド ${index}` : '';
           },

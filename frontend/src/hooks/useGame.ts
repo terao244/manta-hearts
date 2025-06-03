@@ -140,28 +140,6 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     });
   }, [socket, currentPlayer]);
 
-  // スコア履歴更新ヘルパー関数
-  const updateScoreHistory = useCallback((handNumber: number, scores: Record<number, number>) => {
-    setGameHookState(prev => {
-      const existingEntryIndex = prev.scoreHistory.findIndex(entry => entry.hand === handNumber);
-      
-      if (existingEntryIndex >= 0) {
-        // 既存のエントリを更新
-        const updatedHistory = [...prev.scoreHistory];
-        updatedHistory[existingEntryIndex] = { hand: handNumber, scores };
-        return {
-          ...prev,
-          scoreHistory: updatedHistory
-        };
-      } else {
-        // 新しいエントリを追加
-        return {
-          ...prev,
-          scoreHistory: [...prev.scoreHistory, { hand: handNumber, scores }].sort((a, b) => a.hand - b.hand)
-        };
-      }
-    });
-  }, []);
 
   // Socket.ioイベントリスナー
   useEffect(() => {

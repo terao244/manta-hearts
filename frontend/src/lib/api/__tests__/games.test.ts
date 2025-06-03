@@ -2,7 +2,6 @@ import {
   fetchGames,
   fetchGameById,
   fetchWithRetry,
-  ApiError,
 } from '../games';
 import { GameData, GameDetailData } from '../../../types';
 

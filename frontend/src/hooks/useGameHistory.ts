@@ -24,8 +24,6 @@ export default function useGameHistory(
     totalPages: 0,
   });
 
-  // optionsが変更された時にキーを再生成
-  const optionsKey = JSON.stringify(options);
 
   const fetchData = useCallback(async () => {
     try {
@@ -51,7 +49,7 @@ export default function useGameHistory(
     } finally {
       setIsLoading(false);
     }
-  }, [optionsKey]);
+  }, [options.page, options.limit, options.status, options.playerId, options.sortBy, options.sortOrder]);
 
   // 初回とオプション変更時にデータを取得
   useEffect(() => {

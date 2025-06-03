@@ -10,7 +10,7 @@ import { fetchGameByIdWithRetry } from '../lib/api/games';
 /**
  * 特定のゲーム詳細を取得するカスタムフック
  */
-export default function useGameDetail(gameId: number): UseGameDetailResult {
+export function useGameDetail(gameId: number): UseGameDetailResult {
   const [game, setGame] = useState<GameDetailData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
