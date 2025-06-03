@@ -3,7 +3,7 @@
 このドキュメントは、Mantaプロジェクトの詳細な開発タスクリストです。
 各タスクは完了時にチェックし、git commitを行います。
 
-## 🎯 現在の進捗状況（2025/06/02更新）
+## 🎯 現在の進捗状況（2025/06/03更新）
 
 ### ✅ 完了したPhase
 - **Phase 1: 基盤構築** - Docker環境、TypeScript設定、プロジェクト構造、Prettier・Jest設定完了
@@ -19,7 +19,12 @@
 - **Phase 9: カード操作UI詳細（完了）** - 有効カードハイライト、カードホバー効果、カード選択UI改善、カード交換フェーズUI実装
 - **Phase 10: ゲーム進行機能（完了）** - カードプレイ処理強化、トリック勝者判定、スコア計算、アニメーション追加
 
-### ✅ 最新の完了項目（2025/06/02）
+### ✅ 最新の完了項目（2025/06/03）
+- **ゲーム履歴API実装** - GET /api/games（一覧）、GET /api/games/:id（詳細）完全実装、13テスト正常通過
+- **GameRepositoryパターン実装** - Repository層、依存性注入、型安全なデータアクセス実装
+- **包括的ゲーム履歴機能** - ページング、フィルタリング、ソート、ハンド・トリック・スコア詳細対応
+
+### ✅ 過去の完了項目（2025/06/02）
 - **手札ソート順変更機能** - スート順序をクラブ→ダイヤ→スペード→ハートに変更、全60フロントエンドテスト正常通過
 - **現在ハンド点数表示機能実装** - プレイヤーカードに累積点数と現在ハンド点数を区別表示、リアルタイム更新、0点も常時表示
 - **Phase 10ゲーム進行機能完全実装** - カードプレイ処理強化、トリック表示改善、アニメーション追加、全171+30テスト正常通過
@@ -700,11 +705,14 @@ if (this.currentTrick === 1) {
 
 ## Phase 11: 体験向上機能
 
-### 38. ゲーム履歴API
-- [ ] 🧪 GET /api/games テスト
-- [ ] 📝 GET /api/games 実装（一覧）
-- [ ] 🧪 GET /api/games/:id テスト
-- [ ] 📝 GET /api/games/:id 実装（詳細）
+### 38. ゲーム履歴API ✅ **完了**
+- [x] 🧪 GET /api/games テスト（13テストケース作成）
+- [x] 📝 GET /api/games 実装（一覧）（ページング、フィルタリング、ソート対応）
+- [x] 🧪 GET /api/games/:id テスト
+- [x] 📝 GET /api/games/:id 実装（詳細）（ハンド・トリック・スコア履歴含む）
+- [x] 📝 GameRepositoryパターン実装（Repository層、依存性注入）
+- [x] 📝 型安全なデータアクセス（TypeScript完全対応）
+- [x] 🧪 包括的テスト（全13テスト正常通過）
 
 ### 39. 履歴画面
 - [ ] 📝 ゲーム一覧画面
@@ -1077,6 +1085,103 @@ const cumulativeData = players.map(player => {
 - 横軸が常に0-20ハンドで固定表示
 - スコア統計も累計点数ベースで正しく動作
 - プレイヤー順位表示の一貫性向上
+
+---
+
+## 最新の追加実装（2025/06/03）
+
+### 60. ゲーム履歴API完全実装 ✅ **完了**
+
+**実装目的**: プレイヤーがゲーム履歴を確認できるAPIエンドポイントの実装
+
+#### 主要な実装内容
+- [x] 📝 **GET /api/games エンドポイント実装**
+  - ゲーム一覧取得API（ページング、フィルタリング、ソート対応）
+  - クエリパラメータ: page, limit, status, playerId, sortBy, sortOrder
+  - レスポンス: ゲーム基本情報 + 最終スコア + ページング情報
+
+- [x] 📝 **GET /api/games/:id エンドポイント実装**  
+  - ゲーム詳細取得API（ハンド・トリック・スコア履歴含む）
+  - 全ハンド詳細、スコア履歴、トリック詳細を包含
+  - ハンド情報: ハートブレイク、シュートザムーン、スコア詳細
+  - トリック情報: 出されたカード、勝者、リード、ポイント
+
+- [x] 🏗️ **GameRepositoryパターン実装**
+  - Repository層によるデータアクセス抽象化
+  - IGameRepositoryインターフェースで型安全性確保
+  - Containerクラスで依存性注入パターン実装
+  - PrismaServiceとの統合
+
+- [x] 📊 **データ構造設計**
+  - GameData: ゲーム基本情報 + 最終スコア
+  - GameDetailData: 詳細情報（ハンド、トリック、スコア履歴）
+  - GameListQuery: クエリパラメータ型定義
+  - HandData, TrickData, HandScoreData, TrickCardData型定義
+
+- [x] 🧪 **包括的テストスイート作成（13テストケース）**
+  - ゲーム一覧取得のテスト（ページング、フィルタリング、ソート）
+  - ゲーム詳細取得のテスト
+  - バリデーションエラーのテスト（400エラー）
+  - 存在しないゲームのテスト（404エラー）
+  - MockGameRepositoryヘルパー実装
+
+#### 技術的実装詳細
+
+**API仕様:**
+```typescript
+// ゲーム一覧
+GET /api/games?page=1&limit=10&status=FINISHED&playerId=1&sortBy=startTime&sortOrder=desc
+
+// ゲーム詳細
+GET /api/games/:id
+```
+
+**実装したレスポンス構造:**
+```typescript
+interface GameListResponse {
+  success: boolean;
+  data: GameData[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+interface GameDetailResponse {
+  success: boolean;
+  data: GameDetailData;
+}
+```
+
+**Repository実装パターン:**
+```typescript
+export class GameRepository implements IGameRepository {
+  async findAll(query: GameListQuery): Promise<{ games: GameData[]; total: number }>;
+  async findById(id: number): Promise<GameDetailData | null>;
+  async count(status?: GameStatus): Promise<number>;
+}
+```
+
+#### テスト結果
+- **APIテスト**: 13/13テスト正常通過 ✅
+- **TypeScript型チェック**: エラーなし ✅  
+- **ESLint**: エラーなし ✅
+- **全体への影響**: 既存機能に影響なし ✅
+
+#### 実装されたフィルタリング・ソート機能
+1. **フィルタリング**: status（PLAYING/FINISHED/PAUSED/ABANDONED）、playerId
+2. **ソート**: startTime/endTime/duration、asc/desc
+3. **ページング**: page（1-）、limit（1-100）
+4. **バリデーション**: 全パラメータの入力値検証
+
+#### 影響範囲
+- **API層**: 新規エンドポイント追加（/api/games, /api/games/:id）
+- **Repository層**: GameRepository新規作成、Containerクラス拡張
+- **テスト層**: MockGameRepositoryヘルパー追加、13テストケース作成
+- **型定義**: GameData関連の包括的な型定義追加
+- **既存機能**: 影響なし（既存テスト全て正常通過）
 
 ---
 
