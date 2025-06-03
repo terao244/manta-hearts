@@ -211,3 +211,102 @@ export interface ScoreGraphProps {
   currentPlayerId?: number;
   className?: string;
 }
+
+// ゲーム履歴API関連の型定義
+export interface GameData {
+  id: number;
+  startTime: string;
+  endTime?: string;
+  duration?: number;
+  status: 'PLAYING' | 'FINISHED' | 'PAUSED' | 'ABANDONED';
+  finalScores: Record<number, number>;
+  winnerId?: number;
+  players: Array<{
+    id: number;
+    name: string;
+    position: 'North' | 'East' | 'South' | 'West';
+    finalScore: number;
+  }>;
+}
+
+export interface GameDetailData extends GameData {
+  hands: HandData[];
+  scoreHistory: ScoreHistoryEntry[];
+  tricks: TrickDetailData[];
+}
+
+export interface HandDetailData {
+  handNumber: number;
+  exchangeDirection: 'left' | 'right' | 'across' | 'none';
+  heartsBroken: boolean;
+  shootTheMoonPlayerId?: number;
+  scores: Record<number, number>;
+  tricks: TrickDetailData[];
+}
+
+export interface TrickDetailData {
+  trickNumber: number;
+  handNumber: number;
+  leadPlayerId: number;
+  winnerId: number;
+  points: number;
+  cards: Array<{
+    playerId: number;
+    card: CardInfo;
+  }>;
+}
+
+export interface GameListQuery {
+  page?: number;
+  limit?: number;
+  status?: 'PLAYING' | 'FINISHED' | 'PAUSED' | 'ABANDONED';
+  playerId?: number;
+  sortBy?: 'startTime' | 'endTime' | 'duration';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface GameListResponse {
+  success: boolean;
+  data: GameData[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface GameDetailResponse {
+  success: boolean;
+  data: GameDetailData;
+}
+
+// カスタムフック用の型定義
+export interface UseGameHistoryOptions {
+  page?: number;
+  limit?: number;
+  status?: string;
+  playerId?: number;
+  sortBy?: string;
+  sortOrder?: string;
+}
+
+export interface UseGameHistoryResult {
+  games: GameData[];
+  isLoading: boolean;
+  error: Error | null;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  refetch: () => void;
+}
+
+export interface UseGameDetailResult {
+  game: GameDetailData | null;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => void;
+}
