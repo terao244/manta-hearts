@@ -169,9 +169,11 @@ function GameBasicInfo({ gameDetail }: { gameDetail: GameDetailData }) {
   };
 
   // 最終スコアから勝者を決定
-  const winner = gameDetail.players.reduce((min, player) => 
-    player.finalScore < min.finalScore ? player : min
-  );
+  const winner = gameDetail.players?.length > 0 
+    ? gameDetail.players.reduce((min, player) => 
+        player.finalScore < min.finalScore ? player : min
+      )
+    : null;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -205,7 +207,7 @@ function GameBasicInfo({ gameDetail }: { gameDetail: GameDetailData }) {
                 <dd className="text-gray-900">{formatDuration(gameDetail.duration)}</dd>
               </div>
             )}
-            {gameDetail.status === 'FINISHED' && (
+            {gameDetail.status === 'FINISHED' && winner && (
               <div className="flex justify-between">
                 <dt className="text-gray-600">勝者:</dt>
                 <dd className="text-green-600 font-semibold">{winner.name}</dd>
@@ -218,9 +220,10 @@ function GameBasicInfo({ gameDetail }: { gameDetail: GameDetailData }) {
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">最終結果</h2>
           <div className="space-y-2">
-            {gameDetail.players
-              .sort((a, b) => a.finalScore - b.finalScore)
-              .map((player, index) => (
+            {gameDetail.players && gameDetail.players.length > 0 ? (
+              gameDetail.players
+                .sort((a, b) => a.finalScore - b.finalScore)
+                .map((player, index) => (
                 <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                   <div className="flex items-center">
                     <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-3 ${
@@ -236,7 +239,12 @@ function GameBasicInfo({ gameDetail }: { gameDetail: GameDetailData }) {
                     {player.finalScore}点
                   </span>
                 </div>
-              ))}
+              ))
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                プレイヤー情報がありません
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -246,29 +254,35 @@ function GameBasicInfo({ gameDetail }: { gameDetail: GameDetailData }) {
 
 function ScoreGraphSection({ gameDetail }: { gameDetail: GameDetailData }) {
   // スコア履歴をScoreGraphに渡すための形式に変換
-  const scoreHistory = gameDetail.scoreHistory.map(entry => ({
+  const scoreHistory = gameDetail.scoreHistory?.map(entry => ({
     hand: entry.hand,
     scores: entry.scores,
-  }));
+  })) || [];
 
-  const players = gameDetail.players.map(player => ({
+  const players = gameDetail.players?.map(player => ({
     id: player.id,
     name: player.name,
     displayName: player.name,
     displayOrder: 1,
     isActive: true,
-  }));
+  })) || [];
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-xl font-semibold text-gray-900 mb-6">スコア推移</h2>
-      <div className="h-96">
-        <ScoreGraph
-          players={players}
-          scoreHistory={scoreHistory}
-          currentPlayerId={players[0]?.id}
-        />
-      </div>
+      {players.length > 0 ? (
+        <div className="h-96">
+          <ScoreGraph
+            players={players}
+            scoreHistory={scoreHistory}
+            currentPlayerId={players[0]?.id}
+          />
+        </div>
+      ) : (
+        <div className="text-center py-12 text-gray-500">
+          スコアデータがありません
+        </div>
+      )}
     </div>
   );
 }
@@ -277,12 +291,12 @@ function HandHistorySection({ gameDetail }: { gameDetail: GameDetailData }) {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-xl font-semibold text-gray-900 mb-6">ハンド履歴</h2>
-      {gameDetail.hands.length === 0 ? (
+      {!gameDetail.hands || gameDetail.hands.length === 0 ? (
         <p className="text-gray-600">ハンド履歴がありません。</p>
       ) : (
         <div className="space-y-4">
           {gameDetail.hands.map((hand) => (
-            <HandDetail key={hand.handNumber} hand={hand} players={gameDetail.players} />
+            <HandDetail key={hand.handNumber} hand={hand} players={gameDetail.players || []} />
           ))}
         </div>
       )}
@@ -337,11 +351,11 @@ function HandDetail({ hand, players }: { hand: HandDetailData; players: GameDeta
           <div className="mt-4">
             <h4 className="font-medium text-gray-900 mb-2">ハンドスコア</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {Object.entries(hand.scores).map(([playerId, score]) => {
+              {hand.scores && Object.entries(hand.scores).map(([playerId, score]) => {
                 const player = players.find(p => p.id === Number(playerId));
                 return (
                   <div key={playerId} className="bg-gray-50 p-2 rounded text-center">
-                    <div className="text-sm text-gray-600">{player?.name}</div>
+                    <div className="text-sm text-gray-600">{player?.name || `プレイヤー${playerId}`}</div>
                     <div className="font-medium">{score}点</div>
                   </div>
                 );
@@ -371,12 +385,12 @@ function HandDetail({ hand, players }: { hand: HandDetailData; players: GameDeta
                       return (
                         <tr key={trick.trickNumber} className="border-b border-gray-100">
                           <td className="py-2">{trick.trickNumber}</td>
-                          <td className="py-2">{leader?.name}</td>
-                          <td className="py-2 font-medium">{winner?.name}</td>
+                          <td className="py-2">{leader?.name || `プレイヤー${trick.leadPlayerId}`}</td>
+                          <td className="py-2 font-medium">{winner?.name || `プレイヤー${trick.winnerId}`}</td>
                           <td className="py-2">{trick.points}点</td>
                           <td className="py-2">
                             <div className="flex space-x-1">
-                              {trick.cards.map((cardPlay) => (
+                              {trick.cards && trick.cards.map((cardPlay) => (
                                 <span key={`${cardPlay.card.suit}-${cardPlay.card.rank}`} className="text-xs bg-gray-200 px-1 rounded">
                                   {cardPlay.card.suit.charAt(0)}{cardPlay.card.rank.charAt(0)}
                                 </span>
