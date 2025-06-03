@@ -128,17 +128,7 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
         },
       },
       title: {
-        display: true,
-        text: 'スコア推移グラフ',
-        font: {
-          size: 14,
-          weight: 'bold' as const,
-        },
-        color: '#1f2937', // gray-800
-        padding: {
-          top: 5,
-          bottom: 10,
-        },
+        display: false,
       },
       tooltip: {
         mode: 'index' as const,
@@ -257,8 +247,8 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
   }), []);
 
   return (
-    <div className={`bg-white rounded-lg p-2 shadow-md ${className}`} style={{ width: '270px' }}>
-      <div className="h-96 w-full">
+    <div className={`bg-white rounded-lg p-2 shadow-md ${className}`} style={{ width: '270px', height: '28rem' }}>
+      <div className="h-full w-full">
         <Line data={chartData} options={chartOptions} />
       </div>
 
