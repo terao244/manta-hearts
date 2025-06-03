@@ -4,6 +4,7 @@ import { Card } from '../game/Card';
 import { GameStatus } from '../game/GameState';
 import { PrismaService } from './PrismaService';
 import { Server } from 'socket.io';
+import Container from '../container/Container';
 import type {
   ServerToClientEvents,
   ClientToServerEvents,
@@ -21,6 +22,7 @@ export class GameService {
   private playerGameMap: Map<number, number> = new Map();
   private gamePlayersMap: Map<number, Set<number>> = new Map();
   private gameScoreHistory: Map<number, Array<{ hand: number; scores: Record<number, number> }>> = new Map();
+  private gameHandIds: Map<number, Map<number, number>> = new Map(); // gameId -> handNumber -> handId
   private io?: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
   
   private constructor() {}
@@ -75,6 +77,7 @@ export class GameService {
             if (players.size === 0) {
               this.gameEngines.delete(existingGameId);
               this.gamePlayersMap.delete(existingGameId);
+              this.gameHandIds.delete(existingGameId);
             }
           }
           gameId = this.findAvailableGame() || await this.createNewGame();
@@ -277,6 +280,7 @@ export class GameService {
         if (players.size === 0) {
           this.gameEngines.delete(gameId);
           this.gamePlayersMap.delete(gameId);
+          this.gameHandIds.delete(gameId);
         }
       }
     }
@@ -334,15 +338,69 @@ export class GameService {
       onPlayerLeft: (playerId) => {
         this.broadcastToGame(gameId, 'playerLeft', playerId);
       },
-      onHandStarted: (handNumber) => {
-        this.broadcastToGame(gameId, 'handStarted', handNumber);
+      onHandStarted: async (handNumber) => {
+        try {
+          // Handテーブルにレコードを作成
+          const container = Container.getInstance();
+          const handRepository = container.getHandRepository();
+          const hand = await handRepository.createHand(gameId, handNumber);
+          
+          // handIdをゲーム状態に保持
+          let handIds = this.gameHandIds.get(gameId);
+          if (!handIds) {
+            handIds = new Map();
+            this.gameHandIds.set(gameId, handIds);
+          }
+          handIds.set(handNumber, hand.id);
+          
+          console.log(`Hand ${handNumber} created for game ${gameId} with ID ${hand.id}`);
+          
+          this.broadcastToGame(gameId, 'handStarted', handNumber);
+        } catch (error) {
+          console.error(`Error creating hand ${handNumber} for game ${gameId}:`, error);
+          // エラーがあってもゲーム進行は継続
+          this.broadcastToGame(gameId, 'handStarted', handNumber);
+        }
       },
-      onCardsDealt: (playerHands) => {
-        // 各プレイヤーに個別に手札を送信
-        playerHands.forEach((cards, playerId) => {
-          const cardInfos = cards.map(card => this.cardToCardInfo(card));
-          this.sendToPlayer(playerId, 'cardsDealt', cardInfos);
-        });
+      onCardsDealt: async (playerHands) => {
+        try {
+          // HandCardテーブルに一括保存
+          const handIds = this.gameHandIds.get(gameId);
+          if (handIds) {
+            // 現在のハンド番号を取得（最後に作成されたハンド）
+            const handNumbers = Array.from(handIds.keys()).sort((a, b) => b - a);
+            const currentHandNumber = handNumbers[0];
+            const currentHandId = handIds.get(currentHandNumber);
+            
+            if (currentHandId) {
+              const container = Container.getInstance();
+              const handCardRepository = container.getHandCardRepository();
+              
+              // playerHands（Map<playerId, Card[]>）を Map<playerId, cardId[]> に変換
+              const playerCardIds = new Map<number, number[]>();
+              for (const [playerId, cards] of playerHands) {
+                const cardIds = cards.map(card => card.id);
+                playerCardIds.set(playerId, cardIds);
+              }
+              
+              const result = await handCardRepository.saveHandCards(currentHandId, playerCardIds);
+              console.log(`Saved ${result.count} hand cards for hand ${currentHandNumber} (ID: ${currentHandId})`);
+            }
+          }
+          
+          // 各プレイヤーに個別に手札を送信
+          playerHands.forEach((cards, playerId) => {
+            const cardInfos = cards.map(card => this.cardToCardInfo(card));
+            this.sendToPlayer(playerId, 'cardsDealt', cardInfos);
+          });
+        } catch (error) {
+          console.error(`Error saving hand cards for game ${gameId}:`, error);
+          // エラーがあってもゲーム進行は継続
+          playerHands.forEach((cards, playerId) => {
+            const cardInfos = cards.map(card => this.cardToCardInfo(card));
+            this.sendToPlayer(playerId, 'cardsDealt', cardInfos);
+          });
+        }
       },
       onExchangePhaseStarted: (direction) => {
         this.broadcastToGame(gameId, 'exchangePhaseStarted', direction);
@@ -367,27 +425,84 @@ export class GameService {
           this.broadcastToGame(gameId, 'handScoreUpdate', currentHandScores);
         }
       },
-      onHandCompleted: (handNumber, scores) => {
-        // スコア履歴を更新
-        const scoreEntry = {
-          hand: handNumber,
-          scores: Object.fromEntries(scores)
-        };
-        
-        let history = this.gameScoreHistory.get(gameId);
-        if (!history) {
-          history = [];
-          this.gameScoreHistory.set(gameId, history);
+      onHandCompleted: async (handNumber, scores) => {
+        try {
+          // Handテーブルを更新（ハートブレイク、シュートザムーン情報）
+          const handIds = this.gameHandIds.get(gameId);
+          if (handIds) {
+            const handId = handIds.get(handNumber);
+            if (handId) {
+              const container = Container.getInstance();
+              const handRepository = container.getHandRepository();
+              
+              // GameEngineからハートブレイクとシュートザムーン情報を取得
+              const gameEngine = this.gameEngines.get(gameId);
+              if (gameEngine) {
+                const gameState = gameEngine.getGameState();
+                const updates: any = {};
+                
+                if (gameState.heartsBroken) {
+                  updates.heartsBroken = true;
+                }
+                
+                // シュートザムーンの判定（26点を取得したプレイヤーがいるかチェック）
+                for (const [playerId, score] of scores) {
+                  if (score === 26) {
+                    updates.shootTheMoonPlayerId = playerId;
+                    break;
+                  }
+                }
+                
+                if (Object.keys(updates).length > 0) {
+                  await handRepository.updateHand(handId, updates);
+                  console.log(`Hand ${handNumber} updated with:`, updates);
+                }
+              }
+            }
+          }
+          
+          // スコア履歴を更新
+          const scoreEntry = {
+            hand: handNumber,
+            scores: Object.fromEntries(scores)
+          };
+          
+          let history = this.gameScoreHistory.get(gameId);
+          if (!history) {
+            history = [];
+            this.gameScoreHistory.set(gameId, history);
+          }
+          history.push(scoreEntry);
+          
+          this.broadcastToGame(gameId, 'handCompleted', { 
+            handNumber, 
+            scores: Object.fromEntries(scores) 
+          });
+          
+          // スコア履歴も送信
+          this.broadcastToGame(gameId, 'scoreHistoryUpdate', history);
+        } catch (error) {
+          console.error(`Error completing hand ${handNumber} for game ${gameId}:`, error);
+          // エラーがあってもゲーム進行は継続
+          const scoreEntry = {
+            hand: handNumber,
+            scores: Object.fromEntries(scores)
+          };
+          
+          let history = this.gameScoreHistory.get(gameId);
+          if (!history) {
+            history = [];
+            this.gameScoreHistory.set(gameId, history);
+          }
+          history.push(scoreEntry);
+          
+          this.broadcastToGame(gameId, 'handCompleted', { 
+            handNumber, 
+            scores: Object.fromEntries(scores) 
+          });
+          
+          this.broadcastToGame(gameId, 'scoreHistoryUpdate', history);
         }
-        history.push(scoreEntry);
-        
-        this.broadcastToGame(gameId, 'handCompleted', { 
-          handNumber, 
-          scores: Object.fromEntries(scores) 
-        });
-        
-        // スコア履歴も送信
-        this.broadcastToGame(gameId, 'scoreHistoryUpdate', history);
       },
       onGameCompleted: async (winnerId, finalScores) => {
         // ゲーム結果をデータベースに保存

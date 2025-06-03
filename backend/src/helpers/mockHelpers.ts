@@ -27,3 +27,28 @@ export class MockGameRepository implements IGameRepository {
 export const createMockGameRepository = (): MockGameRepository => {
   return new MockGameRepository();
 };
+
+export const createMockPrismaService = () => {
+  const mockHandMethods = {
+    create: jest.fn(),
+    update: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn()
+  };
+
+  const mockHandCardMethods = {
+    createMany: jest.fn(),
+    findMany: jest.fn()
+  };
+
+  return {
+    client: {
+      hand: mockHandMethods,
+      handCard: mockHandCardMethods
+    },
+    getClient: jest.fn().mockReturnValue({
+      hand: mockHandMethods,
+      handCard: mockHandCardMethods
+    })
+  };
+};
