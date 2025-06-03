@@ -7,6 +7,7 @@ import morgan from 'morgan';
 import { PrismaClient } from '@prisma/client';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import playersRouter from './routes/players';
+import gamesRouter from './routes/games';
 import { GameService } from './services/GameService';
 import { SocketHandlers } from './socket/handlers';
 import type {
@@ -70,6 +71,7 @@ app.get('/api/info', (req, res) => {
 
 // APIルート
 app.use('/api/players', playersRouter);
+app.use('/api/games', gamesRouter);
 
 // 404エラーハンドラー
 app.use(notFoundHandler);

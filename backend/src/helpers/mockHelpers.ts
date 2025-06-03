@@ -1,5 +1,8 @@
 import { IPlayerRepository } from '../repositories/interfaces/IPlayerRepository';
 import { PlayerData } from '../repositories/PlayerRepository';
+import { IGameRepository } from '../repositories/interfaces/IGameRepository';
+import { GameData, GameDetailData, GameListQuery } from '../repositories/GameRepository';
+import { GameStatus } from '@prisma/client';
 
 export class MockPlayerRepository implements IPlayerRepository {
   findAll = jest.fn<Promise<PlayerData[]>, [boolean?]>();
@@ -13,4 +16,14 @@ export class MockPlayerRepository implements IPlayerRepository {
 
 export const createMockPlayerRepository = (): MockPlayerRepository => {
   return new MockPlayerRepository();
+};
+
+export class MockGameRepository implements IGameRepository {
+  findAll = jest.fn<Promise<{ games: GameData[]; total: number }>, [GameListQuery?]>();
+  findById = jest.fn<Promise<GameDetailData | null>, [number]>();
+  count = jest.fn<Promise<number>, [GameStatus?]>();
+}
+
+export const createMockGameRepository = (): MockGameRepository => {
+  return new MockGameRepository();
 };
