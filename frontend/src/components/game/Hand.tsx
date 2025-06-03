@@ -124,7 +124,7 @@ export const Hand: React.FC<HandProps> = ({
 
   if (cards.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center py-4 text-gray-500">
         手札がありません
       </div>
     );
@@ -132,17 +132,6 @@ export const Hand: React.FC<HandProps> = ({
 
   return (
     <div className="w-full">
-      {/* 手札情報ヘッダー */}
-      <div className="flex justify-between items-center mb-2">
-        <div className="text-sm text-gray-600">
-          {getHandSummary()}
-        </div>
-        {mode !== 'view' && (
-          <div className="text-sm font-medium text-blue-600">
-            {mode === 'exchange' ? '交換モード' : 'プレイモード'}
-          </div>
-        )}
-      </div>
 
       {/* 交換モード時の選択プログレス */}
       {mode === 'exchange' && (
@@ -172,7 +161,7 @@ export const Hand: React.FC<HandProps> = ({
       <div 
         data-testid="hand-container"
         className={`
-          flex flex-wrap justify-center gap-2 p-4 rounded-lg min-h-32 border-2 transition-all duration-300
+          flex flex-wrap justify-center gap-2 p-3 rounded-lg min-h-20 border-2 transition-all duration-300
           ${mode === 'play' && !isPlayerTurn 
             ? 'bg-gray-100 border-gray-300 opacity-60' 
             : 'bg-green-100 border-green-200'

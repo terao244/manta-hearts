@@ -363,8 +363,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
 
         {/* 手札エリア */}
-        <div className="bg-white rounded-lg p-4 mb-6">
-          <h3 className="text-black text-lg font-semibold mb-3">あなたの手札</h3>
+        <div className="bg-white rounded-lg p-3 mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-black text-base font-semibold">あなたの手札</h3>
+            {(phase === 'exchanging' || phase === 'playing') && (
+              <div className="text-sm font-medium text-blue-600">
+                {phase === 'exchanging' ? '交換モード' : 'プレイモード'}
+              </div>
+            )}
+          </div>
           {currentPlayerCards.length > 0 ? (
             <Hand
               cards={currentPlayerCards}
@@ -386,7 +393,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               onCancel={handleExchangeCancel}
             />
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-4 text-gray-500">
               手札がありません
             </div>
           )}

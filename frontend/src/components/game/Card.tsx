@@ -55,7 +55,7 @@ export const Card: React.FC<CardProps> = ({
       case 'small': return { container: 'w-12 h-16', image: { width: 48, height: 64 } };
       case 'large': return { container: 'w-20 h-28', image: { width: 80, height: 112 } };
       case 'medium':
-      default: return { container: 'w-16 h-24', image: { width: 64, height: 96 } };
+      default: return { container: 'w-20 h-28', image: { width: 80, height: 112 } };
     }
   };
 
