@@ -66,7 +66,7 @@ const formatDuration = (minutes?: number) => {
 
 // 勝者を取得
 const getWinner = (game: GameData) => {
-  if (!game.winnerId) return null;
+  if (!game.winnerId || !game.players) return null;
   return game.players.find(p => p.id === game.winnerId);
 };
 
@@ -109,7 +109,7 @@ export default function GameCard({ game }: GameCardProps) {
         <div className="mb-4">
           <h4 className="text-sm font-medium text-gray-700 mb-2">プレイヤー</h4>
           <div className="grid grid-cols-2 gap-2">
-            {game.players.map((player) => (
+            {game.players?.map((player) => (
               <div key={player.id} className="flex justify-between items-center py-1">
                 <span className="text-sm text-gray-900 truncate">
                   {player.name}
@@ -121,7 +121,11 @@ export default function GameCard({ game }: GameCardProps) {
                   {player.finalScore}点
                 </span>
               </div>
-            ))}
+            )) || (
+              <div className="text-sm text-gray-500 col-span-2">
+                プレイヤー情報がありません
+              </div>
+            )}
           </div>
         </div>
 
