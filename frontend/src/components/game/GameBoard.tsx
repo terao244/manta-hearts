@@ -185,33 +185,33 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   return (
     <div className="min-h-screen bg-green-900 text-white">
       {/* ヘッダー */}
-      <div className="bg-green-800 p-4 shadow-lg">
+      <div className="bg-green-800 p-2 shadow-lg">
         <div className="container mx-auto flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold">ハーツゲーム</h1>
-            <div className="text-sm opacity-80">
+            <h1 className="text-lg font-bold">ハーツゲーム</h1>
+            <div className="text-xs opacity-80">
               ゲーム#{gameId} | ハンド: {currentHand} | トリック: {currentTrick}
             </div>
           </div>
           <div className="text-right">
-            <div className={`text-sm ${
+            <div className={`text-xs ${
               phase === 'playing' && currentTurn === currentPlayerId 
                 ? 'text-yellow-300 font-bold animate-pulse' 
                 : ''
             }`}>
               {status === 'FINISHED' ? 'ゲーム終了' : getPhaseMessage()}
               {phase === 'playing' && currentTurn === currentPlayerId && (
-                <span className="ml-2 text-yellow-400">👆</span>
+                <span className="ml-1 text-yellow-400">👆</span>
               )}
             </div>
             {phase === 'exchanging' && exchangeDirection && (
-              <div className="text-yellow-300 text-sm font-semibold flex items-center justify-end gap-2 mt-1">
+              <div className="text-yellow-300 text-xs font-semibold flex items-center justify-end gap-1 mt-0.5">
                 <span>{getExchangeDirectionIcon()}</span>
                 <span>{getExchangeDirectionText()}</span>
               </div>
             )}
             {phase === 'exchanging' && exchangeProgress && (
-              <div className="text-blue-300 text-xs mt-1 text-right">
+              <div className="text-blue-300 text-xs mt-0.5 text-right">
                 {exchangeProgress.exchangedPlayers.length === 4 ? (
                   <span className="text-green-400 animate-pulse font-bold">
                     🎉 全員交換完了！プレイ開始準備中...
@@ -222,10 +222,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                       交換完了: {exchangeProgress.exchangedPlayers.length}/4人
                     </span>
                     {currentPlayerId && exchangeProgress.exchangedPlayers.includes(currentPlayerId) && (
-                      <span className="text-green-400 ml-2">✓ あなた完了</span>
+                      <span className="text-green-400 ml-1">✓ あなた完了</span>
                     )}
                     {exchangeProgress.remainingPlayers.length > 0 && (
-                      <span className="text-yellow-300 ml-2">
+                      <span className="text-yellow-300 ml-1">
                         待機中: {exchangeProgress.remainingPlayers.length}人
                       </span>
                     )}
@@ -234,7 +234,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               </div>
             )}
             {heartsBroken && (
-              <div className="text-red-400 text-sm font-semibold">
+              <div className="text-red-400 text-xs font-semibold">
                 ハートブレイク中
               </div>
             )}
