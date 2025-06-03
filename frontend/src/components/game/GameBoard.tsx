@@ -24,34 +24,26 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, curren
   return (
     <div
       className={`
-        p-3 bg-white rounded-lg shadow-md border-2 transition-all min-w-24 text-center transform
+        px-3 py-2 bg-white rounded-lg shadow-md border-2 transition-all min-w-28 text-center transform
         ${isCurrentPlayer ? 'ring-2 ring-blue-500 border-blue-300 scale-105' : 'border-gray-200'}
         ${isCurrentTurn && !isCurrentPlayer ? 'bg-yellow-50 border-yellow-300 ring-2 ring-yellow-400 scale-110 animate-pulse' : ''}
         ${isCurrentTurn && isCurrentPlayer ? 'bg-green-50 border-green-300 ring-2 ring-green-400 scale-110 animate-pulse' : ''}
       `}
     >
-      <div className={`text-xs font-semibold ${
+      <div className={`text-sm font-semibold mb-1 ${
         isCurrentTurn ? 'text-yellow-800' : 'text-gray-800'
       }`}>
         {player.displayName}
       </div>
-      <div className="space-y-1">
-        <div className={`text-sm font-bold ${
-          isCurrentTurn ? 'text-yellow-600' : 'text-green-600'
-        }`}>
-          合計: {cumulativeScore}点
-        </div>
-        <div className={`text-xs ${
-          isCurrentTurn ? 'text-red-400' : 'text-red-500'
-        } font-medium`}>
-          ハンド: +{currentHandScore}点
-        </div>
+      <div className={`text-sm font-bold ${
+        isCurrentTurn ? 'text-yellow-600' : 'text-green-600'
+      }`}>
+        {cumulativeScore}点 / +{currentHandScore}点
       </div>
       {isCurrentTurn && (
-        <div className="flex items-center justify-center gap-1">
-          <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce"></div>
-          <div className="text-xs text-yellow-600 font-bold">手番</div>
-          <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+        <div className="flex items-center justify-center gap-1 mt-1">
+          <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce"></div>
+          <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
         </div>
       )}
     </div>
@@ -246,9 +238,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         {/* メインコンテンツエリア（ゲームテーブル＋スコアグラフ） */}
         <div className="flex gap-4 justify-center mb-6">
           {/* ゲームテーブルエリア */}
-          <div className="relative w-full max-w-4xl">
+          <div className="relative w-full max-w-5xl">
             {/* 卓配置レイアウト */}
-            <div className="relative h-96 bg-green-800 rounded-lg p-4">
+            <div className="relative h-[28rem] bg-green-800 rounded-lg p-5">
             
             {/* 北（上）のプレイヤー */}
             {players.filter(p => getPlayerPosition(p.id) === 'North').map(player => (
@@ -298,9 +290,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             <div className="absolute inset-0 flex items-center justify-center">
               <div 
                 data-testid="trick-area"
-                className="bg-green-700 rounded-lg p-6 w-80 h-56 flex flex-col items-center justify-center shadow-lg border border-green-600"
+                className="bg-green-700 rounded-lg p-7 w-96 h-64 flex flex-col items-center justify-center shadow-lg border border-green-600"
               >
-                <h4 className="text-sm font-semibold mb-4 text-center text-white">
+                <h4 className="text-base font-semibold mb-5 text-center text-white">
                   トリック {currentTrick}
                   {getCurrentTrickCards().length > 0 && (
                     <span className="ml-2 text-xs text-yellow-300">
@@ -308,7 +300,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     </span>
                   )}
                 </h4>
-                <div className="grid grid-cols-2 gap-3 w-full">
+                <div className="grid grid-cols-2 gap-4 w-full">
                   {getCurrentTrickCards().map((cardPlay, index) => {
                     const player = players.find(p => p.id === cardPlay.playerId);
                     const cardInfo = cardPlay.card;
