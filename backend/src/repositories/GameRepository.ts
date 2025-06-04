@@ -15,16 +15,27 @@ export interface GameData {
 }
 
 export interface GameDetailData extends GameData {
+  players: Array<{
+    id: number;
+    name: string;
+    position: 'North' | 'East' | 'South' | 'West';
+    finalScore: number;
+  }>;
   hands: HandData[];
+  scoreHistory: Array<{
+    hand: number;
+    scores: Record<number, number>;
+  }>;
 }
 
 export interface HandData {
   id: number;
   handNumber: number;
+  exchangeDirection: 'left' | 'right' | 'across' | 'none';
   heartsBroken: boolean;
   shootTheMoonPlayerId: number | null;
   shootTheMoonPlayerName: string | null;
-  scores: HandScoreData[];
+  scores: Record<number, number>;
   tricks: TrickData[];
 }
 
@@ -41,12 +52,21 @@ export interface HandScoreData {
 export interface TrickData {
   id: number;
   trickNumber: number;
-  winnerPlayerId: number;
-  winnerPlayerName: string;
-  points: number;
+  handNumber: number;
   leadPlayerId: number;
-  leadPlayerName: string;
-  cards: TrickCardData[];
+  winnerId: number;
+  points: number;
+  cards: Array<{
+    playerId: number;
+    card: {
+      id: number;
+      suit: 'HEARTS' | 'DIAMONDS' | 'CLUBS' | 'SPADES';
+      rank: 'ACE' | 'TWO' | 'THREE' | 'FOUR' | 'FIVE' | 'SIX' | 'SEVEN' | 'EIGHT' | 'NINE' | 'TEN' | 'JACK' | 'QUEEN' | 'KING';
+      code: string;
+      pointValue: number;
+      sortOrder: number;
+    };
+  }>;
 }
 
 export interface TrickCardData {
@@ -280,36 +300,50 @@ export class GameRepository implements IGameRepository {
     const hands: HandData[] = game.hands.map((hand) => ({
       id: hand.id,
       handNumber: hand.handNumber,
+      exchangeDirection: 'none' as const, // TODO: 実際の交換方向を取得する必要がある
       heartsBroken: hand.heartsBroken,
       shootTheMoonPlayerId: hand.shootTheMoonPlayerId,
       shootTheMoonPlayerName: hand.shootTheMoonPlayer?.displayName || null,
-      scores: hand.scores.map((score) => ({
-        playerId: score.playerId,
-        playerName: score.player.displayName,
-        handPoints: score.handPoints,
-        cumulativePoints: score.cumulativePoints,
-        heartsTaken: score.heartsTaken,
-        queenOfSpadesTaken: score.queenOfSpadesTaken,
-        shootTheMoonAchieved: score.shootTheMoonAchieved,
-      })),
+      scores: hand.scores.reduce((acc, score) => {
+        acc[score.playerId] = score.handPoints;
+        return acc;
+      }, {} as Record<number, number>),
       tricks: hand.tricks.map((trick) => ({
         id: trick.id,
         trickNumber: trick.trickNumber,
-        winnerPlayerId: trick.winnerPlayerId,
-        winnerPlayerName: trick.winner.displayName,
-        points: trick.points,
+        handNumber: hand.handNumber,
         leadPlayerId: trick.leadPlayerId,
-        leadPlayerName: trick.leadPlayer.displayName,
+        winnerId: trick.winnerPlayerId,
+        points: trick.points,
         cards: trick.trickCards.map((trickCard) => ({
           playerId: trickCard.playerId,
-          playerName: trickCard.player.displayName,
-          cardCode: trickCard.card.code,
-          suit: trickCard.card.suit,
-          rank: trickCard.card.rank,
-          pointValue: trickCard.card.pointValue,
-          playOrder: trickCard.playOrder,
+          card: {
+            id: 0, // カードIDは必要に応じて追加
+            suit: trickCard.card.suit as 'HEARTS' | 'DIAMONDS' | 'CLUBS' | 'SPADES',
+            rank: trickCard.card.rank as 'ACE' | 'TWO' | 'THREE' | 'FOUR' | 'FIVE' | 'SIX' | 'SEVEN' | 'EIGHT' | 'NINE' | 'TEN' | 'JACK' | 'QUEEN' | 'KING',
+            code: trickCard.card.code,
+            pointValue: trickCard.card.pointValue,
+            sortOrder: 0,
+          },
         })),
       })),
+    }));
+
+    // プレイヤー情報を取得
+    const players = game.sessions.map((session) => ({
+      id: session.playerId,
+      name: session.player.displayName,
+      position: 'North' as 'North' | 'East' | 'South' | 'West', // TODO: 実際のポジションを取得
+      finalScore: finalScores.find(s => s.playerId === session.playerId)?.score || 0,
+    }));
+
+    // スコア履歴を作成
+    const scoreHistory = game.hands.map((hand) => ({
+      hand: hand.handNumber,
+      scores: hand.scores.reduce((acc, score) => {
+        acc[score.playerId] = score.cumulativePoints;
+        return acc;
+      }, {} as Record<number, number>),
     }));
 
     return {
@@ -322,7 +356,9 @@ export class GameRepository implements IGameRepository {
       duration: game.duration,
       playerCount: game.sessions.length,
       finalScores,
+      players,
       hands,
+      scoreHistory,
     };
   }
 

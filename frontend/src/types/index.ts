@@ -232,7 +232,6 @@ export interface GameData {
 export interface GameDetailData extends GameData {
   hands: HandDetailData[];
   scoreHistory: ScoreHistoryEntry[];
-  tricks: TrickDetailData[];
 }
 
 export interface HandDetailData {

@@ -390,10 +390,16 @@ function HandDetail({ hand, players }: { hand: HandDetailData; players: GameDeta
                           <td className="py-2">{trick.points}点</td>
                           <td className="py-2">
                             <div className="flex space-x-1">
-                              {trick.cards && trick.cards.map((cardPlay) => (
-                                <span key={`${cardPlay.card.suit}-${cardPlay.card.rank}`} className="text-xs bg-gray-200 px-1 rounded">
-                                  {cardPlay.card.suit.charAt(0)}{cardPlay.card.rank.charAt(0)}
-                                </span>
+                              {trick.cards && trick.cards.map((cardPlay, index) => (
+                                cardPlay.card ? (
+                                  <span key={`${cardPlay.card.suit}-${cardPlay.card.rank}`} className="text-xs bg-gray-200 px-1 rounded">
+                                    {cardPlay.card.suit.charAt(0)}{cardPlay.card.rank.charAt(0)}
+                                  </span>
+                                ) : (
+                                  <span key={index} className="text-xs bg-red-200 px-1 rounded">
+                                    ?
+                                  </span>
+                                )
                               ))}
                             </div>
                           </td>
