@@ -17,8 +17,6 @@ interface HandHistoryProps {
 }
 
 export function HandHistory({
-  gameId,
-  handId,
   handNumber,
   players,
   playerCards,

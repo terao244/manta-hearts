@@ -2,7 +2,7 @@
  * カード表記システム - スーツ記号と数字の統一表記
  */
 
-import { CardInfo, CardDisplay, CardFormattingOptions } from '../types';
+import { CardInfo, CardDisplay } from '../types';
 
 // スーツの表記マッピング
 const SUIT_SYMBOLS: Record<string, { symbol: string; color: 'red' | 'black' }> = {

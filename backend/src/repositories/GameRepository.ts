@@ -12,6 +12,12 @@ export interface GameData {
   duration: number | null;
   playerCount: number;
   finalScores: { playerId: number; playerName: string; score: number }[];
+  players: Array<{
+    id: number;
+    name: string;
+    position: 'North' | 'East' | 'South' | 'West';
+    finalScore: number;
+  }>;
 }
 
 export interface GameDetailData extends GameData {
@@ -181,6 +187,14 @@ export class GameRepository implements IGameRepository {
         score: score.cumulativePoints,
       })) || [];
 
+      // プレイヤー情報を作成
+      const players = game.sessions.map((session) => ({
+        id: session.playerId,
+        name: session.player.displayName,
+        position: 'North' as 'North' | 'East' | 'South' | 'West', // TODO: 実際のポジションを取得
+        finalScore: finalScores.find(s => s.playerId === session.playerId)?.score || 0,
+      }));
+
       return {
         id: game.id,
         startTime: game.startTime,
@@ -191,6 +205,7 @@ export class GameRepository implements IGameRepository {
         duration: game.duration,
         playerCount: game.sessions.length,
         finalScores,
+        players,
       };
     });
 

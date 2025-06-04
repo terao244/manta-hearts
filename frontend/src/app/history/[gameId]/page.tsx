@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Breadcrumbs from '../../../components/ui/Breadcrumbs';
 import { useGameDetail } from '../../../hooks/useGameDetail';
-import { GameDetailData, HandDetailData } from '../../../types';
+import { GameDetailData, HandDetailData, CardInfo } from '../../../types';
 import { ScoreGraph } from '../../../components/game/ScoreGraph';
 import { formatCardFromInfo, getCardColorClass } from '../../../utils/cardFormatting';
 import { fetchHandCardsWithRetry, fetchHandExchangesWithRetry, CardExchange } from '../../../lib/api/games';
@@ -319,7 +319,7 @@ function HandHistorySection({ gameDetail }: { gameDetail: GameDetailData }) {
 
 function HandDetail({ hand, players, gameId }: { hand: HandDetailData; players: GameDetailData['players']; gameId: number }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [handCards, setHandCards] = useState<Record<number, any[]> | undefined>();
+  const [handCards, setHandCards] = useState<Record<number, CardInfo[]> | undefined>();
   const [exchanges, setExchanges] = useState<CardExchange[] | undefined>();
   const [loadingCards, setLoadingCards] = useState(false);
   const [loadingExchanges, setLoadingExchanges] = useState(false);

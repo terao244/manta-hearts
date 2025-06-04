@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CardExchange } from '../../lib/api/games';
 import { formatCardFromInfo, getCardColorClass } from '../../utils/cardFormatting';
+import { CardInfo } from '../../types';
 
 interface CardExchangeHistoryProps {
   gameId: number;
@@ -13,9 +14,13 @@ interface CardExchangeHistoryProps {
   onLoadExchanges?: () => void;
 }
 
+interface GroupedExchange {
+  fromPlayer: { id: number; name: string };
+  toPlayer: { id: number; name: string };
+  cards: CardInfo[];
+}
+
 export function CardExchangeHistory({
-  gameId,
-  handId,
   handNumber,
   exchangeDirection,
   exchanges,
@@ -56,7 +61,7 @@ export function CardExchangeHistory({
     }
     acc[exchange.fromPlayer.id].cards.push(exchange.card);
     return acc;
-  }, {} as Record<number, { fromPlayer: any; toPlayer: any; cards: any[] }>);
+  }, {} as Record<number, GroupedExchange>);
 
   return (
     <div className="border border-gray-200 rounded-lg">
