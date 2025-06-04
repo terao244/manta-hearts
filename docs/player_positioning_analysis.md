@@ -56,14 +56,14 @@ export enum PlayerPosition {
 
 ## 2. フロントエンドでのプレイヤー表示順決定ロジック
 
-### 2.1 相対位置計算ロジック
+### 2.1 相対位置計算ロジック（2025/06/05 更新）
 
 **ファイル**: `frontend/src/components/game/GameBoard.tsx:151-158`
 
 ```typescript
-const getPlayerPosition = (playerId: number): string => {
+const getPlayerPosition = (playerId: number): RelativePosition | '' => {
   if (!currentPlayerId) return '';
-  const positions = ['South', 'West', 'North', 'East'];
+  const positions: RelativePosition[] = ['bottom', 'left', 'top', 'right'];
   const currentIndex = players.findIndex(p => p.id === currentPlayerId);
   const playerIndex = players.findIndex(p => p.id === playerId);
   const relativeIndex = (playerIndex - currentIndex + 4) % 4;
@@ -72,38 +72,39 @@ const getPlayerPosition = (playerId: number): string => {
 ```
 
 **表示位置の決定ルール**:
-- **現在のプレイヤーは常に`South`（下）**に表示
+- **現在のプレイヤーは常に`bottom`（下）**に表示
 - その他のプレイヤーは相対的な位置に配置される
-- `positions = ['South', 'West', 'North', 'East']` の順序で配置
+- `positions = ['bottom', 'left', 'top', 'right']` の順序で配置
+- **バックエンドの絶対位置（North/East/South/West）と区別するため、フロントエンドでは相対位置表記を使用**
 
-### 2.2 画面上での配置
+### 2.2 画面上での配置（2025/06/05 更新）
 
 **ファイル**: `frontend/src/components/game/GameBoard.tsx:245-287`
 
 ```typescript
-{/* 北（上）のプレイヤー */}
-{players.filter(p => getPlayerPosition(p.id) === 'North').map(player => (
+{/* 上のプレイヤー */}
+{players.filter(p => getPlayerPosition(p.id) === 'top').map(player => (
   <div className="absolute top-2 left-1/2 transform -translate-x-1/2">
     <PlayerCard player={player} ... />
   </div>
 ))}
 
-{/* 東（右）のプレイヤー */}
-{players.filter(p => getPlayerPosition(p.id) === 'East').map(player => (
+{/* 右のプレイヤー */}
+{players.filter(p => getPlayerPosition(p.id) === 'right').map(player => (
   <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
     <PlayerCard player={player} ... />
   </div>
 ))}
 
-{/* 南（下）のプレイヤー */}
-{players.filter(p => getPlayerPosition(p.id) === 'South').map(player => (
+{/* 下のプレイヤー */}
+{players.filter(p => getPlayerPosition(p.id) === 'bottom').map(player => (
   <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
     <PlayerCard player={player} ... />
   </div>
 ))}
 
-{/* 西（左）のプレイヤー */}
-{players.filter(p => getPlayerPosition(p.id) === 'West').map(player => (
+{/* 左のプレイヤー */}
+{players.filter(p => getPlayerPosition(p.id) === 'left').map(player => (
   <div className="absolute left-2 top-1/2 transform -translate-y-1/2">
     <PlayerCard player={player} ... />
   </div>
@@ -111,10 +112,10 @@ const getPlayerPosition = (playerId: number): string => {
 ```
 
 **表示配置**:
-- **North**: 画面上部中央
-- **East**: 画面右側中央
-- **South**: 画面下部中央（現在のプレイヤー）
-- **West**: 画面左側中央
+- **top**: 画面上部中央
+- **right**: 画面右側中央
+- **bottom**: 画面下部中央（現在のプレイヤー）
+- **left**: 画面左側中央
 
 ## 3. 手番の決定方法
 
@@ -223,10 +224,11 @@ private setExchangeDirection(): void {
 
 ## 5. データ構造の整理
 
-### 5.1 席順データの型定義
+### 5.1 席順データの型定義（2025/06/05 更新）
 
 **バックエンド** (`backend/src/types/index.ts:186-191`):
 ```typescript
+// バックエンド用絶対位置型（ゲーム内での固定座席）
 export type PlayerPosition = 'North' | 'East' | 'South' | 'West';
 
 export interface PlayerPositionMap {
@@ -234,13 +236,17 @@ export interface PlayerPositionMap {
 }
 ```
 
-**フロントエンド** (`frontend/src/types/index.ts:162-166`):
+**フロントエンド** (`frontend/src/types/index.ts:162-169`):
 ```typescript
+// バックエンドとの互換性用（レガシー）
 export type PlayerPosition = 'North' | 'East' | 'South' | 'West';
 
 export interface PlayerPositionMap {
   [playerId: number]: PlayerPosition;
 }
+
+// フロントエンド画面表示用の相対位置型
+export type RelativePosition = 'top' | 'bottom' | 'left' | 'right';
 ```
 
 ### 5.2 交換方向の型定義
@@ -263,10 +269,11 @@ export enum ExchangeDirection {
 - **不変性**: 一度決定した席順はゲーム終了まで変更されない
 - **シンプルな実装**: 参加プレイヤー数によるswitch文での単純な割り当て
 
-### 6.2 フロントエンド表示の特徴
-- **相対表示**: 現在のプレイヤーを常に下部（South）に表示
+### 6.2 フロントエンド表示の特徴（2025/06/05 更新）
+- **相対表示**: 現在のプレイヤーを常に下部（bottom）に表示
 - **動的計算**: プレイヤーごとに相対位置を計算して表示
 - **直感的UI**: 自分を中心とした視点での表示
+- **用語分離**: バックエンドの絶対位置（North/East/South/West）とフロントエンドの相対位置（top/bottom/left/right）を明確に区別
 
 ### 6.3 手番制御の特徴
 - **循環制御**: プレイヤー配列のインデックスベースで循環
@@ -278,13 +285,19 @@ export enum ExchangeDirection {
 - **相対的計算**: プレイヤー配列のインデックス操作による交換相手決定
 - **対称性**: LEFT/RIGHTが対称的な計算式（+1 vs +3）
 
-## 7. まとめ
+## 7. まとめ（2025/06/05 更新）
 
 Mantaのプレイヤー席順・表示・手番・交換システムは以下の設計思想に基づいています：
 
-1. **席順**: 参加順による固定的な座席割り当て
-2. **表示**: 現在プレイヤー中心の相対的表示
+1. **席順**: 参加順による固定的な座席割り当て（バックエンド：North/East/South/West）
+2. **表示**: 現在プレイヤー中心の相対的表示（フロントエンド：top/bottom/left/right）
 3. **手番**: 配列順による循環的な制御
 4. **交換**: ハンド数による周期的な交換パターン
+5. **用語体系**: バックエンドとフロントエンドで異なる位置表記を使用し、混乱を回避
+
+### 重要な改善点（2025/06/05）
+- **用語の明確化**: バックエンドの「絶対位置」とフロントエンドの「相対位置」を明確に分離
+- **型安全性向上**: `RelativePosition`型を新たに定義し、フロントエンドでの型安全性を強化
+- **保守性向上**: 位置に関する概念を整理し、開発者の理解を促進
 
 この実装により、ハーツゲームの伝統的なルールに則った、直感的で分かりやすいプレイ体験が提供されています。
