@@ -6,6 +6,12 @@ import { HandRepository } from '../repositories/HandRepository';
 import { IHandRepository } from '../repositories/interfaces/IHandRepository';
 import { HandCardRepository } from '../repositories/HandCardRepository';
 import { IHandCardRepository } from '../repositories/interfaces/IHandCardRepository';
+import { CardExchangeRepository } from '../repositories/CardExchangeRepository';
+import { ICardExchangeRepository } from '../repositories/interfaces/ICardExchangeRepository';
+import { TrickRepository } from '../repositories/TrickRepository';
+import { ITrickRepository } from '../repositories/interfaces/ITrickRepository';
+import { TrickCardRepository } from '../repositories/TrickCardRepository';
+import { ITrickCardRepository } from '../repositories/interfaces/ITrickCardRepository';
 
 class Container {
   private static instance: Container;
@@ -13,6 +19,9 @@ class Container {
   private gameRepository: IGameRepository | null = null;
   private handRepository: IHandRepository | null = null;
   private handCardRepository: IHandCardRepository | null = null;
+  private cardExchangeRepository: ICardExchangeRepository | null = null;
+  private trickRepository: ITrickRepository | null = null;
+  private trickCardRepository: ITrickCardRepository | null = null;
 
   static getInstance(): Container {
     if (!Container.instance) {
@@ -49,6 +58,27 @@ class Container {
     return this.handCardRepository;
   }
 
+  getCardExchangeRepository(): ICardExchangeRepository {
+    if (!this.cardExchangeRepository) {
+      this.cardExchangeRepository = new CardExchangeRepository();
+    }
+    return this.cardExchangeRepository;
+  }
+
+  getTrickRepository(): ITrickRepository {
+    if (!this.trickRepository) {
+      this.trickRepository = new TrickRepository();
+    }
+    return this.trickRepository;
+  }
+
+  getTrickCardRepository(): ITrickCardRepository {
+    if (!this.trickCardRepository) {
+      this.trickCardRepository = new TrickCardRepository();
+    }
+    return this.trickCardRepository;
+  }
+
   // テスト用にPlayerRepositoryを注入する
   setPlayerRepository(repository: IPlayerRepository): void {
     this.playerRepository = repository;
@@ -69,12 +99,30 @@ class Container {
     this.handCardRepository = repository;
   }
 
+  // テスト用にCardExchangeRepositoryを注入する
+  setCardExchangeRepository(repository: ICardExchangeRepository): void {
+    this.cardExchangeRepository = repository;
+  }
+
+  // テスト用にTrickRepositoryを注入する
+  setTrickRepository(repository: ITrickRepository): void {
+    this.trickRepository = repository;
+  }
+
+  // テスト用にTrickCardRepositoryを注入する
+  setTrickCardRepository(repository: ITrickCardRepository): void {
+    this.trickCardRepository = repository;
+  }
+
   // テスト後にリセット
   reset(): void {
     this.playerRepository = null;
     this.gameRepository = null;
     this.handRepository = null;
     this.handCardRepository = null;
+    this.cardExchangeRepository = null;
+    this.trickRepository = null;
+    this.trickCardRepository = null;
   }
 }
 

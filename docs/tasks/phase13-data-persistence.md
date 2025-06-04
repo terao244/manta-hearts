@@ -45,44 +45,44 @@
   - カードID解決処理（Card.id とゲーム内カードオブジェクトのマッピング）
   - トランザクション処理（52レコードの原子性保証）
 
-### 33.3 カード交換保存処理実装
-- [ ] 🧪 CardExchangeテーブル保存テスト作成
+### 33.3 カード交換保存処理実装 ✅ **完了**
+- [x] 🧪 CardExchangeテーブル保存テスト作成
   - カード交換完了時のCardExchangeレコード作成テスト
   - 交換方向（左隣・右隣・向かい・なし）別テスト
   - exchangeOrder（1-3）の正確な保存テスト
-- [ ] 📝 CardExchangeRepository実装
+- [x] 📝 CardExchangeRepository実装
   - saveCardExchanges(handId, exchanges: CardExchange[]) メソッド
   - findByHandId(handId) メソッド
   - 交換方向ロジック統合（GameEngine.getExchangeDirection()）
-- [ ] 📝 GameEngine.performExchange イベント連携
+- [x] 📝 GameEngine.performExchange イベント連携
   - カード交換完了時にCardExchangeテーブルへの保存処理追加
   - fromPlayerId、toPlayerId、cardId、exchangeOrderの正確な記録
   - 4ハンド目（交換なし）の適切な処理
 
-### 33.4 トリック保存処理実装
-- [ ] 🧪 Trickテーブル保存テスト作成
+### 33.4 トリック保存処理実装 ✅ **完了**
+- [x] 🧪 Trickテーブル保存テスト作成
   - トリック完了時のTrickレコード作成テスト
   - 勝者、ポイント、リードプレイヤーの正確な保存テスト
   - GameService.onTrickCompleted イベント連携テスト
-- [ ] 📝 TrickRepository実装
+- [x] 📝 TrickRepository実装
   - createTrick(handId, trickNumber, winnerId, points, leadPlayerId) メソッド
   - findByHandId(handId) メソッド
   - bulkInsert対応（13トリック分の効率的保存）
-- [ ] 📝 GameService.onTrickCompleted イベント連携
+- [x] 📝 GameService.onTrickCompleted イベント連携
   - トリック完了時にTrickテーブルへのレコード作成処理追加
   - trickId をゲーム状態に保持する仕組み実装
   - ポイント計算結果の保存（ハート・スペードQ検出）
 
-### 33.5 トリックカード保存処理実装
-- [ ] 🧪 TrickCardテーブル保存テスト作成
+### 33.5 トリックカード保存処理実装 ✅ **完了**
+- [x] 🧪 TrickCardテーブル保存テスト作成
   - カードプレイ時のTrickCardレコード作成テスト
   - playOrder（1-4）の正確な記録テスト
   - 4プレイヤー×13トリック=52レコードの一括保存テスト
-- [ ] 📝 TrickCardRepository実装
+- [x] 📝 TrickCardRepository実装
   - saveTrickCard(trickId, playerId, cardId, playOrder) メソッド
   - saveTrickCards(trickId, trickCards: TrickCard[]) メソッド（一括保存）
   - findByTrickId(trickId) メソッド
-- [ ] 📝 GameService.onCardPlayed イベント連携
+- [x] 📝 GameService.onCardPlayed イベント連携
   - カードプレイ時にTrickCardテーブルへのレコード作成処理追加
   - プレイ順序の正確な記録（1番目、2番目、3番目、4番目）
   - トリック進行状態の管理

@@ -41,14 +41,39 @@ export const createMockPrismaService = () => {
     findMany: jest.fn()
   };
 
+  const mockCardExchangeMethods = {
+    createMany: jest.fn(),
+    findMany: jest.fn()
+  };
+
+  const mockTrickMethods = {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn()
+  };
+
+  const mockTrickCardMethods = {
+    create: jest.fn(),
+    createMany: jest.fn(),
+    findMany: jest.fn(),
+    findFirst: jest.fn()
+  };
+
   return {
     client: {
       hand: mockHandMethods,
-      handCard: mockHandCardMethods
+      handCard: mockHandCardMethods,
+      cardExchange: mockCardExchangeMethods,
+      trick: mockTrickMethods,
+      trickCard: mockTrickCardMethods
     },
     getClient: jest.fn().mockReturnValue({
       hand: mockHandMethods,
-      handCard: mockHandCardMethods
+      handCard: mockHandCardMethods,
+      cardExchange: mockCardExchangeMethods,
+      trick: mockTrickMethods,
+      trickCard: mockTrickCardMethods
     })
   };
 };

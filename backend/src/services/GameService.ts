@@ -408,14 +408,83 @@ export class GameService {
       onExchangeProgress: (exchangedPlayers, remainingPlayers) => {
         this.broadcastToGame(gameId, 'exchangeProgress', { exchangedPlayers, remainingPlayers });
       },
+      onExchangeCompleted: async (exchanges) => {
+        try {
+          // 現在のハンドIDを取得
+          const handIds = this.gameHandIds.get(gameId);
+          if (handIds) {
+            const gameEngine = this.gameEngines.get(gameId);
+            if (gameEngine) {
+              const gameState = gameEngine.getGameState();
+              const currentHandNumber = gameState.currentHand;
+              const handId = handIds.get(currentHandNumber);
+              
+              if (handId) {
+                // CardExchangeRepositoryを取得
+                const container = Container.getInstance();
+                const cardExchangeRepository = container.getCardExchangeRepository();
+                
+                // カード交換情報を保存
+                await cardExchangeRepository.saveCardExchanges(handId, exchanges);
+                console.log(`Saved ${exchanges.length} card exchanges for hand ${currentHandNumber}`);
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`Error saving card exchanges for game ${gameId}:`, error);
+          // エラーがあってもゲーム進行は継続
+        }
+      },
       onPlayingPhaseStarted: (leadPlayerId) => {
         this.broadcastToGame(gameId, 'playingPhaseStarted', leadPlayerId);
       },
       onCardPlayed: (playerId, card) => {
         this.broadcastToGame(gameId, 'cardPlayed', { playerId, card: this.cardToCardInfo(card) });
       },
-      onTrickCompleted: (trickNumber, winnerId, points) => {
+      onTrickCompleted: async (trickNumber, winnerId, points, trickCards) => {
         this.broadcastToGame(gameId, 'trickCompleted', { trickNumber, winnerId, points });
+        
+        try {
+          // トリック情報を保存
+          const handIds = this.gameHandIds.get(gameId);
+          if (handIds) {
+            const gameEngine = this.gameEngines.get(gameId);
+            if (gameEngine) {
+              const gameState = gameEngine.getGameState();
+              const currentHandNumber = gameState.currentHand;
+              const handId = handIds.get(currentHandNumber);
+              
+              if (handId) {
+                const container = Container.getInstance();
+                const trickRepository = container.getTrickRepository();
+                
+                // リードプレイヤーを取得（トリックの最初にカードを出したプレイヤー）
+                const currentTrick = gameState.getCurrentTrick();
+                const leadPlayerId = currentTrick?.leadPlayerId || winnerId; // フォールバック
+                
+                const trickData = {
+                  trickNumber,
+                  winnerPlayerId: winnerId,
+                  points,
+                  leadPlayerId,
+                };
+                
+                const savedTrick = await trickRepository.createTrick(handId, trickData);
+                console.log(`Saved trick ${trickNumber} for hand ${currentHandNumber}, winner: ${winnerId}, points: ${points}`);
+                
+                // トリックカード情報を保存
+                if (trickCards && trickCards.length > 0) {
+                  const trickCardRepository = container.getTrickCardRepository();
+                  await trickCardRepository.saveTrickCards(savedTrick.id, trickCards);
+                  console.log(`Saved ${trickCards.length} trick cards for trick ${trickNumber}`);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`Error saving trick ${trickNumber} for game ${gameId}:`, error);
+          // エラーがあってもゲーム進行は継続
+        }
         
         // 現在のハンドスコアも送信
         const gameEngine = this.gameEngines.get(gameId);

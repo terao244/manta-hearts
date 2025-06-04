@@ -11,9 +11,10 @@ export interface GameEngineEvents {
   onCardsDealt: (playerHands: Map<number, Card[]>) => void;
   onExchangePhaseStarted: (direction: ExchangeDirection) => void;
   onExchangeProgress: (exchangedPlayers: number[], remainingPlayers: number[]) => void;
+  onExchangeCompleted: (exchanges: Array<{ fromPlayerId: number; toPlayerId: number; cardId: number; exchangeOrder: number }>) => void;
   onPlayingPhaseStarted: (leadPlayerId: number) => void;
   onCardPlayed: (playerId: number, card: Card) => void;
-  onTrickCompleted: (trickNumber: number, winnerId: number, points: number) => void;
+  onTrickCompleted: (trickNumber: number, winnerId: number, points: number, trickCards: Array<{ playerId: number; cardId: number; playOrder: number }>) => void;
   onHandCompleted: (handNumber: number, scores: Map<number, number>) => void;
   onGameCompleted: (winnerId: number, finalScores: Map<number, number>) => void;
   onError: (error: Error) => void;
@@ -171,6 +172,7 @@ export class GameEngine {
   private performCardExchange(): void {
     const playerIds = Array.from(this.gameState.players.keys());
     const exchangeMap = new Map<number, Card[]>();
+    const exchanges: Array<{ fromPlayerId: number; toPlayerId: number; cardId: number; exchangeOrder: number }> = [];
 
     // 各プレイヤーの交換カードを取得
     playerIds.forEach(playerId => {
@@ -180,14 +182,23 @@ export class GameEngine {
       }
     });
 
-    // 交換方向に従ってカードを配布
-    playerIds.forEach(playerId => {
-      const targetPlayerId = this.getExchangeTargetPlayer(playerId);
-      const cardsToReceive = exchangeMap.get(targetPlayerId);
+    // 交換方向に従ってカードを配布し、交換詳細を記録
+    playerIds.forEach(fromPlayerId => {
+      const toPlayerId = this.getExchangeTargetPlayer(fromPlayerId);
+      const cardsToGive = exchangeMap.get(fromPlayerId);
       
-      if (cardsToReceive) {
-        cardsToReceive.forEach(card => {
-          this.playerManager.addCardToHand(playerId, card);
+      if (cardsToGive) {
+        cardsToGive.forEach((card, index) => {
+          // 交換詳細データを記録
+          exchanges.push({
+            fromPlayerId,
+            toPlayerId,
+            cardId: card.id,
+            exchangeOrder: index + 1,
+          });
+          
+          // カードを受信者の手札に追加
+          this.playerManager.addCardToHand(toPlayerId, card);
         });
       }
     });
@@ -196,6 +207,9 @@ export class GameEngine {
     playerIds.forEach(playerId => {
       this.playerManager.clearExchangeCards(playerId);
     });
+
+    // 交換完了イベントを発火
+    this.eventListeners.onExchangeCompleted?.(exchanges);
   }
 
   private getExchangeTargetPlayer(playerId: number): number {
@@ -298,10 +312,18 @@ export class GameEngine {
 
       this.playerManager.resetTrickFlags();
       
+      // トリックカードデータを収集
+      const trickCards = completedTrick.cards.map(playedCard => ({
+        playerId: playedCard.playerId,
+        cardId: playedCard.card.id,
+        playOrder: playedCard.playOrder,
+      }));
+
       this.eventListeners.onTrickCompleted?.(
         completedTrick.trickNumber,
         completedTrick.winnerId!,
-        completedTrick.points
+        completedTrick.points,
+        trickCards
       );
 
       // ハンド完了チェック
