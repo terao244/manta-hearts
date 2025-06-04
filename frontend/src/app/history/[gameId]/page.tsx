@@ -263,18 +263,27 @@ function ScoreGraphSection({ gameDetail }: { gameDetail: GameDetailData }) {
     scores: entry.scores,
   })) || [];
 
-  const players = gameDetail.players?.map(player => ({
-    id: player.id,
-    name: player.name,
-    displayName: player.name,
-    displayOrder: 1,
-    isActive: true,
-  })) || [];
+  // playersが空の場合はfinalScoresからプレイヤー情報を生成
+  const players = gameDetail.players?.length > 0 
+    ? gameDetail.players.map(player => ({
+        id: player.id,
+        name: player.name,
+        displayName: player.name,
+        displayOrder: 1,
+        isActive: true,
+      }))
+    : gameDetail.finalScores?.map(score => ({
+        id: score.playerId,
+        name: score.playerName,
+        displayName: score.playerName,
+        displayOrder: 1,
+        isActive: true,
+      })) || [];
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-xl font-semibold text-gray-900 mb-6">スコア推移</h2>
-      {players.length > 0 ? (
+      {players.length > 0 && scoreHistory.length > 0 ? (
         <div className="h-96">
           <ScoreGraph
             players={players}

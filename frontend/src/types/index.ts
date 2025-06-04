@@ -219,8 +219,14 @@ export interface GameData {
   endTime?: string;
   duration?: number;
   status: 'PLAYING' | 'FINISHED' | 'PAUSED' | 'ABANDONED';
-  finalScores: Record<number, number>;
+  finalScores: Array<{
+    playerId: number;
+    playerName: string;
+    score: number;
+  }>;
   winnerId?: number;
+  winnerName?: string;
+  playerCount?: number;
   players: Array<{
     id: number;
     name: string;
@@ -235,15 +241,18 @@ export interface GameDetailData extends GameData {
 }
 
 export interface HandDetailData {
+  id: number;
   handNumber: number;
   exchangeDirection: 'left' | 'right' | 'across' | 'none';
   heartsBroken: boolean;
   shootTheMoonPlayerId?: number;
+  shootTheMoonPlayerName?: string;
   scores: Record<number, number>;
   tricks: TrickDetailData[];
 }
 
 export interface TrickDetailData {
+  id: number;
   trickNumber: number;
   handNumber: number;
   leadPlayerId: number;

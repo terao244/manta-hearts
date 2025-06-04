@@ -247,7 +247,7 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
   }), []);
 
   return (
-    <div className={`bg-white rounded-lg p-2 shadow-md ${className}`} style={{ width: '270px', height: '28rem' }}>
+    <div className={`w-full h-full ${className}`}>
       <div className="h-full w-full">
         <Line data={chartData} options={chartOptions} />
       </div>
