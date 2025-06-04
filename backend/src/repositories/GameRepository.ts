@@ -296,11 +296,17 @@ export class GameRepository implements IGameRepository {
       score: score.cumulativePoints,
     })) || [];
 
+    // 交換方向を計算するヘルパー関数
+    const getExchangeDirection = (handNumber: number): 'left' | 'right' | 'across' | 'none' => {
+      const directions: ('left' | 'right' | 'across' | 'none')[] = ['left', 'right', 'across', 'none'];
+      return directions[(handNumber - 1) % 4];
+    };
+
     // ハンド詳細データを変換
     const hands: HandData[] = game.hands.map((hand) => ({
       id: hand.id,
       handNumber: hand.handNumber,
-      exchangeDirection: 'none' as const, // TODO: 実際の交換方向を取得する必要がある
+      exchangeDirection: getExchangeDirection(hand.handNumber),
       heartsBroken: hand.heartsBroken,
       shootTheMoonPlayerId: hand.shootTheMoonPlayerId,
       shootTheMoonPlayerName: hand.shootTheMoonPlayer?.displayName || null,
