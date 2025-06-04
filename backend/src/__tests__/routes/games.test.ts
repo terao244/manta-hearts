@@ -94,6 +94,15 @@ describe('Games API', () => {
       { playerId: 3, playerName: '南', score: 30 },
       { playerId: 4, playerName: '西', score: 30 },
     ],
+    players: [
+      { id: 1, name: '北', position: 'North' as const, finalScore: 15 },
+      { id: 2, name: '東', position: 'East' as const, finalScore: 25 },
+      { id: 3, name: '南', position: 'South' as const, finalScore: 30 },
+      { id: 4, name: '西', position: 'West' as const, finalScore: 30 },
+    ],
+    scoreHistory: [
+      { hand: 1, scores: { 1: 15, 2: 25, 3: 30, 4: 30 } },
+    ],
     hands: [
       {
         id: 1,
@@ -161,6 +170,15 @@ describe('Games API', () => {
       { playerId: 2, playerName: '東', score: 25 },
       { playerId: 3, playerName: '南', score: 30 },
       { playerId: 4, playerName: '西', score: 30 },
+    ],
+    players: [
+      { id: 1, name: '北', position: 'North', finalScore: 15 },
+      { id: 2, name: '東', position: 'East', finalScore: 25 },
+      { id: 3, name: '南', position: 'South', finalScore: 30 },
+      { id: 4, name: '西', position: 'West', finalScore: 30 },
+    ],
+    scoreHistory: [
+      { hand: 1, scores: { '1': 15, '2': 25, '3': 30, '4': 30 } },
     ],
     hands: [
       {

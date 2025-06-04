@@ -104,9 +104,15 @@ describe('CardExchangeRepository', () => {
       expect(mockPrismaService.getClient().cardExchange.findMany).toHaveBeenCalledWith({
         where: { handId },
         include: {
-          fromPlayer: true,
-          toPlayer: true,
-          card: true,
+          fromPlayer: {
+            select: { id: true, name: true, displayName: true }
+          },
+          toPlayer: {
+            select: { id: true, name: true, displayName: true }
+          },
+          card: {
+            select: { id: true, suit: true, rank: true, code: true, pointValue: true }
+          },
         },
         orderBy: [
           { fromPlayerId: 'asc' },
@@ -170,9 +176,15 @@ describe('CardExchangeRepository', () => {
           ]
         },
         include: {
-          fromPlayer: true,
-          toPlayer: true,
-          card: true,
+          fromPlayer: {
+            select: { id: true, name: true, displayName: true }
+          },
+          toPlayer: {
+            select: { id: true, name: true, displayName: true }
+          },
+          card: {
+            select: { id: true, suit: true, rank: true, code: true, pointValue: true }
+          },
         },
         orderBy: { exchangeOrder: 'asc' },
       });

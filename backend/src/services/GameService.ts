@@ -157,7 +157,13 @@ export class GameService {
       }
 
       if (success) {
-        // ゲームセッションをデータベースに保存（必要に応じて実装）
+        // ゲームセッションをデータベースに保存
+        try {
+          await this.saveGameSession(gameId, playerId, isRejoining);
+        } catch (error) {
+          console.error(`Error saving game session for player ${playerId} in game ${gameId}:`, error);
+          // エラーがあってもゲーム進行は継続
+        }
 
         const gameInfo = this.getGameInfo(gameId, playerId);
         
@@ -765,5 +771,46 @@ export class GameService {
       const cardInfos = playerHand.map(card => this.cardToCardInfo(card));
       this.sendToPlayer(playerId, 'handUpdated', cardInfos);
     });
+  }
+
+  /**
+   * ゲームセッションをデータベースに保存
+   */
+  private async saveGameSession(gameId: number, playerId: number, isRejoining: boolean): Promise<void> {
+    const prismaService = PrismaService.getInstance();
+    const prisma = prismaService.getClient();
+
+    try {
+      // 同一プレイヤー・同一ゲームの既存セッションをすべて無効化
+      await prisma.gameSession.updateMany({
+        where: {
+          gameId: gameId,
+          playerId: playerId,
+        },
+        data: {
+          status: 'DISCONNECTED',
+          disconnectedAt: new Date(),
+        },
+      });
+
+      // 新しいセッションIDを生成（ユニークIDとして現在時刻 + ランダム値を使用）
+      const sessionId = `${gameId}_${playerId}_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+
+      // 新しいゲームセッションを作成
+      await prisma.gameSession.create({
+        data: {
+          gameId: gameId,
+          playerId: playerId,
+          sessionId: sessionId,
+          status: 'CONNECTED',
+          connectedAt: new Date(),
+        },
+      });
+
+      console.log(`Game session saved: Player ${playerId} ${isRejoining ? 'rejoined' : 'joined'} game ${gameId} with session ${sessionId}`);
+    } catch (error) {
+      console.error(`Failed to save game session for player ${playerId} in game ${gameId}:`, error);
+      throw error;
+    }
   }
 }
