@@ -7,6 +7,10 @@ import Breadcrumbs from '../../../components/ui/Breadcrumbs';
 import { useGameDetail } from '../../../hooks/useGameDetail';
 import { GameDetailData, HandDetailData } from '../../../types';
 import { ScoreGraph } from '../../../components/game/ScoreGraph';
+import { formatCardFromInfo, getCardColorClass } from '../../../utils/cardFormatting';
+import { fetchHandCardsWithRetry, fetchHandExchangesWithRetry, CardExchange } from '../../../lib/api/games';
+import HandHistory from '../../../components/history/HandHistory';
+import CardExchangeHistory from '../../../components/history/CardExchangeHistory';
 
 export default function GameDetailPage() {
   const params = useParams();
@@ -296,7 +300,7 @@ function HandHistorySection({ gameDetail }: { gameDetail: GameDetailData }) {
       ) : (
         <div className="space-y-4">
           {gameDetail.hands.map((hand) => (
-            <HandDetail key={hand.handNumber} hand={hand} players={gameDetail.players || []} />
+            <HandDetail key={hand.handNumber} hand={hand} players={gameDetail.players || []} gameId={gameDetail.id} />
           ))}
         </div>
       )}
@@ -304,8 +308,40 @@ function HandHistorySection({ gameDetail }: { gameDetail: GameDetailData }) {
   );
 }
 
-function HandDetail({ hand, players }: { hand: HandDetailData; players: GameDetailData['players'] }) {
+function HandDetail({ hand, players, gameId }: { hand: HandDetailData; players: GameDetailData['players']; gameId: number }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [handCards, setHandCards] = useState<Record<number, any[]> | undefined>();
+  const [exchanges, setExchanges] = useState<CardExchange[] | undefined>();
+  const [loadingCards, setLoadingCards] = useState(false);
+  const [loadingExchanges, setLoadingExchanges] = useState(false);
+  const [cardsError, setCardsError] = useState<string | undefined>();
+  const [exchangesError, setExchangesError] = useState<string | undefined>();
+
+  const loadHandCards = async () => {
+    setLoadingCards(true);
+    setCardsError(undefined);
+    try {
+      const data = await fetchHandCardsWithRetry(gameId, hand.id);
+      setHandCards(data.playerCards);
+    } catch (error) {
+      setCardsError(error instanceof Error ? error.message : '手札データの読み込みに失敗しました');
+    } finally {
+      setLoadingCards(false);
+    }
+  };
+
+  const loadExchanges = async () => {
+    setLoadingExchanges(true);
+    setExchangesError(undefined);
+    try {
+      const data = await fetchHandExchangesWithRetry(gameId, hand.id);
+      setExchanges(data.exchanges);
+    } catch (error) {
+      setExchangesError(error instanceof Error ? error.message : '交換データの読み込みに失敗しました');
+    } finally {
+      setLoadingExchanges(false);
+    }
+  };
 
   const getExchangeDirectionText = (direction: string) => {
     switch (direction) {
@@ -347,6 +383,34 @@ function HandDetail({ hand, players }: { hand: HandDetailData; players: GameDeta
       
       {isExpanded && (
         <div className="px-4 pb-4 border-t border-gray-100">
+          {/* 手札履歴 */}
+          <div className="mt-4">
+            <HandHistory
+              gameId={gameId}
+              handId={hand.id}
+              handNumber={hand.handNumber}
+              players={players.map(p => ({ id: p.id, name: p.name }))}
+              playerCards={handCards}
+              isLoading={loadingCards}
+              error={cardsError}
+              onLoadCards={loadHandCards}
+            />
+          </div>
+
+          {/* カード交換履歴 */}
+          <div className="mt-4">
+            <CardExchangeHistory
+              gameId={gameId}
+              handId={hand.id}
+              handNumber={hand.handNumber}
+              exchangeDirection={hand.exchangeDirection}
+              exchanges={exchanges}
+              isLoading={loadingExchanges}
+              error={exchangesError}
+              onLoadExchanges={loadExchanges}
+            />
+          </div>
+
           {/* ハンドスコア */}
           <div className="mt-4">
             <h4 className="font-medium text-gray-900 mb-2">ハンドスコア</h4>
@@ -367,47 +431,69 @@ function HandDetail({ hand, players }: { hand: HandDetailData; players: GameDeta
           {hand.tricks && hand.tricks.length > 0 && (
             <div className="mt-4">
               <h4 className="font-medium text-gray-900 mb-2">トリック詳細</h4>
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-2">トリック</th>
-                      <th className="text-left py-2">リード</th>
-                      <th className="text-left py-2">勝者</th>
-                      <th className="text-left py-2">ポイント</th>
-                      <th className="text-left py-2">カード</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {hand.tricks.map((trick) => {
-                      const leader = players.find(p => p.id === trick.leadPlayerId);
-                      const winner = players.find(p => p.id === trick.winnerId);
-                      return (
-                        <tr key={trick.trickNumber} className="border-b border-gray-100">
-                          <td className="py-2">{trick.trickNumber}</td>
-                          <td className="py-2">{leader?.name || `プレイヤー${trick.leadPlayerId}`}</td>
-                          <td className="py-2 font-medium">{winner?.name || `プレイヤー${trick.winnerId}`}</td>
-                          <td className="py-2">{trick.points}点</td>
-                          <td className="py-2">
-                            <div className="flex space-x-1">
-                              {trick.cards && trick.cards.map((cardPlay, index) => (
-                                cardPlay.card ? (
-                                  <span key={`${cardPlay.card.suit}-${cardPlay.card.rank}`} className="text-xs bg-gray-200 px-1 rounded">
-                                    {cardPlay.card.suit.charAt(0)}{cardPlay.card.rank.charAt(0)}
-                                  </span>
-                                ) : (
-                                  <span key={index} className="text-xs bg-red-200 px-1 rounded">
-                                    ?
-                                  </span>
-                                )
-                              ))}
+              <div className="space-y-3">
+                {hand.tricks.map((trick) => {
+                  const leader = players.find(p => p.id === trick.leadPlayerId);
+                  const winner = players.find(p => p.id === trick.winnerId);
+                  
+                  return (
+                    <div key={trick.trickNumber} className="bg-gray-50 p-4 rounded-lg border">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-4">
+                          <span className="font-medium text-gray-900">トリック {trick.trickNumber}</span>
+                          <span className="text-sm text-gray-600">リード: {leader?.name || `プレイヤー${trick.leadPlayerId}`}</span>
+                          <span className="text-sm font-medium text-green-600">
+                            勝者: {winner?.name || `プレイヤー${trick.winnerId}`}
+                          </span>
+                          <span className="text-sm text-gray-600">{trick.points}点</span>
+                        </div>
+                      </div>
+                      
+                      {/* カードプレイ順序表示 */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {trick.cards && trick.cards.map((cardPlay, index) => {
+                          if (!cardPlay.card) {
+                            return (
+                              <div key={index} className="text-center p-2 bg-red-100 rounded">
+                                <div className="text-xs text-red-600">不明</div>
+                                <div className="text-red-400">?</div>
+                              </div>
+                            );
+                          }
+                          
+                          const cardDisplay = formatCardFromInfo(cardPlay.card);
+                          const colorClass = getCardColorClass(cardDisplay.color);
+                          const playerName = players.find(p => p.id === cardPlay.playerId)?.name || `P${cardPlay.playerId}`;
+                          const isWinner = cardPlay.playerId === trick.winnerId;
+                          const isLeader = cardPlay.playerId === trick.leadPlayerId;
+                          
+                          return (
+                            <div 
+                              key={`${cardPlay.card.suit}-${cardPlay.card.rank}`}
+                              className={`text-center p-3 rounded-lg border-2 transition-all ${
+                                isWinner 
+                                  ? 'bg-green-50 border-green-300 shadow-md' 
+                                  : 'bg-white border-gray-200'
+                              }`}
+                            >
+                              <div className={`text-xs ${isWinner ? 'text-green-600 font-medium' : 'text-gray-600'}`}>
+                                {playerName}
+                                {isLeader && <span className="ml-1">👑</span>}
+                                {isWinner && <span className="ml-1">🏆</span>}
+                              </div>
+                              <div className={`text-lg font-bold ${colorClass}`}>
+                                {cardDisplay.displayText}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                #{index + 1}
+                              </div>
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

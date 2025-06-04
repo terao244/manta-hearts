@@ -2,6 +2,26 @@ import { CardExchange } from '@prisma/client';
 import { PrismaService } from '../services/PrismaService';
 import { ICardExchangeRepository, CardExchangeData } from './interfaces/ICardExchangeRepository';
 
+export type CardExchangeWithRelations = CardExchange & {
+  fromPlayer: {
+    id: number;
+    name: string;
+    displayName: string;
+  };
+  toPlayer: {
+    id: number;
+    name: string;
+    displayName: string;
+  };
+  card: {
+    id: number;
+    suit: string;
+    rank: string;
+    code: string;
+    pointValue: number;
+  };
+};
+
 export class CardExchangeRepository implements ICardExchangeRepository {
   private prismaService: PrismaService;
 
@@ -9,7 +29,7 @@ export class CardExchangeRepository implements ICardExchangeRepository {
     this.prismaService = PrismaService.getInstance();
   }
 
-  async saveCardExchanges(handId: number, exchanges: CardExchangeData[]): Promise<CardExchange[]> {
+  async saveCardExchanges(handId: number, exchanges: CardExchangeData[]): Promise<CardExchangeWithRelations[]> {
     const prisma = this.prismaService.getClient();
     const data = exchanges.map(exchange => ({
       handId,
@@ -26,25 +46,32 @@ export class CardExchangeRepository implements ICardExchangeRepository {
     return this.findByHandId(handId);
   }
 
-  async findByHandId(handId: number): Promise<CardExchange[]> {
+  async findByHandId(handId: number): Promise<CardExchangeWithRelations[]> {
     const prisma = this.prismaService.getClient();
-    return prisma.cardExchange.findMany({
+    const result = await prisma.cardExchange.findMany({
       where: { handId },
       include: {
-        fromPlayer: true,
-        toPlayer: true,
-        card: true,
+        fromPlayer: {
+          select: { id: true, name: true, displayName: true }
+        },
+        toPlayer: {
+          select: { id: true, name: true, displayName: true }
+        },
+        card: {
+          select: { id: true, suit: true, rank: true, code: true, pointValue: true }
+        },
       },
       orderBy: [
         { fromPlayerId: 'asc' },
         { exchangeOrder: 'asc' },
       ],
     });
+    return result as unknown as CardExchangeWithRelations[];
   }
 
-  async findByHandIdAndPlayer(handId: number, playerId: number): Promise<CardExchange[]> {
+  async findByHandIdAndPlayer(handId: number, playerId: number): Promise<CardExchangeWithRelations[]> {
     const prisma = this.prismaService.getClient();
-    return prisma.cardExchange.findMany({
+    const result = await prisma.cardExchange.findMany({
       where: { 
         handId,
         OR: [
@@ -53,11 +80,18 @@ export class CardExchangeRepository implements ICardExchangeRepository {
         ]
       },
       include: {
-        fromPlayer: true,
-        toPlayer: true,
-        card: true,
+        fromPlayer: {
+          select: { id: true, name: true, displayName: true }
+        },
+        toPlayer: {
+          select: { id: true, name: true, displayName: true }
+        },
+        card: {
+          select: { id: true, suit: true, rank: true, code: true, pointValue: true }
+        },
       },
       orderBy: { exchangeOrder: 'asc' },
     });
+    return result as unknown as CardExchangeWithRelations[];
   }
 }

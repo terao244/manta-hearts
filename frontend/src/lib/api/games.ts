@@ -4,6 +4,7 @@ import {
   GameListQuery,
   GameListResponse,
   GameDetailResponse,
+  CardInfo,
 } from '../../types';
 
 // API Base URL - 環境変数から取得、デフォルトはlocalhost
@@ -151,4 +152,79 @@ export async function fetchGamesWithRetry(
  */
 export async function fetchGameByIdWithRetry(gameId: number): Promise<GameDetailData> {
   return fetchWithRetry(() => fetchGameById(gameId));
+}
+
+// ハンド履歴関連の型定義
+export interface HandCardsResponse {
+  success: boolean;
+  data: {
+    handId: number;
+    playerCards: Record<number, CardInfo[]>;
+  };
+}
+
+export interface CardExchange {
+  id: number;
+  fromPlayer: {
+    id: number;
+    name: string;
+  };
+  toPlayer: {
+    id: number;
+    name: string;
+  };
+  card: CardInfo;
+  exchangeOrder: number;
+}
+
+export interface HandExchangesResponse {
+  success: boolean;
+  data: {
+    handId: number;
+    exchanges: CardExchange[];
+  };
+}
+
+/**
+ * 特定ハンドの全プレイヤー手札を取得
+ */
+export async function fetchHandCards(gameId: number, handId: number): Promise<HandCardsResponse['data']> {
+  const endpoint = `/api/games/${gameId}/hands/${handId}/cards`;
+  
+  const response = await request<HandCardsResponse>(endpoint);
+  
+  if (!response.success) {
+    throw new Error(`Failed to fetch hand cards for game ${gameId} hand ${handId}`);
+  }
+  
+  return response.data;
+}
+
+/**
+ * 特定ハンドのカード交換履歴を取得
+ */
+export async function fetchHandExchanges(gameId: number, handId: number): Promise<HandExchangesResponse['data']> {
+  const endpoint = `/api/games/${gameId}/hands/${handId}/exchanges`;
+  
+  const response = await request<HandExchangesResponse>(endpoint);
+  
+  if (!response.success) {
+    throw new Error(`Failed to fetch hand exchanges for game ${gameId} hand ${handId}`);
+  }
+  
+  return response.data;
+}
+
+/**
+ * リトライ付きハンドカード取得
+ */
+export async function fetchHandCardsWithRetry(gameId: number, handId: number): Promise<HandCardsResponse['data']> {
+  return fetchWithRetry(() => fetchHandCards(gameId, handId));
+}
+
+/**
+ * リトライ付きハンド交換履歴取得
+ */
+export async function fetchHandExchangesWithRetry(gameId: number, handId: number): Promise<HandExchangesResponse['data']> {
+  return fetchWithRetry(() => fetchHandExchanges(gameId, handId));
 }

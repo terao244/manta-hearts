@@ -309,3 +309,17 @@ export interface UseGameDetailResult {
   error: Error | null;
   refetch: () => void;
 }
+
+// カード表記システム関連の型定義
+export interface CardDisplay {
+  suit: string;
+  rank: string;
+  displayText: string;
+  color: 'red' | 'black';
+}
+
+export interface CardFormattingOptions {
+  format?: 'full' | 'short' | 'compact';
+  showColor?: boolean;
+  separator?: string;
+}
