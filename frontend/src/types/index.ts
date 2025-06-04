@@ -165,6 +165,9 @@ export interface PlayerPositionMap {
   [playerId: number]: PlayerPosition;
 }
 
+// フロントエンド画面表示用の相対位置型
+export type RelativePosition = 'top' | 'bottom' | 'left' | 'right';
+
 // コンポーネントProps型
 export interface PlayerSelectProps {
   onPlayerSelect: (playerName: string) => void;

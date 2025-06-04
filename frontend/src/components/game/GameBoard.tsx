@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Hand } from './Hand';
 import { Card } from './Card';
 import { ScoreGraph } from './ScoreGraph';
-import type { GameBoardProps, CardInfo, PlayerInfo } from '@/types';
+import type { GameBoardProps, CardInfo, PlayerInfo, RelativePosition } from '@/types';
 
 // プレイヤーカードコンポーネント
 interface PlayerCardProps {
@@ -148,9 +148,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     }
   };
 
-  const getPlayerPosition = (playerId: number): string => {
+  const getPlayerPosition = (playerId: number): RelativePosition | '' => {
     if (!currentPlayerId) return '';
-    const positions = ['South', 'West', 'North', 'East'];
+    const positions: RelativePosition[] = ['bottom', 'left', 'top', 'right'];
     const currentIndex = players.findIndex(p => p.id === currentPlayerId);
     const playerIndex = players.findIndex(p => p.id === playerId);
     const relativeIndex = (playerIndex - currentIndex + 4) % 4;
@@ -242,8 +242,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             {/* 卓配置レイアウト */}
             <div className="relative h-[28rem] bg-green-800 rounded-lg p-5">
             
-            {/* 北（上）のプレイヤー */}
-            {players.filter(p => getPlayerPosition(p.id) === 'North').map(player => (
+            {/* 上のプレイヤー */}
+            {players.filter(p => getPlayerPosition(p.id) === 'top').map(player => (
               <div
                 key={player.id}
                 data-testid={`player-${player.id}`}
@@ -253,8 +253,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               </div>
             ))}
 
-            {/* 東（右）のプレイヤー */}
-            {players.filter(p => getPlayerPosition(p.id) === 'East').map(player => (
+            {/* 右のプレイヤー */}
+            {players.filter(p => getPlayerPosition(p.id) === 'right').map(player => (
               <div
                 key={player.id}
                 data-testid={`player-${player.id}`}
@@ -264,8 +264,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               </div>
             ))}
 
-            {/* 南（下）のプレイヤー */}
-            {players.filter(p => getPlayerPosition(p.id) === 'South').map(player => (
+            {/* 下のプレイヤー */}
+            {players.filter(p => getPlayerPosition(p.id) === 'bottom').map(player => (
               <div
                 key={player.id}
                 data-testid={`player-${player.id}`}
@@ -275,8 +275,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               </div>
             ))}
 
-            {/* 西（左）のプレイヤー */}
-            {players.filter(p => getPlayerPosition(p.id) === 'West').map(player => (
+            {/* 左のプレイヤー */}
+            {players.filter(p => getPlayerPosition(p.id) === 'left').map(player => (
               <div
                 key={player.id}
                 data-testid={`player-${player.id}`}
