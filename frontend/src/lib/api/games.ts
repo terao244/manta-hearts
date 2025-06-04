@@ -8,7 +8,7 @@ import {
 } from '../../types';
 
 // API Base URL - 環境変数から取得、デフォルトはlocalhost
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
 /**
  * HTTP Request 共通関数
