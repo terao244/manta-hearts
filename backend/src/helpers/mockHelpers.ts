@@ -2,7 +2,8 @@ import { IPlayerRepository } from '../repositories/interfaces/IPlayerRepository'
 import { PlayerData } from '../repositories/PlayerRepository';
 import { IGameRepository } from '../repositories/interfaces/IGameRepository';
 import { GameData, GameDetailData, GameListQuery } from '../repositories/GameRepository';
-import { GameStatus } from '@prisma/client';
+import { IHandScoreRepository, HandScoreData } from '../repositories/interfaces/IHandScoreRepository';
+import { GameStatus, HandScore } from '@prisma/client';
 
 export class MockPlayerRepository implements IPlayerRepository {
   findAll = jest.fn<Promise<PlayerData[]>, [boolean?]>();
@@ -26,6 +27,17 @@ export class MockGameRepository implements IGameRepository {
 
 export const createMockGameRepository = (): MockGameRepository => {
   return new MockGameRepository();
+};
+
+export class MockHandScoreRepository implements IHandScoreRepository {
+  saveHandScores = jest.fn<Promise<HandScore[]>, [number, HandScoreData[]]>();
+  findByHandId = jest.fn<Promise<HandScore[]>, [number]>();
+  findByPlayerId = jest.fn<Promise<HandScore[]>, [number]>();
+  findByHandIdAndPlayerId = jest.fn<Promise<HandScore | null>, [number, number]>();
+}
+
+export const createMockHandScoreRepository = (): MockHandScoreRepository => {
+  return new MockHandScoreRepository();
 };
 
 export const createMockPrismaService = () => {
@@ -60,20 +72,28 @@ export const createMockPrismaService = () => {
     findFirst: jest.fn()
   };
 
+  const mockHandScoreMethods = {
+    createMany: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn()
+  };
+
   return {
     client: {
       hand: mockHandMethods,
       handCard: mockHandCardMethods,
       cardExchange: mockCardExchangeMethods,
       trick: mockTrickMethods,
-      trickCard: mockTrickCardMethods
+      trickCard: mockTrickCardMethods,
+      handScore: mockHandScoreMethods
     },
     getClient: jest.fn().mockReturnValue({
       hand: mockHandMethods,
       handCard: mockHandCardMethods,
       cardExchange: mockCardExchangeMethods,
       trick: mockTrickMethods,
-      trickCard: mockTrickCardMethods
+      trickCard: mockTrickCardMethods,
+      handScore: mockHandScoreMethods
     })
   };
 };

@@ -12,6 +12,8 @@ import { TrickRepository } from '../repositories/TrickRepository';
 import { ITrickRepository } from '../repositories/interfaces/ITrickRepository';
 import { TrickCardRepository } from '../repositories/TrickCardRepository';
 import { ITrickCardRepository } from '../repositories/interfaces/ITrickCardRepository';
+import { HandScoreRepository } from '../repositories/HandScoreRepository';
+import { IHandScoreRepository } from '../repositories/interfaces/IHandScoreRepository';
 
 class Container {
   private static instance: Container;
@@ -22,6 +24,7 @@ class Container {
   private cardExchangeRepository: ICardExchangeRepository | null = null;
   private trickRepository: ITrickRepository | null = null;
   private trickCardRepository: ITrickCardRepository | null = null;
+  private handScoreRepository: IHandScoreRepository | null = null;
 
   static getInstance(): Container {
     if (!Container.instance) {
@@ -79,6 +82,13 @@ class Container {
     return this.trickCardRepository;
   }
 
+  getHandScoreRepository(): IHandScoreRepository {
+    if (!this.handScoreRepository) {
+      this.handScoreRepository = new HandScoreRepository();
+    }
+    return this.handScoreRepository;
+  }
+
   // テスト用にPlayerRepositoryを注入する
   setPlayerRepository(repository: IPlayerRepository): void {
     this.playerRepository = repository;
@@ -114,6 +124,11 @@ class Container {
     this.trickCardRepository = repository;
   }
 
+  // テスト用にHandScoreRepositoryを注入する
+  setHandScoreRepository(repository: IHandScoreRepository): void {
+    this.handScoreRepository = repository;
+  }
+
   // テスト後にリセット
   reset(): void {
     this.playerRepository = null;
@@ -123,6 +138,7 @@ class Container {
     this.cardExchangeRepository = null;
     this.trickRepository = null;
     this.trickCardRepository = null;
+    this.handScoreRepository = null;
   }
 }
 

@@ -5,6 +5,8 @@ import { GameStatus } from '../game/GameState';
 import { PrismaService } from './PrismaService';
 import { Server } from 'socket.io';
 import Container from '../container/Container';
+import { HandScoreData } from '../repositories/interfaces/IHandScoreRepository';
+import { GamePersistenceService } from './GamePersistenceService';
 import type {
   ServerToClientEvents,
   ClientToServerEvents,
@@ -24,8 +26,11 @@ export class GameService {
   private gameScoreHistory: Map<number, Array<{ hand: number; scores: Record<number, number> }>> = new Map();
   private gameHandIds: Map<number, Map<number, number>> = new Map(); // gameId -> handNumber -> handId
   private io?: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
+  private gamePersistenceService: GamePersistenceService;
   
-  private constructor() {}
+  private constructor() {
+    this.gamePersistenceService = GamePersistenceService.getInstance();
+  }
 
   public static getInstance(): GameService {
     if (!GameService.instance) {
@@ -496,36 +501,103 @@ export class GameService {
       },
       onHandCompleted: async (handNumber, scores) => {
         try {
-          // Handテーブルを更新（ハートブレイク、シュートザムーン情報）
+          // GamePersistenceServiceを使用した統合保存処理
           const handIds = this.gameHandIds.get(gameId);
           if (handIds) {
             const handId = handIds.get(handNumber);
             if (handId) {
-              const container = Container.getInstance();
-              const handRepository = container.getHandRepository();
-              
-              // GameEngineからハートブレイクとシュートザムーン情報を取得
               const gameEngine = this.gameEngines.get(gameId);
               if (gameEngine) {
                 const gameState = gameEngine.getGameState();
-                const updates: any = {};
                 
-                if (gameState.heartsBroken) {
-                  updates.heartsBroken = true;
-                }
+                // ハートブレイク状態の取得
+                const heartsBroken = gameState.heartsBroken;
                 
-                // シュートザムーンの判定（26点を取得したプレイヤーがいるかチェック）
+                // シュートザムーンプレイヤーの判定
+                let shootTheMoonPlayerId: number | null = null;
                 for (const [playerId, score] of scores) {
-                  if (score === 26) {
-                    updates.shootTheMoonPlayerId = playerId;
-                    break;
+                  if (score === 0) {  // シュートザムーン達成者は0点
+                    // さらに詳細確認
+                    const tricks = gameState.tricks;
+                    let heartsTaken = 0;
+                    let queenOfSpadesTaken = false;
+                    
+                    for (const trick of tricks) {
+                      if (trick.winnerId === playerId) {
+                        for (const playedCard of trick.cards) {
+                          const card = playedCard.card;
+                          if (card.suit === 'HEARTS') {
+                            heartsTaken++;
+                          } else if (card.suit === 'SPADES' && card.rank === 'QUEEN') {
+                            queenOfSpadesTaken = true;
+                          }
+                        }
+                      }
+                    }
+                    
+                    if (heartsTaken === 13 && queenOfSpadesTaken) {
+                      shootTheMoonPlayerId = playerId;
+                      break;
+                    }
                   }
                 }
                 
-                if (Object.keys(updates).length > 0) {
-                  await handRepository.updateHand(handId, updates);
-                  console.log(`Hand ${handNumber} updated with:`, updates);
+                // 累積スコア履歴を取得
+                const history = this.gameScoreHistory.get(gameId) || [];
+                
+                // HandScoreデータを準備
+                const handScores: HandScoreData[] = [];
+                for (const [playerId, handPoints] of scores) {
+                  // 累積ポイントを計算
+                  let cumulativePoints = handPoints;
+                  for (const entry of history) {
+                    if (entry.scores[playerId] !== undefined) {
+                      cumulativePoints += entry.scores[playerId];
+                    }
+                  }
+                  
+                  // プレイヤーのトリック詳細を計算
+                  let heartsTaken = 0;
+                  let queenOfSpadesTaken = false;
+                  
+                  const tricks = gameState.tricks;
+                  for (const trick of tricks) {
+                    if (trick.winnerId === playerId) {
+                      for (const playedCard of trick.cards) {
+                        const card = playedCard.card;
+                        if (card.suit === 'HEARTS') {
+                          heartsTaken++;
+                        } else if (card.suit === 'SPADES' && card.rank === 'QUEEN') {
+                          queenOfSpadesTaken = true;
+                        }
+                      }
+                    }
+                  }
+                  
+                  const shootTheMoonAchieved = (playerId === shootTheMoonPlayerId);
+                  
+                  handScores.push({
+                    playerId,
+                    handPoints,
+                    cumulativePoints,
+                    heartsTaken,
+                    queenOfSpadesTaken,
+                    shootTheMoonAchieved
+                  });
                 }
+                
+                // GamePersistenceServiceの統合保存処理を呼び出し
+                await this.gamePersistenceService.executeWithRetry(async () => {
+                  await this.gamePersistenceService.persistHandCompletion(
+                    handId,
+                    handNumber,
+                    heartsBroken,
+                    shootTheMoonPlayerId,
+                    handScores
+                  );
+                });
+                
+                console.log(`Hand ${handNumber} completion persisted for game ${gameId}`);
               }
             }
           }

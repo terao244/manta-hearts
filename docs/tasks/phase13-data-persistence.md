@@ -87,34 +87,35 @@
   - プレイ順序の正確な記録（1番目、2番目、3番目、4番目）
   - トリック進行状態の管理
 
-### 33.6 ハンドスコア詳細保存処理実装
-- [ ] 🧪 HandScoreテーブル保存テスト作成
+### 33.6 ハンドスコア詳細保存処理実装 ✅ **完了**
+- [x] 🧪 HandScoreテーブル保存テスト作成
   - ハンド完了時のHandScoreレコード作成テスト（プレイヤー4人分）
   - handPoints、cumulativePoints、heartsTaken、queenOfSpadesTaken詳細保存テスト
   - シュートザムーン達成時の特別処理テスト
-- [ ] 📝 HandScoreRepository実装
+- [x] 📝 HandScoreRepository実装
   - saveHandScores(handId, handScores: HandScore[]) メソッド
   - findByHandId(handId) メソッド
-  - calculateDetailedScore(playerId, hand) メソッド（詳細スコア計算）
-- [ ] 📝 GameService.onHandCompleted イベント連携
+  - findByPlayerId(playerId) メソッド
+  - findByHandIdAndPlayerId(handId, playerId) メソッド
+- [x] 📝 GameService.onHandCompleted イベント連携
   - ハンド完了時にHandScoreテーブルへの詳細スコア保存処理追加
   - ハート取得枚数、スペードQ取得、シュートザムーン達成の詳細記録
   - cumulative score の正確な計算・保存
 
-### 33.7 統合保存処理とトランザクション管理
-- [ ] 🧪 統合保存処理テスト作成
+### 33.7 統合保存処理とトランザクション管理 ✅ **完了**
+- [x] 🧪 統合保存処理テスト作成
   - 1ハンド完了時の全テーブル一貫性テスト
   - トランザクション失敗時のロールバック処理テスト
   - 大量データ保存時のパフォーマンステスト
-- [ ] 📝 GamePersistenceService実装
+- [x] 📝 GamePersistenceService実装
   - ゲーム永続化の統括サービスクラス
   - トランザクション管理（Prisma.$transaction）
   - バッチ保存処理の最適化
   - エラーハンドリングとリトライ機能
-- [ ] 📝 GameService統合
+- [x] 📝 GameService統合
   - 既存GameServiceへのGamePersistenceService組み込み
-  - 全イベントハンドラーでの保存処理呼び出し追加
-  - メモリ使用量最適化（大量データ保存時）
+  - onHandCompletedイベントハンドラーでの統合保存処理実装
+  - エラーハンドリングとリトライ機能付きトランザクション管理
 
 ### 33.8 データ整合性・パフォーマンス
 - [ ] 🧪 データ整合性テスト作成
