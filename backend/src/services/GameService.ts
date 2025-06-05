@@ -26,7 +26,7 @@ export class GameService {
   private gameHandIds: Map<number, Map<number, number>> = new Map(); // gameId -> handNumber -> handId
   private io?: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
   private gamePersistenceService: GamePersistenceService;
-  
+
   private constructor() {
     this.gamePersistenceService = GamePersistenceService.getInstance();
   }
@@ -56,16 +56,16 @@ export class GameService {
   public async joinGame(playerId: number): Promise<{ success: boolean; gameInfo?: GameInfo }> {
     try {
       console.log(`GameService.joinGame called for player ${playerId}`);
-      
+
       let gameId: number;
       let isRejoining = false;
-      
+
       // 1. まず既存のゲームを確認
       const existingGameId = this.playerGameMap.get(playerId);
       if (existingGameId && this.gameEngines.has(existingGameId)) {
         const existingEngine = this.gameEngines.get(existingGameId)!;
         const gameState = existingEngine.getGameState();
-        
+
         // ゲームが終了していない場合のみ復帰
         if (gameState.status !== GameStatus.FINISHED) {
           console.log(`Player ${playerId} rejoining existing game ${existingGameId}`);
@@ -90,9 +90,9 @@ export class GameService {
         // 2. 新規ゲーム参加
         gameId = this.findAvailableGame() || await this.createNewGame();
       }
-      
+
       console.log(`Using game ID: ${gameId}, isRejoining: ${isRejoining}`);
-      
+
       let gameEngine = this.gameEngines.get(gameId);
       if (!gameEngine) {
         console.log(`Creating new game engine for game ${gameId}`);
@@ -112,7 +112,7 @@ export class GameService {
       }
 
       let success = true;
-      
+
       if (isRejoining) {
         // 復帰時：既存プレイヤーの接続状態を更新
         console.log(`Updating connection status for rejoining player ${playerId}`);
@@ -143,7 +143,7 @@ export class GameService {
         success = gameEngine.addPlayer(gamePlayer);
         if (success) {
           this.playerGameMap.set(playerId, gameId);
-          
+
           let players = this.gamePlayersMap.get(gameId);
           if (!players) {
             players = new Set();
@@ -165,7 +165,7 @@ export class GameService {
         }
 
         const gameInfo = this.getGameInfo(gameId, playerId);
-        
+
         // 新規参加でゲームが満員になった場合、自動でゲーム開始
         if (!isRejoining && gameEngine.getGameState().isFull()) {
           gameEngine.startGame();
@@ -281,11 +281,11 @@ export class GameService {
     const success = gameEngine.removePlayer(playerId);
     if (success) {
       this.playerGameMap.delete(playerId);
-      
+
       const players = this.gamePlayersMap.get(gameId);
       if (players) {
         players.delete(playerId);
-        
+
         // ゲームにプレイヤーがいなくなった場合、ゲームを削除
         if (players.size === 0) {
           this.gameEngines.delete(gameId);
@@ -312,7 +312,7 @@ export class GameService {
     try {
       const prismaService = PrismaService.getInstance();
       const prisma = prismaService.getClient();
-      
+
       // データベースに新しいゲームレコードを作成
       const game = await prisma.game.create({
         data: {
@@ -320,7 +320,7 @@ export class GameService {
           startTime: new Date()
         }
       });
-      
+
       return game.id;
     } catch (error) {
       console.error('Error creating new game:', error);
@@ -332,9 +332,20 @@ export class GameService {
   private createGameEngine(gameId: number): GameEngine {
     const eventListeners: Partial<GameEngineEvents> = {
       onGameStateChanged: (gameState) => {
+        // プレイヤー情報にpositionを含める
+        const players = gameState.getAllPlayers().map(player => ({
+          id: player.id,
+          name: player.name,
+          displayName: player.displayName,
+          displayOrder: 0, // 既存のAPIとの互換性のため
+          isActive: true,   // 既存のAPIとの互換性のため
+          position: player.position
+        }));
+
         this.broadcastToGame(gameId, 'gameStateChanged', {
           gameId,
           status: gameState.status,
+          players,
           phase: gameState.phase,
           currentTurn: gameState.currentTurn,
           heartsBroken: gameState.heartsBroken,
@@ -354,7 +365,7 @@ export class GameService {
           const container = Container.getInstance();
           const handRepository = container.getHandRepository();
           const hand = await handRepository.createHand(gameId, handNumber);
-          
+
           // handIdをゲーム状態に保持
           let handIds = this.gameHandIds.get(gameId);
           if (!handIds) {
@@ -362,9 +373,9 @@ export class GameService {
             this.gameHandIds.set(gameId, handIds);
           }
           handIds.set(handNumber, hand.id);
-          
+
           console.log(`Hand ${handNumber} created for game ${gameId} with ID ${hand.id}`);
-          
+
           this.broadcastToGame(gameId, 'handStarted', handNumber);
         } catch (error) {
           console.error(`Error creating hand ${handNumber} for game ${gameId}:`, error);
@@ -381,23 +392,23 @@ export class GameService {
             const handNumbers = Array.from(handIds.keys()).sort((a, b) => b - a);
             const currentHandNumber = handNumbers[0];
             const currentHandId = handIds.get(currentHandNumber);
-            
+
             if (currentHandId) {
               const container = Container.getInstance();
               const handCardRepository = container.getHandCardRepository();
-              
+
               // playerHands（Map<playerId, Card[]>）を Map<playerId, cardId[]> に変換
               const playerCardIds = new Map<number, number[]>();
               for (const [playerId, cards] of playerHands) {
                 const cardIds = cards.map(card => card.id);
                 playerCardIds.set(playerId, cardIds);
               }
-              
+
               const result = await handCardRepository.saveHandCards(currentHandId, playerCardIds);
               console.log(`Saved ${result.count} hand cards for hand ${currentHandNumber} (ID: ${currentHandId})`);
             }
           }
-          
+
           // 各プレイヤーに個別に手札を送信
           playerHands.forEach((cards, playerId) => {
             const cardInfos = cards.map(card => this.cardToCardInfo(card));
@@ -428,12 +439,12 @@ export class GameService {
               const gameState = gameEngine.getGameState();
               const currentHandNumber = gameState.currentHand;
               const handId = handIds.get(currentHandNumber);
-              
+
               if (handId) {
                 // CardExchangeRepositoryを取得
                 const container = Container.getInstance();
                 const cardExchangeRepository = container.getCardExchangeRepository();
-                
+
                 // カード交換情報を保存
                 await cardExchangeRepository.saveCardExchanges(handId, exchanges);
                 console.log(`Saved ${exchanges.length} card exchanges for hand ${currentHandNumber}`);
@@ -453,7 +464,7 @@ export class GameService {
       },
       onTrickCompleted: async (trickNumber, winnerId, points, trickCards) => {
         this.broadcastToGame(gameId, 'trickCompleted', { trickNumber, winnerId, points });
-        
+
         try {
           // トリック情報を保存
           const handIds = this.gameHandIds.get(gameId);
@@ -463,25 +474,25 @@ export class GameService {
               const gameState = gameEngine.getGameState();
               const currentHandNumber = gameState.currentHand;
               const handId = handIds.get(currentHandNumber);
-              
+
               if (handId) {
                 const container = Container.getInstance();
                 const trickRepository = container.getTrickRepository();
-                
+
                 // リードプレイヤーを取得（トリックの最初にカードを出したプレイヤー）
                 const currentTrick = gameState.getCurrentTrick();
                 const leadPlayerId = currentTrick?.leadPlayerId || winnerId; // フォールバック
-                
+
                 const trickData = {
                   trickNumber,
                   winnerPlayerId: winnerId,
                   points,
                   leadPlayerId,
                 };
-                
+
                 const savedTrick = await trickRepository.createTrick(handId, trickData);
                 console.log(`Saved trick ${trickNumber} for hand ${currentHandNumber}, winner: ${winnerId}, points: ${points}`);
-                
+
                 // トリックカード情報を保存
                 if (trickCards && trickCards.length > 0) {
                   const trickCardRepository = container.getTrickCardRepository();
@@ -495,7 +506,7 @@ export class GameService {
           console.error(`Error saving trick ${trickNumber} for game ${gameId}:`, error);
           // エラーがあってもゲーム進行は継続
         }
-        
+
         // 現在のハンドスコアも送信
         const gameEngine = this.gameEngines.get(gameId);
         if (gameEngine) {
@@ -514,10 +525,10 @@ export class GameService {
               const gameEngine = this.gameEngines.get(gameId);
               if (gameEngine) {
                 const gameState = gameEngine.getGameState();
-                
+
                 // ハートブレイク状態の取得
                 const heartsBroken = gameState.heartsBroken;
-                
+
                 // シュートザムーンプレイヤーの判定
                 let shootTheMoonPlayerId: number | null = null;
                 for (const [playerId, score] of scores) {
@@ -526,7 +537,7 @@ export class GameService {
                     const tricks = gameState.tricks;
                     let heartsTaken = 0;
                     let queenOfSpadesTaken = false;
-                    
+
                     for (const trick of tricks) {
                       if (trick.winnerId === playerId) {
                         for (const playedCard of trick.cards) {
@@ -539,17 +550,17 @@ export class GameService {
                         }
                       }
                     }
-                    
+
                     if (heartsTaken === 13 && queenOfSpadesTaken) {
                       shootTheMoonPlayerId = playerId;
                       break;
                     }
                   }
                 }
-                
+
                 // 累積スコア履歴を取得
                 const history = this.gameScoreHistory.get(gameId) || [];
-                
+
                 // HandScoreデータを準備
                 const handScores: HandScoreData[] = [];
                 for (const [playerId, handPoints] of scores) {
@@ -560,11 +571,11 @@ export class GameService {
                       cumulativePoints += entry.scores[playerId];
                     }
                   }
-                  
+
                   // プレイヤーのトリック詳細を計算
                   let heartsTaken = 0;
                   let queenOfSpadesTaken = false;
-                  
+
                   const tricks = gameState.tricks;
                   for (const trick of tricks) {
                     if (trick.winnerId === playerId) {
@@ -578,9 +589,9 @@ export class GameService {
                       }
                     }
                   }
-                  
+
                   const shootTheMoonAchieved = (playerId === shootTheMoonPlayerId);
-                  
+
                   handScores.push({
                     playerId,
                     handPoints,
@@ -590,7 +601,7 @@ export class GameService {
                     shootTheMoonAchieved
                   });
                 }
-                
+
                 // GamePersistenceServiceの統合保存処理を呼び出し
                 await this.gamePersistenceService.executeWithRetry(async () => {
                   await this.gamePersistenceService.persistHandCompletion(
@@ -601,30 +612,30 @@ export class GameService {
                     handScores
                   );
                 });
-                
+
                 console.log(`Hand ${handNumber} completion persisted for game ${gameId}`);
               }
             }
           }
-          
+
           // スコア履歴を更新
           const scoreEntry = {
             hand: handNumber,
             scores: Object.fromEntries(scores)
           };
-          
+
           let history = this.gameScoreHistory.get(gameId);
           if (!history) {
             history = [];
             this.gameScoreHistory.set(gameId, history);
           }
           history.push(scoreEntry);
-          
-          this.broadcastToGame(gameId, 'handCompleted', { 
-            handNumber, 
-            scores: Object.fromEntries(scores) 
+
+          this.broadcastToGame(gameId, 'handCompleted', {
+            handNumber,
+            scores: Object.fromEntries(scores)
           });
-          
+
           // スコア履歴も送信
           this.broadcastToGame(gameId, 'scoreHistoryUpdate', history);
         } catch (error) {
@@ -634,19 +645,19 @@ export class GameService {
             hand: handNumber,
             scores: Object.fromEntries(scores)
           };
-          
+
           let history = this.gameScoreHistory.get(gameId);
           if (!history) {
             history = [];
             this.gameScoreHistory.set(gameId, history);
           }
           history.push(scoreEntry);
-          
-          this.broadcastToGame(gameId, 'handCompleted', { 
-            handNumber, 
-            scores: Object.fromEntries(scores) 
+
+          this.broadcastToGame(gameId, 'handCompleted', {
+            handNumber,
+            scores: Object.fromEntries(scores)
           });
-          
+
           this.broadcastToGame(gameId, 'scoreHistoryUpdate', history);
         }
       },
@@ -655,10 +666,10 @@ export class GameService {
         const gameStartTime = Date.now(); // 実際にはGameEngineから取得する必要がある
         const duration = Math.floor((Date.now() - gameStartTime) / 60000); // 分単位
         await this.saveGameResult(gameId, winnerId, duration);
-        
-        this.broadcastToGame(gameId, 'gameCompleted', { 
-          winnerId, 
-          finalScores: Object.fromEntries(finalScores) 
+
+        this.broadcastToGame(gameId, 'gameCompleted', {
+          winnerId,
+          finalScores: Object.fromEntries(finalScores)
         });
       },
       onError: (error) => {
@@ -676,30 +687,32 @@ export class GameService {
       // 新しいゲームの場合、ランダムに最初の席を選択
       const allPositions = [PlayerPosition.NORTH, PlayerPosition.EAST, PlayerPosition.SOUTH, PlayerPosition.WEST];
       const randomIndex = Math.floor(Math.random() * allPositions.length);
+      console.log("ababababa Position:", allPositions[randomIndex])
       return allPositions[randomIndex];
     }
 
     // 既存のゲームの場合、占有済みの席を取得
     const gameState = gameEngine.getGameState();
     const currentPlayers = gameState.getAllPlayers();
-    
+
     if (currentPlayers.length >= 4) {
       throw new Error('Game is full');
     }
 
     // 占有済みの席順を取得
     const occupiedPositions = new Set(currentPlayers.map(player => player.position));
-    
+
     // 全席順から占有済みを除外して空席リストを作成
     const allPositions = [PlayerPosition.NORTH, PlayerPosition.EAST, PlayerPosition.SOUTH, PlayerPosition.WEST];
     const availablePositions = allPositions.filter(position => !occupiedPositions.has(position));
-    
+
     if (availablePositions.length === 0) {
       throw new Error('No available positions');
     }
 
     // 空席からランダムに選択
     const randomIndex = Math.floor(Math.random() * availablePositions.length);
+    console.log("ababa ava Position:", availablePositions[randomIndex])
     return availablePositions[randomIndex];
   }
 
@@ -735,7 +748,7 @@ export class GameService {
     try {
       const prismaService = PrismaService.getInstance();
       const prisma = prismaService.getClient();
-      
+
       await prisma.game.update({
         where: { id: gameId },
         data: {

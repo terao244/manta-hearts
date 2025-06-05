@@ -213,26 +213,61 @@ export class GameEngine {
   }
 
   private getExchangeTargetPlayer(playerId: number): number {
-    const players = this.gameState.getAllPlayers();
-    const currentIndex = players.findIndex(p => p.id === playerId);
+    const currentPlayer = this.gameState.getPlayer(playerId);
+    if (!currentPlayer?.position) {
+      // positionが設定されていない場合は従来のロジックを使用
+      const players = this.gameState.getAllPlayers();
+      const currentIndex = players.findIndex(p => p.id === playerId);
+      
+      let targetIndex: number;
+      
+      switch (this.gameState.exchangeDirection) {
+        case ExchangeDirection.LEFT:
+          targetIndex = (currentIndex + 1) % 4;
+          break;
+        case ExchangeDirection.RIGHT:
+          targetIndex = (currentIndex + 3) % 4;
+          break;
+        case ExchangeDirection.ACROSS:
+          targetIndex = (currentIndex + 2) % 4;
+          break;
+        default:
+          return playerId;
+      }
+
+      return players[targetIndex].id;
+    }
     
-    let targetIndex: number;
+    // positionベースの交換ターゲット決定
+    const positionOrder = [PlayerPosition.NORTH, PlayerPosition.EAST, PlayerPosition.SOUTH, PlayerPosition.WEST];
+    const currentPositionIndex = positionOrder.indexOf(currentPlayer.position);
+    
+    if (currentPositionIndex === -1) return playerId;
+    
+    let targetPositionIndex: number;
     
     switch (this.gameState.exchangeDirection) {
       case ExchangeDirection.LEFT:
-        targetIndex = (currentIndex + 1) % 4;
+        // 時計回りで次の位置
+        targetPositionIndex = (currentPositionIndex + 1) % 4;
         break;
       case ExchangeDirection.RIGHT:
-        targetIndex = (currentIndex + 3) % 4;
+        // 反時計回りで次の位置
+        targetPositionIndex = (currentPositionIndex + 3) % 4;
         break;
       case ExchangeDirection.ACROSS:
-        targetIndex = (currentIndex + 2) % 4;
+        // 対向位置
+        targetPositionIndex = (currentPositionIndex + 2) % 4;
         break;
       default:
         return playerId;
     }
-
-    return players[targetIndex].id;
+    
+    const targetPosition = positionOrder[targetPositionIndex];
+    const players = this.gameState.getAllPlayers();
+    const targetPlayer = players.find(p => p.position === targetPosition);
+    
+    return targetPlayer?.id || playerId;
   }
 
   public startPlayingPhase(): void {
@@ -248,23 +283,6 @@ export class GameEngine {
     } catch (error) {
       this.eventListeners.onError?.(error as Error);
     }
-  }
-
-  private findPlayerWithTwoOfClubs(): number {
-    const twoOfClubs = this.deck.findCard(Suit.CLUBS, Rank.TWO);
-    if (!twoOfClubs) {
-      // フォールバック: 最初のプレイヤー
-      return this.gameState.getAllPlayers()[0].id;
-    }
-
-    for (const player of this.gameState.getAllPlayers()) {
-      if (this.playerManager.hasCard(player.id, twoOfClubs.id)) {
-        return player.id;
-      }
-    }
-
-    // フォールバック: 最初のプレイヤー
-    return this.gameState.getAllPlayers()[0].id;
   }
 
   public playCard(playerId: number, cardId: number): boolean {
@@ -398,5 +416,25 @@ export class GameEngine {
 
   public getScore(playerId: number): number {
     return this.gameState.cumulativeScores.get(playerId) || 0;
+  }
+
+  private findPlayerWithTwoOfClubs(): number {
+    // 全プレイヤーの手札から2のクラブを持つプレイヤーを探す
+    const players = this.gameState.getAllPlayers();
+    
+    for (const player of players) {
+      const hand = this.playerManager.getPlayer(player.id)?.hand || [];
+      const hasTwoOfClubs = hand.some(card => 
+        card.suit === Suit.CLUBS && card.rank === Rank.TWO
+      );
+      
+      if (hasTwoOfClubs) {
+        return player.id;
+      }
+    }
+    
+    // 2のクラブが見つからない場合は、North位置のプレイヤーをフォールバック
+    const northPlayer = players.find(p => p.position === PlayerPosition.NORTH);
+    return northPlayer?.id || players[0]?.id;
   }
 }

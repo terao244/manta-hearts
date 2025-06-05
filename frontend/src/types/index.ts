@@ -5,6 +5,7 @@ export interface PlayerInfo {
   displayName: string;
   displayOrder: number;
   isActive: boolean;
+  position?: PlayerPosition;
 }
 
 export interface CardInfo {
@@ -89,6 +90,7 @@ export interface GameState {
 export interface GameStateUpdate {
   gameId: number;
   status: string;
+  players: PlayerInfo[];
   phase: string;
   currentTurn?: number;
   heartsBroken: boolean;

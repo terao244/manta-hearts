@@ -286,13 +286,33 @@ export class GameState {
   }
 
   public getNextPlayer(currentPlayerId: number): number | null {
+    const currentPlayer = this.getPlayer(currentPlayerId);
+    if (!currentPlayer?.position) {
+      // positionが設定されていない場合は従来のロジックを使用
+      const players = this.getAllPlayers();
+      const currentIndex = players.findIndex(p => p.id === currentPlayerId);
+      
+      if (currentIndex === -1) return null;
+      
+      const nextIndex = (currentIndex + 1) % players.length;
+      return players[nextIndex].id;
+    }
+    
+    // positionベースの手番順（時計回り）
+    const positionOrder = [PlayerPosition.NORTH, PlayerPosition.EAST, PlayerPosition.SOUTH, PlayerPosition.WEST];
+    const currentPositionIndex = positionOrder.indexOf(currentPlayer.position);
+    
+    if (currentPositionIndex === -1) return null;
+    
+    // 次のposition（時計回り）を取得
+    const nextPositionIndex = (currentPositionIndex + 1) % positionOrder.length;
+    const nextPosition = positionOrder[nextPositionIndex];
+    
+    // 該当positionのプレイヤーを探す
     const players = this.getAllPlayers();
-    const currentIndex = players.findIndex(p => p.id === currentPlayerId);
+    const nextPlayer = players.find(p => p.position === nextPosition);
     
-    if (currentIndex === -1) return null;
-    
-    const nextIndex = (currentIndex + 1) % players.length;
-    return players[nextIndex].id;
+    return nextPlayer?.id || null;
   }
 
   public canPlayCard(playerId: number, card: Card): boolean {

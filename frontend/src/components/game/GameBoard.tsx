@@ -150,11 +150,38 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   const getPlayerPosition = (playerId: number): RelativePosition | '' => {
     if (!currentPlayerId) return '';
-    const positions: RelativePosition[] = ['bottom', 'left', 'top', 'right'];
-    const currentIndex = players.findIndex(p => p.id === currentPlayerId);
-    const playerIndex = players.findIndex(p => p.id === playerId);
-    const relativeIndex = (playerIndex - currentIndex + 4) % 4;
-    return positions[relativeIndex];
+    
+    const player = players.find(p => p.id === playerId);
+    const currentPlayer = players.find(p => p.id === currentPlayerId);
+    
+    if (!player?.position || !currentPlayer?.position) {
+      // positionが設定されていない場合は従来のロジックを使用
+      const positions: RelativePosition[] = ['bottom', 'left', 'top', 'right'];
+      const currentIndex = players.findIndex(p => p.id === currentPlayerId);
+      const playerIndex = players.findIndex(p => p.id === playerId);
+      const relativeIndex = (playerIndex - currentIndex + 4) % 4;
+      return positions[relativeIndex];
+    }
+    
+    // 現在のプレイヤーを基準とした相対位置を計算
+    const currentPlayerPosition = currentPlayer.position;
+    const targetPlayerPosition = player.position;
+    
+    // 現在のプレイヤーが常に下側（bottom）になるよう配置
+    if (playerId === currentPlayerId) {
+      return 'bottom';
+    }
+    
+    // North, East, South, Westの順序で配置
+    const positionOrder = ['North', 'East', 'South', 'West'];
+    const currentIndex = positionOrder.indexOf(currentPlayerPosition);
+    const targetIndex = positionOrder.indexOf(targetPlayerPosition);
+    
+    // 相対位置を計算
+    const relativeIndex = (targetIndex - currentIndex + 4) % 4;
+    const relativePositions: RelativePosition[] = ['bottom', 'left', 'top', 'right'];
+    
+    return relativePositions[relativeIndex];
   };
 
   const getPhaseMessage = (): string => {
