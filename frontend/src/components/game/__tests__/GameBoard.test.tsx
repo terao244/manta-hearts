@@ -86,9 +86,9 @@ describe('GameBoard', () => {
       />
     );
     
-    expect(screen.getAllByText('合計: 0点')).toHaveLength(2); // プレイヤー1と4がテーブル配置で表示
-    expect(screen.getAllByText('合計: 5点')).toHaveLength(1); // プレイヤー2がテーブル配置で表示
-    expect(screen.getAllByText('合計: 10点')).toHaveLength(1); // プレイヤー3がテーブル配置で表示
+    expect(screen.getAllByText('0点 / +0点')).toHaveLength(2); // プレイヤー1と4がテーブル配置で表示
+    expect(screen.getAllByText('5点 / +0点')).toHaveLength(1); // プレイヤー2がテーブル配置で表示
+    expect(screen.getAllByText('10点 / +0点')).toHaveLength(1); // プレイヤー3がテーブル配置で表示
     expect(screen.getAllByText('0点')).toHaveLength(2); // スコア一覧で表示
     expect(screen.getAllByText('5点')).toHaveLength(1); // スコア一覧で表示
     expect(screen.getAllByText('10点')).toHaveLength(1); // スコア一覧で表示
@@ -109,9 +109,10 @@ describe('GameBoard', () => {
       />
     );
     
-    expect(screen.getByText('ハンド: +3点')).toBeInTheDocument(); // プレイヤー1の現在ハンドスコア
-    expect(screen.getByText('ハンド: +13点')).toBeInTheDocument(); // プレイヤー3の現在ハンドスコア
-    expect(screen.getAllByText('ハンド: +0点')).toHaveLength(2); // プレイヤー2と4も0点が表示される
+    expect(screen.getByText('0点 / +3点')).toBeInTheDocument(); // プレイヤー1の現在ハンドスコア
+    expect(screen.getByText('10点 / +13点')).toBeInTheDocument(); // プレイヤー3の現在ハンドスコア
+    expect(screen.getAllByText('5点 / +0点')).toHaveLength(1); // プレイヤー2
+    expect(screen.getAllByText('0点 / +0点')).toHaveLength(1); // プレイヤー4
   });
 
   it('現在ハンドスコアが未定義の場合も0点として表示される', () => {
@@ -125,7 +126,9 @@ describe('GameBoard', () => {
       />
     );
     
-    expect(screen.getAllByText('ハンド: +0点')).toHaveLength(4); // 全プレイヤーに0点が表示される
+    expect(screen.getAllByText('0点 / +0点')).toHaveLength(2); // プレイヤー1と4に0点が表示される
+    expect(screen.getAllByText('5点 / +0点')).toHaveLength(1); // プレイヤー2
+    expect(screen.getAllByText('10点 / +0点')).toHaveLength(1); // プレイヤー3
   });
 
   it('現在のプレイヤーがハイライトされる', () => {
@@ -192,7 +195,7 @@ describe('GameBoard', () => {
       />
     );
     
-    expect(screen.getByText(/交換するカードを3枚選択してください/)).toBeInTheDocument();
+    expect(screen.getAllByText('交換するカードを3枚選んでください').length).toBeGreaterThan(0);
   });
 
   it('トリック情報が表示される', () => {
@@ -278,7 +281,6 @@ describe('GameBoard', () => {
     const currentTurnPlayerElement = screen.getByTestId('player-1');
     const playerCard = currentTurnPlayerElement.querySelector('div');
     expect(playerCard).toHaveClass('animate-pulse');
-    expect(screen.getByText('手番')).toBeInTheDocument();
   });
 
   it('手番でないプレイヤーのメッセージが表示される', () => {

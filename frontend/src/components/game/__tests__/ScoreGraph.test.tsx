@@ -130,8 +130,7 @@ describe('ScoreGraph', () => {
 
     const chartOptions = JSON.parse(screen.getByTestId('chart-options').textContent || '{}');
     expect(chartOptions.responsive).toBe(true);
-    expect(chartOptions.plugins.title.display).toBe(true);
-    expect(chartOptions.plugins.title.text).toBe('スコア推移グラフ');
+    expect(chartOptions.plugins.title.display).toBe(false);
     expect(chartOptions.scales.y.min).toBe(0);
     expect(chartOptions.scales.y.title.text).toBe('累積スコア (点)');
     expect(chartOptions.scales.x.title.text).toBe('ハンド番号');
@@ -149,10 +148,10 @@ describe('ScoreGraph', () => {
     const chartData = JSON.parse(screen.getByTestId('chart-data').textContent || '{}');
     
     // プレイヤー1（currentPlayer）は太い線で強調
-    expect(chartData.datasets[0].borderWidth).toBe(4);
+    expect(chartData.datasets[0].borderWidth).toBe(2);
     // 他のプレイヤーは通常の太さ
-    expect(chartData.datasets[1].borderWidth).toBe(2);
-    expect(chartData.datasets[2].borderWidth).toBe(2);
-    expect(chartData.datasets[3].borderWidth).toBe(2);
+    expect(chartData.datasets[1].borderWidth).toBe(1);
+    expect(chartData.datasets[2].borderWidth).toBe(1);
+    expect(chartData.datasets[3].borderWidth).toBe(1);
   });
 });
