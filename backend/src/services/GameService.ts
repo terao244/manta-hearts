@@ -14,7 +14,6 @@ import type {
   SocketData,
   CardInfo,
   GameInfo,
-  GameState as GameStateType,
 } from '../types';
 
 
@@ -672,21 +671,36 @@ export class GameService {
   }
 
   private assignPlayerPosition(gameId: number): PlayerPosition {
-    const players = this.gamePlayersMap.get(gameId);
-    const playerCount = players ? players.size : 0;
-
-    switch (playerCount) {
-      case 0:
-        return PlayerPosition.NORTH;
-      case 1:
-        return PlayerPosition.EAST;
-      case 2:
-        return PlayerPosition.SOUTH;
-      case 3:
-        return PlayerPosition.WEST;
-      default:
-        throw new Error('Game is full');
+    const gameEngine = this.gameEngines.get(gameId);
+    if (!gameEngine) {
+      // 新しいゲームの場合、ランダムに最初の席を選択
+      const allPositions = [PlayerPosition.NORTH, PlayerPosition.EAST, PlayerPosition.SOUTH, PlayerPosition.WEST];
+      const randomIndex = Math.floor(Math.random() * allPositions.length);
+      return allPositions[randomIndex];
     }
+
+    // 既存のゲームの場合、占有済みの席を取得
+    const gameState = gameEngine.getGameState();
+    const currentPlayers = gameState.getAllPlayers();
+    
+    if (currentPlayers.length >= 4) {
+      throw new Error('Game is full');
+    }
+
+    // 占有済みの席順を取得
+    const occupiedPositions = new Set(currentPlayers.map(player => player.position));
+    
+    // 全席順から占有済みを除外して空席リストを作成
+    const allPositions = [PlayerPosition.NORTH, PlayerPosition.EAST, PlayerPosition.SOUTH, PlayerPosition.WEST];
+    const availablePositions = allPositions.filter(position => !occupiedPositions.has(position));
+    
+    if (availablePositions.length === 0) {
+      throw new Error('No available positions');
+    }
+
+    // 空席からランダムに選択
+    const randomIndex = Math.floor(Math.random() * availablePositions.length);
+    return availablePositions[randomIndex];
   }
 
   private broadcastToGame(gameId: number, event: string, data: any): void {
