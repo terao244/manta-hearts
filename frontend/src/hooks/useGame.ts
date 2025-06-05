@@ -23,6 +23,8 @@ interface GameHookState {
   exchangeDirection?: 'left' | 'right' | 'across' | 'none';
   exchangeProgress?: { exchangedPlayers: number[]; remainingPlayers: number[] };
   scoreHistory: ScoreHistoryEntry[];
+  gameResult?: GameResult;
+  isGameCompleted: boolean;
 }
 
 export const useGame = (currentPlayer: PlayerInfo | null) => {
@@ -33,7 +35,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     isLoading: false,
     error: null,
     validCardIds: [],
-    scoreHistory: []
+    scoreHistory: [],
+    isGameCompleted: false
   });
 
   // ゲーム参加
@@ -71,7 +74,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
           isLoading: false,
           error: null,
           validCardIds: [],
-          scoreHistory: result.gameInfo.scoreHistory || []
+          scoreHistory: result.gameInfo.scoreHistory || [],
+          isGameCompleted: false
         });
       } else {
         setGameHookState(prev => ({
@@ -441,6 +445,12 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     // ゲーム完了
     const handleGameCompleted = (gameResult: GameResult) => {
       console.log('Game completed:', gameResult);
+      setGameHookState(prev => ({
+        ...prev,
+        gameResult,
+        isGameCompleted: true,
+        isInGame: false
+      }));
     };
 
     // エラー
@@ -495,6 +505,15 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     };
   }, [socket, on, off, currentPlayer]);
 
+  // ゲーム終了モーダルを閉じる
+  const closeGameEndModal = useCallback(() => {
+    setGameHookState(prev => ({
+      ...prev,
+      isGameCompleted: false,
+      gameResult: undefined
+    }));
+  }, []);
+
   return {
     gameState: gameHookState.gameState,
     isInGame: gameHookState.isInGame,
@@ -504,9 +523,12 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     exchangeDirection: gameHookState.exchangeDirection,
     exchangeProgress: gameHookState.exchangeProgress,
     scoreHistory: gameHookState.scoreHistory,
+    gameResult: gameHookState.gameResult,
+    isGameCompleted: gameHookState.isGameCompleted,
     joinGame: handleJoinGame,
     playCard: handleCardPlay,
     exchangeCards: handleCardExchange,
-    updateValidCards
+    updateValidCards,
+    closeGameEndModal
   };
 };

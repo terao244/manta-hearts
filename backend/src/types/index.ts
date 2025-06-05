@@ -49,7 +49,12 @@ export interface ServerToClientEvents {
   handScoreUpdate: (currentHandScores: Record<number, number>) => void;
   handCompleted: (handResult: { handNumber: number; scores: Record<number, number> }) => void;
   scoreHistoryUpdate: (scoreHistory: Array<{ hand: number; scores: Record<number, number> }>) => void;
-  gameCompleted: (gameResult: { winnerId: number; finalScores: Record<number, number> }) => void;
+  gameCompleted: (gameResult: { 
+    winnerId: number; 
+    finalScores: Record<number, number>; 
+    rankings: Array<{ playerId: number; rank: number; score: number }>; 
+    scoreHistory: Array<{ hand: number; scores: Record<number, number> }>; 
+  }) => void;
   error: (error: string) => void;
   connectionStatus: (
     status: 'connected' | 'disconnected' | 'reconnected'

@@ -662,14 +662,25 @@ export class GameService {
         }
       },
       onGameCompleted: async (winnerId, finalScores) => {
+        const gameEngine = this.gameEngines.get(gameId);
+        if (!gameEngine) return;
+
+        const gameState = gameEngine.getGameState();
+        const rankings = gameState.getFinalRankings();
+        
         // ゲーム結果をデータベースに保存
-        const gameStartTime = Date.now(); // 実際にはGameEngineから取得する必要がある
+        const gameStartTime = gameState.startedAt.getTime();
         const duration = Math.floor((Date.now() - gameStartTime) / 60000); // 分単位
         await this.saveGameResult(gameId, winnerId, duration);
 
+        // スコア履歴を取得
+        const scoreHistory = this.gameScoreHistory.get(gameId) || [];
+
         this.broadcastToGame(gameId, 'gameCompleted', {
           winnerId,
-          finalScores: Object.fromEntries(finalScores)
+          finalScores: Object.fromEntries(finalScores),
+          rankings,
+          scoreHistory
         });
       },
       onError: (error) => {

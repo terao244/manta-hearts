@@ -26,10 +26,13 @@ export default function Home() {
     exchangeDirection,
     exchangeProgress,
     scoreHistory,
+    gameResult,
+    isGameCompleted,
     joinGame,
     playCard,
     exchangeCards,
-    updateValidCards
+    updateValidCards,
+    closeGameEndModal
   } = useGame(loginState.playerInfo || null);
 
   // ゲーム状態が変わったときに有効カードを更新
@@ -149,8 +152,11 @@ export default function Home() {
           exchangeDirection={exchangeDirection}
           exchangeProgress={exchangeProgress}
           scoreHistory={scoreHistory}
+          gameResult={gameResult}
+          isGameCompleted={isGameCompleted}
           onCardPlay={playCard}
           onCardExchange={exchangeCards}
+          onCloseGameEndModal={closeGameEndModal}
         />
       </>
     );

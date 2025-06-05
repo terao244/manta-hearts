@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Hand } from './Hand';
 import { Card } from './Card';
 import { ScoreGraph } from './ScoreGraph';
+import GameEndModal from './GameEndModal';
 import type { GameBoardProps, CardInfo, PlayerInfo, RelativePosition } from '@/types';
 
 // プレイヤーカードコンポーネント
@@ -58,8 +59,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   exchangeProgress,
   scoreHistory = [],
   showScoreGraph = false,
+  gameResult,
+  isGameCompleted = false,
   onCardPlay,
-  onCardExchange
+  onCardExchange,
+  onCloseGameEndModal
 }) => {
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
   const [isScoreGraphVisible, setIsScoreGraphVisible] = useState<boolean>(showScoreGraph);
@@ -465,6 +469,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* ゲーム終了モーダル */}
+      {isGameCompleted && gameResult && (
+        <GameEndModal
+          isOpen={isGameCompleted}
+          gameResult={gameResult}
+          players={players}
+          onClose={onCloseGameEndModal || (() => {})}
+        />
+      )}
     </div>
   );
 };

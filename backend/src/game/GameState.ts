@@ -262,6 +262,20 @@ export class GameState {
     return winnerId;
   }
 
+  public getFinalRankings(): Array<{ playerId: number; rank: number; score: number }> {
+    if (!this.isGameCompleted()) return [];
+
+    const scores = Array.from(this.cumulativeScores.entries())
+      .map(([playerId, score]) => ({ playerId, score }))
+      .sort((a, b) => a.score - b.score);
+
+    return scores.map((entry, index) => ({
+      playerId: entry.playerId,
+      rank: index + 1,
+      score: entry.score
+    }));
+  }
+
   public getCurrentTrick(): Trick | undefined {
     return this.tricks[this.tricks.length - 1];
   }

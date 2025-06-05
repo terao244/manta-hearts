@@ -132,10 +132,10 @@ export interface HandResult {
 }
 
 export interface GameResult {
-  gameId: number;
   winnerId: number;
   finalScores: Record<number, number>;
-  duration: number; // 分単位
+  rankings: Array<{ playerId: number; rank: number; score: number }>;
+  scoreHistory: Array<{ hand: number; scores: Record<number, number> }>;
 }
 
 // フロントエンド固有の型定義
@@ -185,8 +185,11 @@ export interface GameBoardProps {
   exchangeProgress?: { exchangedPlayers: number[]; remainingPlayers: number[] };
   scoreHistory?: ScoreHistoryEntry[];
   showScoreGraph?: boolean;
+  gameResult?: GameResult;
+  isGameCompleted?: boolean;
   onCardPlay: (cardId: number) => void;
   onCardExchange: (cardIds: number[]) => void;
+  onCloseGameEndModal?: () => void;
 }
 
 export interface CardProps {
