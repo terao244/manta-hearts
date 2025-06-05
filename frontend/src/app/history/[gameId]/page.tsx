@@ -289,6 +289,7 @@ function ScoreGraphSection({ gameDetail }: { gameDetail: GameDetailData }) {
             players={players}
             scoreHistory={scoreHistory}
             currentPlayerId={players[0]?.id}
+            height="100%"
           />
         </div>
       ) : (

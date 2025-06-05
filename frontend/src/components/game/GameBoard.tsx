@@ -374,11 +374,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
           {/* スコアグラフエリア（右側固定） */}
           {isScoreGraphVisible && (
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 w-96">
               <ScoreGraph
                 players={players}
                 scoreHistory={scoreHistory}
                 currentPlayerId={currentPlayerId}
+                height="28rem"
+                className="border border-gray-300"
               />
             </div>
           )}

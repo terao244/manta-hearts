@@ -98,6 +98,15 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
     animation: {
       duration: 0, // アニメーション無効化
     },
+    backgroundColor: '#ffffff', // 白い背景を設定
+    layout: {
+      padding: {
+        top: 10,
+        right: 10,
+        bottom: 10,
+        left: 10
+      }
+    },
     plugins: {
       legend: {
         position: 'top' as const,
@@ -248,8 +257,8 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
   }), []);
 
   return (
-    <div className={`w-full ${className}`} style={{ height }}>
-      <div className="h-full w-full">
+    <div className={`w-full bg-white rounded-lg shadow-md ${className}`} style={{ height }}>
+      <div className="h-full w-full p-2">
         <Line data={chartData} options={chartOptions} />
       </div>
 
