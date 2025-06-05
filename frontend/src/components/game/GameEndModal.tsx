@@ -2,28 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { GameResult, PlayerInfo } from '@/types';
-import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  ChartOptions,
-} from 'chart.js';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import { ScoreGraph } from './ScoreGraph';
 
 interface GameEndModalProps {
   isOpen: boolean;
@@ -52,79 +31,6 @@ export default function GameEndModal({ isOpen, gameResult, players, onClose }: G
     return player?.displayName || player?.name || `Player ${playerId}`;
   };
 
-  const getRankingSuffix = (rank: number) => {
-    switch (rank) {
-      case 1: return '位';
-      case 2: return '位';
-      case 3: return '位';
-      case 4: return '位';
-      default: return '位';
-    }
-  };
-
-  // Chart.jsのデータ準備
-  const chartData = {
-    labels: gameResult.scoreHistory.map((_, index) => `ハンド ${index + 1}`),
-    datasets: gameResult.rankings.map((ranking, index) => {
-      const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b']; // 赤、青、緑、オレンジ
-      const color = colors[index % colors.length];
-      
-      // 各ハンドでの累積スコアを計算
-      const cumulativeData = gameResult.scoreHistory.map(handData => {
-        return handData.scores[ranking.playerId] || 0;
-      });
-
-      return {
-        label: getPlayerName(ranking.playerId),
-        data: cumulativeData,
-        borderColor: color,
-        backgroundColor: color + '20',
-        borderWidth: 3,
-        tension: 0.1,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-      };
-    }),
-  };
-
-  const chartOptions: ChartOptions<'line'> = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-        labels: {
-          font: {
-            size: 12,
-          },
-        },
-      },
-      title: {
-        display: true,
-        text: '得点推移グラフ',
-        font: {
-          size: 16,
-          weight: 'bold',
-        },
-      },
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'ハンド',
-        },
-      },
-      y: {
-        title: {
-          display: true,
-          text: '累積スコア',
-        },
-        beginAtZero: true,
-      },
-    },
-  };
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -138,7 +44,7 @@ export default function GameEndModal({ isOpen, gameResult, players, onClose }: G
 
         {/* 最終順位表 */}
         <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-4 text-center">最終順位</h3>
+          <h3 className="text-xl font-semibold mb-4 text-center text-gray-800">最終順位</h3>
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="grid gap-3">
               {gameResult.rankings.map((ranking) => (
@@ -168,10 +74,10 @@ export default function GameEndModal({ isOpen, gameResult, players, onClose }: G
                     >
                       {ranking.rank}
                     </div>
-                    <span className="font-semibold text-lg">{getPlayerName(ranking.playerId)}</span>
+                    <span className="font-semibold text-lg text-gray-800">{getPlayerName(ranking.playerId)}</span>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold">{ranking.score}点</div>
+                    <div className="text-lg font-bold text-gray-800">{ranking.score}点</div>
                   </div>
                 </div>
               ))}
@@ -182,10 +88,14 @@ export default function GameEndModal({ isOpen, gameResult, players, onClose }: G
         {/* 得点推移グラフ */}
         {showGraph && gameResult.scoreHistory.length > 0 && (
           <div className="mb-6">
+            <h3 className="text-xl font-semibold mb-4 text-center text-gray-800">得点推移グラフ</h3>
             <div className="bg-gray-50 rounded-lg p-4">
-              <div style={{ height: '400px' }}>
-                <Line data={chartData} options={chartOptions} />
-              </div>
+              <ScoreGraph
+                players={players}
+                scoreHistory={gameResult.scoreHistory}
+                height="400px"
+                className="text-gray-800"
+              />
             </div>
           </div>
         )}

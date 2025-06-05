@@ -41,7 +41,8 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
   players,
   scoreHistory,
   currentPlayerId,
-  className = ''
+  className = '',
+  height = '100%'
 }) => {
   // チャートデータの生成
   const chartData = React.useMemo(() => {
@@ -247,7 +248,7 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
   }), []);
 
   return (
-    <div className={`w-full h-full ${className}`}>
+    <div className={`w-full ${className}`} style={{ height }}>
       <div className="h-full w-full">
         <Line data={chartData} options={chartOptions} />
       </div>

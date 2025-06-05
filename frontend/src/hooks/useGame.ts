@@ -448,8 +448,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       setGameHookState(prev => ({
         ...prev,
         gameResult,
-        isGameCompleted: true,
-        isInGame: false
+        isGameCompleted: true
+        // isInGameはtrueのままにしてGameBoardを表示し続ける
       }));
     };
 
@@ -510,7 +510,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     setGameHookState(prev => ({
       ...prev,
       isGameCompleted: false,
-      gameResult: undefined
+      gameResult: undefined,
+      isInGame: false  // モーダルを閉じた時にゲームから退出
     }));
   }, []);
 

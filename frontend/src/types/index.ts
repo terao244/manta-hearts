@@ -218,6 +218,7 @@ export interface ScoreGraphProps {
   scoreHistory: ScoreHistoryEntry[];
   currentPlayerId?: number;
   className?: string;
+  height?: string | number;
 }
 
 // ゲーム履歴API関連の型定義
