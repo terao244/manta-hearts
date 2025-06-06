@@ -40,7 +40,7 @@ export function HandHistory({
     <div className="border border-gray-200 rounded-lg">
       <button
         onClick={handleToggle}
-        className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center justify-between"
+        className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center justify-between"
       >
         <div className="flex items-center space-x-4">
           <span className="font-medium">ハンド {handNumber} の初期手札</span>
@@ -59,16 +59,16 @@ export function HandHistory({
       </button>
 
       {isExpanded && (
-        <div className="px-4 pb-4 border-t border-gray-100">
+        <div className="px-3 pb-3 border-t border-gray-100">
           {isLoading && (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center py-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               <span className="ml-3 text-gray-600">手札データを読み込み中...</span>
             </div>
           )}
 
           {error && (
-            <div className="text-center py-8">
+            <div className="text-center py-4">
               <div className="text-red-600 mb-2">
                 <svg className="mx-auto h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -87,52 +87,60 @@ export function HandHistory({
           )}
 
           {playerCards && !isLoading && !error && (
-            <div className="mt-4 space-y-6">
-              {players.map(player => {
-                const cards = playerCards[player.id] || [];
-                const sortedCards = [...cards].sort((a, b) => a.sortOrder - b.sortOrder);
-                const formattedCards = formatCardsFromInfo(sortedCards);
+            <div className="mt-3">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-gray-300 px-1 py-0.5 text-left font-medium">プレイヤー</th>
+                      <th className="border border-gray-300 px-1 py-0.5 text-left font-medium">手札 (13枚)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {players.map(player => {
+                      const cards = playerCards[player.id] || [];
+                      const sortedCards = [...cards].sort((a, b) => a.sortOrder - b.sortOrder);
+                      const formattedCards = formatCardsFromInfo(sortedCards);
 
-                return (
-                  <div key={player.id} className="bg-gray-50 p-3 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-3 flex items-center">
-                      <span>{player.name}</span>
-                      <span className="ml-2 text-sm text-gray-500">
-                        ({cards.length}枚)
-                      </span>
-                    </h4>
-
-                    {cards.length === 0 ? (
-                      <p className="text-gray-500 text-sm">手札データがありません</p>
-                    ) : (
-                      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-13 gap-1.5">
-                        {formattedCards.map((cardDisplay, index) => {
-                          const card = sortedCards[index];
-                          const colorClass = getCardColorClass(cardDisplay.color);
-                          
-                          return (
-                            <div
-                              key={`${card.suit}-${card.rank}`}
-                              className="bg-white border border-gray-200 rounded-md p-1.5 text-center shadow-sm hover:shadow-md transition-shadow"
-                              title={`${cardDisplay.displayText}`}
-                            >
-                              <div className={`text-sm font-bold ${colorClass}`}>
-                                {cardDisplay.displayText}
+                      return (
+                        <tr key={player.id} className="hover:bg-gray-50">
+                          <td className="border border-gray-300 px-1 py-0.5 font-medium align-top">
+                            {player.name}
+                            <span className="ml-1 text-xs text-gray-500">({cards.length}枚)</span>
+                          </td>
+                          <td className="border border-gray-300 px-1 py-0.5">
+                            {cards.length === 0 ? (
+                              <span className="text-gray-500 text-xs">手札データがありません</span>
+                            ) : (
+                              <div className="flex flex-wrap gap-1">
+                                {formattedCards.map((cardDisplay, index) => {
+                                  const card = sortedCards[index];
+                                  const colorClass = getCardColorClass(cardDisplay.color);
+                                  
+                                  return (
+                                    <span
+                                      key={`${card.suit}-${card.rank}`}
+                                      className={`inline-flex items-center px-1 py-0.5 rounded text-xs font-bold border bg-white border-gray-200 ${colorClass}`}
+                                      title={`${cardDisplay.displayText}`}
+                                    >
+                                      {cardDisplay.displayText}
+                                    </span>
+                                  );
+                                })}
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                  </div>
-                );
-              })}
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
           {!playerCards && !isLoading && !error && (
-            <div className="text-center py-8">
+            <div className="text-center py-4">
               <p className="text-gray-600 mb-3">手札データを表示するには、上記ボタンをクリックしてください</p>
               {onLoadCards && (
                 <button

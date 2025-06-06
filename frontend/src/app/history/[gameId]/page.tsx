@@ -367,7 +367,7 @@ function HandDetail({ hand, players, gameId }: { hand: HandDetailData; players: 
     <div className="border border-gray-200 rounded-lg">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center justify-between"
+        className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center justify-between"
       >
         <div className="flex items-center space-x-4">
           <span className="font-medium">ハンド {hand.handNumber}</span>
@@ -375,10 +375,10 @@ function HandDetail({ hand, players, gameId }: { hand: HandDetailData; players: 
             交換: {getExchangeDirectionText(hand.exchangeDirection)}
           </span>
           {hand.heartsBroken && (
-            <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded">ハートブレイク</span>
+            <span className="px-1 py-0.5 bg-red-100 text-red-800 text-xs rounded">ハートブレイク</span>
           )}
           {hand.shootTheMoonPlayerId && (
-            <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">シュートザムーン</span>
+            <span className="px-1 py-0.5 bg-purple-100 text-purple-800 text-xs rounded">シュートザムーン</span>
           )}
         </div>
         <svg
@@ -392,9 +392,9 @@ function HandDetail({ hand, players, gameId }: { hand: HandDetailData; players: 
       </button>
       
       {isExpanded && (
-        <div className="px-4 pb-4 border-t border-gray-100">
+        <div className="px-3 pb-3 border-t border-gray-100">
           {/* 手札履歴 */}
-          <div className="mt-4">
+          <div className="mt-3">
             <HandHistory
               gameId={gameId}
               handId={hand.id}
@@ -408,7 +408,7 @@ function HandDetail({ hand, players, gameId }: { hand: HandDetailData; players: 
           </div>
 
           {/* カード交換履歴 */}
-          <div className="mt-4">
+          <div className="mt-3">
             <CardExchangeHistory
               gameId={gameId}
               handId={hand.id}
@@ -422,88 +422,108 @@ function HandDetail({ hand, players, gameId }: { hand: HandDetailData; players: 
           </div>
 
           {/* ハンドスコア */}
-          <div className="mt-4">
-            <h4 className="font-medium text-gray-900 mb-2">ハンドスコア</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {hand.scores && Object.entries(hand.scores).map(([playerId, score]) => {
-                const player = players.find(p => p.id === Number(playerId));
-                return (
-                  <div key={playerId} className="bg-gray-50 p-2 rounded text-center">
-                    <div className="text-sm text-gray-600">{player?.name || `プレイヤー${playerId}`}</div>
-                    <div className="font-medium">{score}点</div>
-                  </div>
-                );
-              })}
+          <div className="mt-3">
+            <h4 className="font-medium text-gray-900 mb-1">ハンドスコア</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    {hand.scores && Object.entries(hand.scores).map(([playerId]) => {
+                      const player = players.find(p => p.id === Number(playerId));
+                      return (
+                        <th key={playerId} className="border border-gray-300 px-1 py-0.5 text-center font-medium">
+                          {player?.name || `P${playerId}`}
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    {hand.scores && Object.entries(hand.scores).map(([playerId, score]) => (
+                      <td key={playerId} className="border border-gray-300 px-1 py-0.5 text-center font-medium">
+                        {score}点
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
           {/* トリック一覧 */}
           {hand.tricks && hand.tricks.length > 0 && (
-            <div className="mt-4">
-              <h4 className="font-medium text-gray-900 mb-2">トリック詳細</h4>
-              <div className="space-y-3">
-                {hand.tricks.map((trick) => {
-                  const leader = players.find(p => p.id === trick.leadPlayerId);
-                  const winner = players.find(p => p.id === trick.winnerId);
-                  
-                  return (
-                    <div key={trick.trickNumber} className="bg-gray-50 p-3 rounded-lg border">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-4">
-                          <span className="font-medium text-gray-900">トリック {trick.trickNumber}</span>
-                          <span className="text-sm text-gray-600">リード: {leader?.name || `プレイヤー${trick.leadPlayerId}`}</span>
-                          <span className="text-sm font-medium text-green-600">
-                            勝者: {winner?.name || `プレイヤー${trick.winnerId}`}
-                          </span>
-                          <span className="text-sm text-gray-600">{trick.points}点</span>
-                        </div>
-                      </div>
+            <div className="mt-3">
+              <h4 className="font-medium text-gray-900 mb-1">トリック詳細</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-gray-300 px-1 py-0.5 text-left font-medium">T#</th>
+                      <th className="border border-gray-300 px-1 py-0.5 text-left font-medium">リード</th>
+                      <th className="border border-gray-300 px-1 py-0.5 text-left font-medium">カード</th>
+                      <th className="border border-gray-300 px-1 py-0.5 text-left font-medium">勝者</th>
+                      <th className="border border-gray-300 px-1 py-0.5 text-center font-medium">点数</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {hand.tricks.map((trick) => {
+                      const leader = players.find(p => p.id === trick.leadPlayerId);
+                      const winner = players.find(p => p.id === trick.winnerId);
                       
-                      {/* カードプレイ順序表示 */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                        {trick.cards && trick.cards.map((cardPlay, index) => {
-                          if (!cardPlay.card) {
-                            return (
-                              <div key={index} className="text-center p-2 bg-red-100 rounded">
-                                <div className="text-xs text-red-600">不明</div>
-                                <div className="text-red-400">?</div>
-                              </div>
-                            );
-                          }
-                          
-                          const cardDisplay = formatCardFromInfo(cardPlay.card);
-                          const colorClass = getCardColorClass(cardDisplay.color);
-                          const playerName = players.find(p => p.id === cardPlay.playerId)?.name || `P${cardPlay.playerId}`;
-                          const isWinner = cardPlay.playerId === trick.winnerId;
-                          const isLeader = cardPlay.playerId === trick.leadPlayerId;
-                          
-                          return (
-                            <div 
-                              key={`${cardPlay.card.suit}-${cardPlay.card.rank}`}
-                              className={`text-center p-2 rounded-lg border-2 transition-all ${
-                                isWinner 
-                                  ? 'bg-green-50 border-green-300 shadow-md' 
-                                  : 'bg-white border-gray-200'
-                              }`}
-                            >
-                              <div className={`text-xs ${isWinner ? 'text-green-600 font-medium' : 'text-gray-600'}`}>
-                                {playerName}
-                                {isLeader && <span className="ml-1">👑</span>}
-                                {isWinner && <span className="ml-1">🏆</span>}
-                              </div>
-                              <div className={`text-lg font-bold ${colorClass}`}>
-                                {cardDisplay.displayText}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                #{index + 1}
-                              </div>
+                      return (
+                        <tr key={trick.trickNumber} className="hover:bg-gray-50">
+                          <td className="border border-gray-300 px-1 py-0.5 font-medium">{trick.trickNumber}</td>
+                          <td className="border border-gray-300 px-1 py-0.5">{leader?.name || `P${trick.leadPlayerId}`}</td>
+                          <td className="border border-gray-300 px-1 py-0.5">
+                            <div className="flex flex-wrap gap-1">
+                              {trick.cards && trick.cards.map((cardPlay, index) => {
+                                if (!cardPlay.card) {
+                                  return (
+                                    <span key={index} className="text-red-400 text-xs">?</span>
+                                  );
+                                }
+                                
+                                const cardDisplay = formatCardFromInfo(cardPlay.card);
+                                const colorClass = getCardColorClass(cardDisplay.color);
+                                const playerName = players.find(p => p.id === cardPlay.playerId)?.name || `P${cardPlay.playerId}`;
+                                const isWinner = cardPlay.playerId === trick.winnerId;
+                                const isLeader = cardPlay.playerId === trick.leadPlayerId;
+                                
+                                return (
+                                  <span
+                                    key={`${cardPlay.card.suit}-${cardPlay.card.rank}`}
+                                    className={`inline-flex items-center px-1 py-0.5 rounded text-xs font-medium border ${
+                                      isWinner 
+                                        ? 'bg-green-100 border-green-300 text-green-800' 
+                                        : 'bg-white border-gray-200'
+                                    }`}
+                                    title={`${playerName}${isLeader ? ' (リード)' : ''}${isWinner ? ' (勝者)' : ''}`}
+                                  >
+                                    <span className={`font-bold ${colorClass}`}>
+                                      {cardDisplay.displayText}
+                                    </span>
+                                    <span className="ml-1 text-gray-600">
+                                      {playerName.charAt(0)}
+                                      {isLeader && '👑'}
+                                      {isWinner && '🏆'}
+                                    </span>
+                                  </span>
+                                );
+                              })}
                             </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
+                          </td>
+                          <td className="border border-gray-300 px-1 py-0.5 font-medium text-green-600">
+                            {winner?.name || `P${trick.winnerId}`}
+                          </td>
+                          <td className="border border-gray-300 px-1 py-0.5 text-center font-medium">
+                            {trick.points}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
