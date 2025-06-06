@@ -29,7 +29,7 @@ export function HandHistory({
   const handleToggle = () => {
     const newExpanded = !isExpanded;
     setIsExpanded(newExpanded);
-    
+
     // 展開時にカードデータがない場合はロード
     if (newExpanded && !playerCards && onLoadCards) {
       onLoadCards();
@@ -44,9 +44,6 @@ export function HandHistory({
       >
         <div className="flex items-center space-x-4">
           <span className="font-medium">ハンド {handNumber} の初期手札</span>
-          <span className="text-sm text-gray-500">
-            {players.length}名のプレイヤー
-          </span>
         </div>
         <svg
           className={`w-5 h-5 transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}
@@ -93,7 +90,7 @@ export function HandHistory({
                   <thead>
                     <tr className="bg-gray-100">
                       <th className="border border-gray-300 px-1 py-0.5 text-left font-medium">プレイヤー</th>
-                      <th className="border border-gray-300 px-1 py-0.5 text-left font-medium">手札 (13枚)</th>
+                      <th className="border border-gray-300 px-1 py-0.5 text-left font-medium">手札</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -106,7 +103,6 @@ export function HandHistory({
                         <tr key={player.id} className="hover:bg-gray-50">
                           <td className="border border-gray-300 px-1 py-0.5 font-medium align-top">
                             {player.name}
-                            <span className="ml-1 text-xs text-gray-500">({cards.length}枚)</span>
                           </td>
                           <td className="border border-gray-300 px-1 py-0.5">
                             {cards.length === 0 ? (
@@ -116,7 +112,7 @@ export function HandHistory({
                                 {formattedCards.map((cardDisplay, index) => {
                                   const card = sortedCards[index];
                                   const colorClass = getCardColorClass(cardDisplay.color);
-                                  
+
                                   return (
                                     <span
                                       key={`${card.suit}-${card.rank}`}

@@ -97,12 +97,12 @@ export default function GameDetailPage() {
         <div className="bg-white rounded-lg shadow-lg p-4">
           {/* ブレッドクラム */}
           <div className="mb-4">
-            <Breadcrumbs 
+            <Breadcrumbs
               items={[
                 { label: 'ホーム', href: '/' },
                 { label: 'ゲーム履歴', href: '/history' },
                 { label: `ゲーム #${gameId}` }
-              ]} 
+              ]}
             />
           </div>
 
@@ -173,10 +173,10 @@ function GameBasicInfo({ gameDetail }: { gameDetail: GameDetailData }) {
   };
 
   // 最終スコアから勝者を決定
-  const winner = gameDetail.players?.length > 0 
-    ? gameDetail.players.reduce((min, player) => 
-        player.finalScore < min.finalScore ? player : min
-      )
+  const winner = gameDetail.players?.length > 0
+    ? gameDetail.players.reduce((min, player) =>
+      player.finalScore < min.finalScore ? player : min
+    )
     : null;
 
   return (
@@ -228,22 +228,20 @@ function GameBasicInfo({ gameDetail }: { gameDetail: GameDetailData }) {
               gameDetail.players
                 .sort((a, b) => a.finalScore - b.finalScore)
                 .map((player, index) => (
-                <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                  <div className="flex items-center">
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-3 ${
-                      index === 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {index + 1}
+                  <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                    <div className="flex items-center">
+                      <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-3 ${index === 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                        {index + 1}
+                      </span>
+                      <span className="font-medium">{player.name}</span>
+                    </div>
+                    <span className={`font-bold ${index === 0 ? 'text-green-600' : 'text-gray-900'
+                      }`}>
+                      {player.finalScore}点
                     </span>
-                    <span className="font-medium">{player.name}</span>
                   </div>
-                  <span className={`font-bold ${
-                    index === 0 ? 'text-green-600' : 'text-gray-900'
-                  }`}>
-                    {player.finalScore}点
-                  </span>
-                </div>
-              ))
+                ))
             ) : (
               <div className="text-center py-4 text-gray-500">
                 プレイヤー情報がありません
@@ -264,21 +262,21 @@ function ScoreGraphSection({ gameDetail }: { gameDetail: GameDetailData }) {
   })) || [];
 
   // playersが空の場合はfinalScoresからプレイヤー情報を生成
-  const players = gameDetail.players?.length > 0 
+  const players = gameDetail.players?.length > 0
     ? gameDetail.players.map(player => ({
-        id: player.id,
-        name: player.name,
-        displayName: player.name,
-        displayOrder: 1,
-        isActive: true,
-      }))
+      id: player.id,
+      name: player.name,
+      displayName: player.name,
+      displayOrder: 1,
+      isActive: true,
+    }))
     : gameDetail.finalScores?.map(score => ({
-        id: score.playerId,
-        name: score.playerName,
-        displayName: score.playerName,
-        displayOrder: 1,
-        isActive: true,
-      })) || [];
+      id: score.playerId,
+      name: score.playerName,
+      displayName: score.playerName,
+      displayOrder: 1,
+      isActive: true,
+    })) || [];
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
@@ -374,9 +372,6 @@ function HandDetail({ hand, players, gameId }: { hand: HandDetailData; players: 
           <span className="text-sm text-gray-600">
             交換: {getExchangeDirectionText(hand.exchangeDirection)}
           </span>
-          {hand.heartsBroken && (
-            <span className="px-1 py-0.5 bg-red-100 text-red-800 text-xs rounded">ハートブレイク</span>
-          )}
           {hand.shootTheMoonPlayerId && (
             <span className="px-1 py-0.5 bg-purple-100 text-purple-800 text-xs rounded">シュートザムーン</span>
           )}
@@ -390,7 +385,7 @@ function HandDetail({ hand, players, gameId }: { hand: HandDetailData; players: 
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      
+
       {isExpanded && (
         <div className="px-3 pb-3 border-t border-gray-100">
           {/* 手札履歴 */}
@@ -470,7 +465,7 @@ function HandDetail({ hand, players, gameId }: { hand: HandDetailData; players: 
                     {hand.tricks.map((trick) => {
                       const leader = players.find(p => p.id === trick.leadPlayerId);
                       const winner = players.find(p => p.id === trick.winnerId);
-                      
+
                       return (
                         <tr key={trick.trickNumber} className="hover:bg-gray-50">
                           <td className="border border-gray-300 px-1 py-0.5 font-medium">{trick.trickNumber}</td>
@@ -483,21 +478,20 @@ function HandDetail({ hand, players, gameId }: { hand: HandDetailData; players: 
                                     <span key={index} className="text-red-400 text-xs">?</span>
                                   );
                                 }
-                                
+
                                 const cardDisplay = formatCardFromInfo(cardPlay.card);
                                 const colorClass = getCardColorClass(cardDisplay.color);
                                 const playerName = players.find(p => p.id === cardPlay.playerId)?.name || `P${cardPlay.playerId}`;
                                 const isWinner = cardPlay.playerId === trick.winnerId;
                                 const isLeader = cardPlay.playerId === trick.leadPlayerId;
-                                
+
                                 return (
                                   <span
                                     key={`${cardPlay.card.suit}-${cardPlay.card.rank}`}
-                                    className={`inline-flex items-center px-1 py-0.5 rounded text-xs font-medium border ${
-                                      isWinner 
-                                        ? 'bg-green-100 border-green-300 text-green-800' 
+                                    className={`inline-flex items-center px-1 py-0.5 rounded text-xs font-medium border ${isWinner
+                                        ? 'bg-green-100 border-green-300 text-green-800'
                                         : 'bg-white border-gray-200'
-                                    }`}
+                                      }`}
                                     title={`${playerName}${isLeader ? ' (リード)' : ''}${isWinner ? ' (勝者)' : ''}`}
                                   >
                                     <span className={`font-bold ${colorClass}`}>

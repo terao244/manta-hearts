@@ -33,7 +33,7 @@ export function CardExchangeHistory({
   const handleToggle = () => {
     const newExpanded = !isExpanded;
     setIsExpanded(newExpanded);
-    
+
     // 展開時に交換データがない場合はロード
     if (newExpanded && !exchanges && onLoadExchanges && exchangeDirection !== 'none') {
       onLoadExchanges();
@@ -74,11 +74,6 @@ export function CardExchangeHistory({
           <span className="text-sm text-gray-600">
             {getExchangeDirectionText(exchangeDirection)}
           </span>
-          {exchanges && exchanges.length > 0 && (
-            <span className="text-sm text-gray-500">
-              {exchanges.length}枚の交換
-            </span>
-          )}
         </div>
         <svg
           className={`w-5 h-5 transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}
@@ -143,7 +138,7 @@ export function CardExchangeHistory({
                   <tbody>
                     {Object.values(groupedExchanges).map((group) => {
                       const sortedCards = [...group.cards].sort((a, b) => a.sortOrder - b.sortOrder);
-                      
+
                       return (
                         <tr key={group.fromPlayer.id} className="hover:bg-gray-50">
                           <td className="border border-gray-300 px-1 py-0.5 font-medium align-top">
@@ -157,7 +152,7 @@ export function CardExchangeHistory({
                               {sortedCards.map((card) => {
                                 const cardDisplay = formatCardFromInfo(card);
                                 const colorClass = getCardColorClass(cardDisplay.color);
-                                
+
                                 return (
                                   <span
                                     key={`${card.suit}-${card.rank}`}
@@ -168,7 +163,6 @@ export function CardExchangeHistory({
                                   </span>
                                 );
                               })}
-                              <span className="text-xs text-gray-500 ml-1">({group.cards.length}枚)</span>
                             </div>
                           </td>
                         </tr>
