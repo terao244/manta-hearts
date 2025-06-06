@@ -24,9 +24,9 @@ export default function GameDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="mb-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <div className="mb-4">
               <Link href="/history" className="text-blue-600 hover:text-blue-800">
                 ← ゲーム履歴に戻る
               </Link>
@@ -44,9 +44,9 @@ export default function GameDetailPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="mb-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <div className="mb-4">
               <Link href="/history" className="text-blue-600 hover:text-blue-800">
                 ← ゲーム履歴に戻る
               </Link>
@@ -75,9 +75,9 @@ export default function GameDetailPage() {
   if (!gameDetail) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="mb-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <div className="mb-4">
               <Link href="/history" className="text-blue-600 hover:text-blue-800">
                 ← ゲーム履歴に戻る
               </Link>
@@ -93,10 +93,10 @@ export default function GameDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-white rounded-lg shadow-lg p-4">
           {/* ブレッドクラム */}
-          <div className="mb-6">
+          <div className="mb-4">
             <Breadcrumbs 
               items={[
                 { label: 'ホーム', href: '/' },
@@ -106,7 +106,7 @@ export default function GameDetailPage() {
             />
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-4">
             {/* ゲーム基本情報 */}
             <GameBasicInfo gameDetail={gameDetail} />
 
@@ -281,10 +281,10 @@ function ScoreGraphSection({ gameDetail }: { gameDetail: GameDetailData }) {
       })) || [];
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">スコア推移</h2>
+    <div className="bg-white rounded-lg shadow-md p-4">
+      <h2 className="text-xl font-semibold text-gray-900 mb-4">スコア推移</h2>
       {players.length > 0 && scoreHistory.length > 0 ? (
-        <div className="h-96">
+        <div className="h-80">
           <ScoreGraph
             players={players}
             scoreHistory={scoreHistory}
@@ -303,8 +303,8 @@ function ScoreGraphSection({ gameDetail }: { gameDetail: GameDetailData }) {
 
 function HandHistorySection({ gameDetail }: { gameDetail: GameDetailData }) {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">ハンド履歴</h2>
+    <div className="bg-white rounded-lg shadow-md p-4">
+      <h2 className="text-xl font-semibold text-gray-900 mb-4">ハンド履歴</h2>
       {!gameDetail.hands || gameDetail.hands.length === 0 ? (
         <p className="text-gray-600">ハンド履歴がありません。</p>
       ) : (
@@ -447,7 +447,7 @@ function HandDetail({ hand, players, gameId }: { hand: HandDetailData; players: 
                   const winner = players.find(p => p.id === trick.winnerId);
                   
                   return (
-                    <div key={trick.trickNumber} className="bg-gray-50 p-4 rounded-lg border">
+                    <div key={trick.trickNumber} className="bg-gray-50 p-3 rounded-lg border">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-4">
                           <span className="font-medium text-gray-900">トリック {trick.trickNumber}</span>
@@ -460,7 +460,7 @@ function HandDetail({ hand, players, gameId }: { hand: HandDetailData; players: 
                       </div>
                       
                       {/* カードプレイ順序表示 */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {trick.cards && trick.cards.map((cardPlay, index) => {
                           if (!cardPlay.card) {
                             return (
@@ -480,7 +480,7 @@ function HandDetail({ hand, players, gameId }: { hand: HandDetailData; players: 
                           return (
                             <div 
                               key={`${cardPlay.card.suit}-${cardPlay.card.rank}`}
-                              className={`text-center p-3 rounded-lg border-2 transition-all ${
+                              className={`text-center p-2 rounded-lg border-2 transition-all ${
                                 isWinner 
                                   ? 'bg-green-50 border-green-300 shadow-md' 
                                   : 'bg-white border-gray-200'

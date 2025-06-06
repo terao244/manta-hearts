@@ -94,7 +94,7 @@ export function HandHistory({
                 const formattedCards = formatCardsFromInfo(sortedCards);
 
                 return (
-                  <div key={player.id} className="bg-gray-50 p-4 rounded-lg">
+                  <div key={player.id} className="bg-gray-50 p-3 rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-3 flex items-center">
                       <span>{player.name}</span>
                       <span className="ml-2 text-sm text-gray-500">
@@ -105,7 +105,7 @@ export function HandHistory({
                     {cards.length === 0 ? (
                       <p className="text-gray-500 text-sm">手札データがありません</p>
                     ) : (
-                      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-13 gap-2">
+                      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-13 gap-1.5">
                         {formattedCards.map((cardDisplay, index) => {
                           const card = sortedCards[index];
                           const colorClass = getCardColorClass(cardDisplay.color);
@@ -113,39 +113,18 @@ export function HandHistory({
                           return (
                             <div
                               key={`${card.suit}-${card.rank}`}
-                              className="bg-white border border-gray-200 rounded-md p-2 text-center shadow-sm hover:shadow-md transition-shadow"
-                              title={`${cardDisplay.displayText} (${card.pointValue}点)`}
+                              className="bg-white border border-gray-200 rounded-md p-1.5 text-center shadow-sm hover:shadow-md transition-shadow"
+                              title={`${cardDisplay.displayText}`}
                             >
                               <div className={`text-sm font-bold ${colorClass}`}>
                                 {cardDisplay.displayText}
                               </div>
-                              {card.pointValue > 0 && (
-                                <div className="text-xs text-red-500 mt-1">
-                                  {card.pointValue}pt
-                                </div>
-                              )}
                             </div>
                           );
                         })}
                       </div>
                     )}
 
-                    {/* ハンドの統計情報 */}
-                    {cards.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-200">
-                        <div className="flex space-x-4 text-xs text-gray-600">
-                          <span>
-                            ハート: {cards.filter(c => c.suit === 'HEARTS').length}枚
-                          </span>
-                          <span>
-                            スペードQ: {cards.some(c => c.suit === 'SPADES' && c.rank === 'QUEEN') ? 'あり' : 'なし'}
-                          </span>
-                          <span>
-                            潜在点数: {cards.reduce((sum, c) => sum + c.pointValue, 0)}点
-                          </span>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 );
               })}

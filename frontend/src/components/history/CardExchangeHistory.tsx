@@ -135,11 +135,11 @@ export function CardExchangeHistory({
                 const sortedCards = [...group.cards].sort((a, b) => a.sortOrder - b.sortOrder);
                 
                 return (
-                  <div key={group.fromPlayer.id} className="bg-gray-50 p-4 rounded-lg">
+                  <div key={group.fromPlayer.id} className="bg-gray-50 p-3 rounded-lg">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-2">
                         <span className="font-medium text-gray-900">{group.fromPlayer.name}</span>
-                        <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                         </svg>
                         <span className="font-medium text-gray-900">{group.toPlayer.name}</span>
@@ -149,7 +149,7 @@ export function CardExchangeHistory({
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5">
                       {sortedCards.map((card) => {
                         const cardDisplay = formatCardFromInfo(card);
                         const colorClass = getCardColorClass(cardDisplay.color);
@@ -157,36 +157,17 @@ export function CardExchangeHistory({
                         return (
                           <div
                             key={`${card.suit}-${card.rank}`}
-                            className="bg-white border border-gray-200 rounded-md p-2 text-center shadow-sm hover:shadow-md transition-shadow"
-                            title={`${cardDisplay.displayText} (${card.pointValue}点)`}
+                            className="bg-white border border-gray-200 rounded-md p-1.5 text-center shadow-sm hover:shadow-md transition-shadow"
+                            title={`${cardDisplay.displayText}`}
                           >
                             <div className={`text-sm font-bold ${colorClass}`}>
                               {cardDisplay.displayText}
                             </div>
-                            {card.pointValue > 0 && (
-                              <div className="text-xs text-red-500 mt-1">
-                                {card.pointValue}pt
-                              </div>
-                            )}
                           </div>
                         );
                       })}
                     </div>
 
-                    {/* 交換カードの統計情報 */}
-                    <div className="mt-3 pt-3 border-t border-gray-200">
-                      <div className="flex space-x-4 text-xs text-gray-600">
-                        <span>
-                          ハート: {group.cards.filter(c => c.suit === 'HEARTS').length}枚
-                        </span>
-                        <span>
-                          スペードQ: {group.cards.some(c => c.suit === 'SPADES' && c.rank === 'QUEEN') ? 'あり' : 'なし'}
-                        </span>
-                        <span>
-                          危険点数: {group.cards.reduce((sum, c) => sum + c.pointValue, 0)}点
-                        </span>
-                      </div>
-                    </div>
                   </div>
                 );
               })}
