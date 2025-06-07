@@ -147,7 +147,6 @@ export class GameRepository implements IGameRepository {
         sessions: {
           select: {
             playerId: true,
-            playerPosition: true,
             player: {
               select: {
                 id: true,
@@ -193,7 +192,7 @@ export class GameRepository implements IGameRepository {
       const players = game.sessions.map((session) => ({
         id: session.playerId,
         name: session.player.displayName,
-        position: this.convertPlayerPosition(session.playerPosition) as 'North' | 'East' | 'South' | 'West',
+        position: 'North' as 'North' | 'East' | 'South' | 'West', // 一時的にデフォルト値
         finalScore: finalScores.find(s => s.playerId === session.playerId)?.score || 0,
       }));
 
@@ -228,7 +227,6 @@ export class GameRepository implements IGameRepository {
         sessions: {
           select: {
             playerId: true,
-            playerPosition: true,
             player: {
               select: {
                 id: true,
@@ -358,7 +356,7 @@ export class GameRepository implements IGameRepository {
     const players = game.sessions.map((session) => ({
       id: session.playerId,
       name: session.player.displayName,
-      position: this.convertPlayerPosition(session.playerPosition) as 'North' | 'East' | 'South' | 'West',
+      position: 'North' as 'North' | 'East' | 'South' | 'West', // 一時的にデフォルト値
       finalScore: finalScores.find(s => s.playerId === session.playerId)?.score || 0,
     }));
 
