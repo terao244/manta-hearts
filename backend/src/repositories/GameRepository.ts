@@ -188,13 +188,21 @@ export class GameRepository implements IGameRepository {
         score: score.cumulativePoints,
       })) || [];
 
-      // プレイヤー情報を作成（席順情報を含む）
-      const players = game.sessions.map((session) => ({
-        id: session.playerId,
-        name: session.player.displayName,
-        position: 'North' as 'North' | 'East' | 'South' | 'West', // 一時的にデフォルト値
-        finalScore: finalScores.find(s => s.playerId === session.playerId)?.score || 0,
-      }));
+      // プレイヤー情報を作成
+      // game.sessionsが空の場合はfinalScoresからプレイヤー情報を取得
+      const players = game.sessions.length > 0
+        ? game.sessions.map((session, index) => ({
+            id: session.playerId,
+            name: session.player.displayName,
+            position: ['North', 'East', 'South', 'West'][index % 4] as 'North' | 'East' | 'South' | 'West',
+            finalScore: finalScores.find(s => s.playerId === session.playerId)?.score || 0,
+          }))
+        : finalScores.map((score, index) => ({
+            id: score.playerId,
+            name: score.playerName,
+            position: ['North', 'East', 'South', 'West'][index % 4] as 'North' | 'East' | 'South' | 'West',
+            finalScore: score.score,
+          }));
 
       return {
         id: game.id,
@@ -204,7 +212,7 @@ export class GameRepository implements IGameRepository {
         winnerId: game.winnerId,
         winnerName: game.winner?.displayName || null,
         duration: game.duration,
-        playerCount: game.sessions.length,
+        playerCount: players.length,
         finalScores,
         players,
       };
@@ -352,13 +360,21 @@ export class GameRepository implements IGameRepository {
       })),
     }));
 
-    // プレイヤー情報を取得（席順情報を含む）
-    const players = game.sessions.map((session) => ({
-      id: session.playerId,
-      name: session.player.displayName,
-      position: 'North' as 'North' | 'East' | 'South' | 'West', // 一時的にデフォルト値
-      finalScore: finalScores.find(s => s.playerId === session.playerId)?.score || 0,
-    }));
+    // プレイヤー情報を取得
+    // game.sessionsが空の場合はfinalScoresからプレイヤー情報を取得
+    const players = game.sessions.length > 0 
+      ? game.sessions.map((session, index) => ({
+          id: session.playerId,
+          name: session.player.displayName,
+          position: ['North', 'East', 'South', 'West'][index % 4] as 'North' | 'East' | 'South' | 'West',
+          finalScore: finalScores.find(s => s.playerId === session.playerId)?.score || 0,
+        }))
+      : finalScores.map((score, index) => ({
+          id: score.playerId,
+          name: score.playerName,
+          position: ['North', 'East', 'South', 'West'][index % 4] as 'North' | 'East' | 'South' | 'West',
+          finalScore: score.score,
+        }));
 
     // スコア履歴を作成
     const scoreHistory = game.hands.map((hand) => ({
@@ -377,7 +393,7 @@ export class GameRepository implements IGameRepository {
       winnerId: game.winnerId,
       winnerName: game.winner?.displayName || null,
       duration: game.duration,
-      playerCount: game.sessions.length,
+      playerCount: players.length,
       finalScores,
       players,
       hands,
