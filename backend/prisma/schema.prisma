@@ -222,6 +222,7 @@ model GameSession {
   playerId      Int      @map("player_id")
   sessionId     String   @unique @map("session_id")
   socketId      String?  @map("socket_id")
+  playerPosition PlayerPosition? @map("player_position") // プレイヤーの席順
   status        SessionStatus @default(CONNECTED)
   connectedAt   DateTime @default(now()) @map("connected_at")
   disconnectedAt DateTime? @map("disconnected_at")
@@ -340,4 +341,13 @@ enum Rank {
   KING
   
   @@map("rank")
+}
+
+enum PlayerPosition {
+  NORTH
+  EAST
+  SOUTH
+  WEST
+  
+  @@map("player_position")
 }

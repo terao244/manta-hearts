@@ -11,6 +11,7 @@ import { formatCardFromInfo, getCardColorClass } from '../../../utils/cardFormat
 import { fetchHandCardsWithRetry, fetchHandExchangesWithRetry, CardExchange } from '../../../lib/api/games';
 import HandHistory from '../../../components/history/HandHistory';
 import CardExchangeHistory from '../../../components/history/CardExchangeHistory';
+import PlayerPositions from '../../../components/history/PlayerPositions';
 
 export default function GameDetailPage() {
   const params = useParams();
@@ -109,6 +110,9 @@ export default function GameDetailPage() {
           <div className="space-y-4">
             {/* ゲーム基本情報 */}
             <GameBasicInfo gameDetail={gameDetail} />
+
+            {/* プレイヤー席順 */}
+            <PlayerPositions players={gameDetail.players} />
 
             {/* スコア推移グラフ */}
             <ScoreGraphSection gameDetail={gameDetail} />

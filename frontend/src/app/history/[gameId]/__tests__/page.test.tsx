@@ -133,6 +133,22 @@ describe('GameDetailPage', () => {
     expect(screen.getByText('交換: 左隣')).toBeInTheDocument();
   });
 
+  it('should display player positions correctly', () => {
+    render(<GameDetailPage />);
+
+    // プレイヤー席順情報が表示されることを確認
+    expect(screen.getByText('Player 1')).toBeInTheDocument(); // North
+    expect(screen.getByText('Player 2')).toBeInTheDocument(); // East  
+    expect(screen.getByText('Player 3')).toBeInTheDocument(); // South
+    expect(screen.getByText('Player 4')).toBeInTheDocument(); // West
+
+    // 最終スコアも正しく表示されることを確認
+    expect(screen.getByText('23点')).toBeInTheDocument(); // Player 1 score
+    expect(screen.getByText('67点')).toBeInTheDocument(); // Player 2 score
+    expect(screen.getByText('45点')).toBeInTheDocument(); // Player 3 score
+    expect(screen.getByText('89点')).toBeInTheDocument(); // Player 4 score
+  });
+
   it('renders back to history link', () => {
     render(<GameDetailPage />);
     

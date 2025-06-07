@@ -831,24 +831,55 @@ export class GameService {
         },
       });
 
+      // プレイヤーの現在の席順を取得
+      let playerPosition: string | null = null;
+      const gameEngine = this.gameEngines.get(gameId);
+      if (gameEngine) {
+        const gameState = gameEngine.getGameState();
+        const player = gameState.getPlayer(playerId);
+        if (player?.position) {
+          // GamePlayerのpositionをPrismaのPlayerPositionに変換
+          playerPosition = this.convertToPlayerPosition(player.position);
+        }
+      }
+
       // 新しいセッションIDを生成（ユニークIDとして現在時刻 + ランダム値を使用）
       const sessionId = `${gameId}_${playerId}_${Date.now()}_${Math.random().toString(36).substring(2)}`;
 
-      // 新しいゲームセッションを作成
+      // 新しいゲームセッションを作成（席順情報を含む）
       await prisma.gameSession.create({
         data: {
           gameId: gameId,
           playerId: playerId,
           sessionId: sessionId,
+          playerPosition: playerPosition as any, // PlayerPosition enum
           status: 'CONNECTED',
           connectedAt: new Date(),
         },
       });
 
-      console.log(`Game session saved: Player ${playerId} ${isRejoining ? 'rejoined' : 'joined'} game ${gameId} with session ${sessionId}`);
+      console.log(`Game session saved: Player ${playerId} ${isRejoining ? 'rejoined' : 'joined'} game ${gameId} with session ${sessionId}, position: ${playerPosition}`);
     } catch (error) {
       console.error(`Failed to save game session for player ${playerId} in game ${gameId}:`, error);
       throw error;
+    }
+  }
+
+  /**
+   * GamePlayerのPositionをPrismaのPlayerPositionに変換
+   */
+  private convertToPlayerPosition(position: string): string {
+    switch (position) {
+      case 'North':
+        return 'NORTH';
+      case 'East':
+        return 'EAST';
+      case 'South':
+        return 'SOUTH';
+      case 'West':
+        return 'WEST';
+      default:
+        return 'NORTH'; // デフォルト
     }
   }
 }

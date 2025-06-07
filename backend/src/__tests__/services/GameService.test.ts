@@ -31,6 +31,10 @@ describe('GameService', () => {
         findUnique: jest.fn(),
         update: jest.fn(),
       },
+      gameSession: {
+        updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+        create: jest.fn().mockResolvedValue({ id: 1 }),
+      },
     };
 
     mockPrismaService = {
@@ -62,6 +66,10 @@ describe('GameService', () => {
         tricks: [],
         cumulativeScores: new Map(),
         getAllPlayers: jest.fn().mockReturnValue([]),
+        getPlayer: jest.fn().mockReturnValue({
+          id: 1,
+          position: 'North',
+        }),
       }),
       getPlayerHand: jest.fn().mockReturnValue([]),
       getScore: jest.fn().mockReturnValue(0),
@@ -143,6 +151,38 @@ describe('GameService', () => {
 
       // Assert
       expect(result.success).toBe(false);
+    });
+
+    it('should save game session with player position', async () => {
+      // Arrange
+      const playerId = 1;
+      const playerData = {
+        id: playerId,
+        name: 'North',
+        displayName: '北',
+        isActive: true,
+      };
+
+      mockPrismaClient.player.findUnique.mockResolvedValue(playerData);
+      mockPrismaClient.game.create.mockResolvedValue({ id: 123 });
+
+      // Mock the assignPlayerPosition method to return NORTH
+      const gameService = GameService.getInstance();
+      jest.spyOn(gameService as any, 'assignPlayerPosition').mockReturnValue('NORTH');
+
+      // Act
+      const result = await gameService.joinGame(playerId);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(mockPrismaClient.gameSession.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          gameId: 123,
+          playerId: playerId,
+          status: 'CONNECTED',
+          playerPosition: 'NORTH',
+        }),
+      });
     });
   });
 

@@ -145,7 +145,9 @@ export class GameRepository implements IGameRepository {
           },
         },
         sessions: {
-          include: {
+          select: {
+            playerId: true,
+            playerPosition: true,
             player: {
               select: {
                 id: true,
@@ -187,11 +189,11 @@ export class GameRepository implements IGameRepository {
         score: score.cumulativePoints,
       })) || [];
 
-      // プレイヤー情報を作成
+      // プレイヤー情報を作成（席順情報を含む）
       const players = game.sessions.map((session) => ({
         id: session.playerId,
         name: session.player.displayName,
-        position: 'North' as 'North' | 'East' | 'South' | 'West', // TODO: 実際のポジションを取得
+        position: this.convertPlayerPosition(session.playerPosition) as 'North' | 'East' | 'South' | 'West',
         finalScore: finalScores.find(s => s.playerId === session.playerId)?.score || 0,
       }));
 
@@ -224,7 +226,9 @@ export class GameRepository implements IGameRepository {
           },
         },
         sessions: {
-          include: {
+          select: {
+            playerId: true,
+            playerPosition: true,
             player: {
               select: {
                 id: true,
@@ -350,11 +354,11 @@ export class GameRepository implements IGameRepository {
       })),
     }));
 
-    // プレイヤー情報を取得
+    // プレイヤー情報を取得（席順情報を含む）
     const players = game.sessions.map((session) => ({
       id: session.playerId,
       name: session.player.displayName,
-      position: 'North' as 'North' | 'East' | 'South' | 'West', // TODO: 実際のポジションを取得
+      position: this.convertPlayerPosition(session.playerPosition) as 'North' | 'East' | 'South' | 'West',
       finalScore: finalScores.find(s => s.playerId === session.playerId)?.score || 0,
     }));
 
@@ -386,5 +390,27 @@ export class GameRepository implements IGameRepository {
   async count(status?: GameStatus): Promise<number> {
     const where = status ? { status } : {};
     return await this.prisma.game.count({ where });
+  }
+
+  /**
+   * PrismaのPlayerPositionを文字列に変換
+   */
+  private convertPlayerPosition(position: any): 'North' | 'East' | 'South' | 'West' {
+    if (!position) {
+      return 'North'; // デフォルト値
+    }
+    
+    switch (position) {
+      case 'NORTH':
+        return 'North';
+      case 'EAST':
+        return 'East';
+      case 'SOUTH':
+        return 'South';
+      case 'WEST':
+        return 'West';
+      default:
+        return 'North'; // フォールバック
+    }
   }
 }

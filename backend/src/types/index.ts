@@ -9,6 +9,7 @@ export interface PlayerInfo {
   displayOrder: number;
   isActive: boolean;
   position?: PlayerPosition;
+  playerPosition?: PlayerPosition; // GameSessionから取得した席順情報
 }
 
 export interface CardInfo {
