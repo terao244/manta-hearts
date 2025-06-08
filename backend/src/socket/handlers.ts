@@ -29,17 +29,17 @@ export class SocketHandlers {
     socket.emit('connectionStatus', 'connected');
 
     // ログイン処理
-    socket.on('login', async (playerName, callback) => {
+    socket.on('login', async (playerId, callback) => {
       try {
-        console.log(`Login attempt: ${playerName} on socket ${socket.id}`);
+        console.log(`Login attempt: Player ID ${playerId} on socket ${socket.id}`);
 
         // プレイヤー情報を取得
         const player = await this.prisma.player.findUnique({
-          where: { name: playerName },
+          where: { id: playerId },
         });
 
         if (!player || !player.isActive) {
-          console.log(`Login failed for: ${playerName} (player not found or inactive) on socket ${socket.id}`);
+          console.log(`Login failed for: Player ID ${playerId} (player not found or inactive) on socket ${socket.id}`);
           callback(false);
           return;
         }

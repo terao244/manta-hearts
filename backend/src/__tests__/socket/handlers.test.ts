@@ -90,10 +90,10 @@ describe('SocketHandlers', () => {
 
     it('should handle successful login', async () => {
       // Arrange
-      const playerName = 'TestPlayer';
+      const playerId = 1;
       const playerData = {
-        id: 1,
-        name: playerName,
+        id: playerId,
+        name: 'TestPlayer',
         displayName: 'Test Player',
         displayOrder: 1,
         isActive: true,
@@ -104,11 +104,11 @@ describe('SocketHandlers', () => {
       mockPrismaClient.player.update.mockResolvedValue(playerData);
 
       // Act
-      await loginHandler(playerName, callback);
+      await loginHandler(playerId, callback);
 
       // Assert
       expect(mockPrismaClient.player.findUnique).toHaveBeenCalledWith({
-        where: { name: playerName },
+        where: { id: playerId },
       });
       expect(mockPrismaClient.player.update).toHaveBeenCalledWith({
         where: { id: playerData.id },
@@ -127,13 +127,13 @@ describe('SocketHandlers', () => {
 
     it('should handle login failure for non-existent player', async () => {
       // Arrange
-      const playerName = 'NonExistentPlayer';
+      const playerId = 999;
       const callback = jest.fn();
 
       mockPrismaClient.player.findUnique.mockResolvedValue(null);
 
       // Act
-      await loginHandler(playerName, callback);
+      await loginHandler(playerId, callback);
 
       // Assert
       expect(callback).toHaveBeenCalledWith(false);
@@ -142,10 +142,10 @@ describe('SocketHandlers', () => {
 
     it('should handle login failure for inactive player', async () => {
       // Arrange
-      const playerName = 'InactivePlayer';
+      const playerId = 1;
       const playerData = {
-        id: 1,
-        name: playerName,
+        id: playerId,
+        name: 'InactivePlayer',
         displayName: 'Inactive Player',
         displayOrder: 1,
         isActive: false,
@@ -155,7 +155,7 @@ describe('SocketHandlers', () => {
       mockPrismaClient.player.findUnique.mockResolvedValue(playerData);
 
       // Act
-      await loginHandler(playerName, callback);
+      await loginHandler(playerId, callback);
 
       // Assert
       expect(callback).toHaveBeenCalledWith(false);

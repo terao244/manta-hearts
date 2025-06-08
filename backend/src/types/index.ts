@@ -65,7 +65,7 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
   login: (
-    playerName: string,
+    playerId: number,
     callback: (success: boolean, playerInfo?: PlayerInfo) => void
   ) => void;
   joinGame: (
