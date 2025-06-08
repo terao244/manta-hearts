@@ -1,0 +1,119 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: hearts_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Backend - Install dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Backend - Prisma setup
+        run: |
+          cd backend
+          npx prisma generate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hearts_test
+
+      - name: Backend - Run tests
+        run: |
+          cd backend
+          npm run test
+          npm run type-check
+          npm run lint
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hearts_test
+
+      - name: Frontend - Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Frontend - Run tests
+        run: |
+          cd frontend
+          npm run test
+          npm run type-check
+          npm run lint
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Railway デプロイ例（他のプラットフォーム用にコメントアウト/変更可能）
+      - name: Deploy to Railway
+        if: ${{ secrets.RAILWAY_API_KEY }}
+        run: |
+          npm install -g @railway/cli
+          railway login --apiKey ${{ secrets.RAILWAY_API_KEY }}
+          
+          # バックエンドデプロイ
+          cd backend
+          railway up --service backend
+          
+          # フロントエンドデプロイ
+          cd ../frontend
+          railway up --service frontend
+
+      # Vercel デプロイ例（Vercelを使用する場合）
+      # - name: Deploy Frontend to Vercel
+      #   if: ${{ secrets.VERCEL_TOKEN }}
+      #   run: |
+      #     npm install -g vercel
+      #     cd frontend
+      #     vercel --token ${{ secrets.VERCEL_TOKEN }} --prod
+
+      # Docker Hub プッシュ例（Docker利用の場合）
+      # - name: Build and push Docker images
+      #   if: ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_PASSWORD }}
+      #   run: |
+      #     echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+      #     
+      #     # Backend
+      #     cd backend
+      #     docker build -f Dockerfile.prod -t ${{ secrets.DOCKER_USERNAME }}/manta-hearts-backend:latest .
+      #     docker push ${{ secrets.DOCKER_USERNAME }}/manta-hearts-backend:latest
+      #     
+      #     # Frontend
+      #     cd ../frontend
+      #     docker build -f Dockerfile.prod -t ${{ secrets.DOCKER_USERNAME }}/manta-hearts-frontend:latest .
+      #     docker push ${{ secrets.DOCKER_USERNAME }}/manta-hearts-frontend:latest

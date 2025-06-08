@@ -1,0 +1,21 @@
+FROM node:18-slim
+
+WORKDIR /app
+
+# パッケージファイルをコピー
+COPY package*.json ./
+
+# 本番用依存関係のみインストール
+RUN npm ci --only=production
+
+# ソースコードをコピー
+COPY . .
+
+# Next.jsアプリケーションをビルド
+RUN npm run build
+
+# ポート公開
+EXPOSE 3000
+
+# 本番モードで起動
+CMD ["npm", "start"]

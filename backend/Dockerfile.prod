@@ -1,0 +1,28 @@
+FROM node:18-slim
+
+# 必要なライブラリをインストール（Prisma用）
+RUN apt-get update -y && apt-get install -y openssl
+
+WORKDIR /app
+
+# パッケージファイルをコピー
+COPY package*.json ./
+
+# 本番用依存関係のみインストール
+RUN npm ci --only=production
+
+# Prismaスキーマをコピーしてクライアント生成
+COPY prisma ./prisma/
+RUN npx prisma generate
+
+# ソースコードをコピー
+COPY . .
+
+# TypeScriptビルド
+RUN npm run build
+
+# ポート公開
+EXPOSE 3001
+
+# Prismaマイグレーション実行後にサーバー起動
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
