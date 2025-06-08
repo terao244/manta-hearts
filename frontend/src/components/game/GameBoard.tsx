@@ -21,7 +21,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, curren
   const isCurrentTurn = player.id === currentTurn;
   const currentHandScore = currentHandScores[player.id] || 0;
   const cumulativeScore = scores[player.id] || 0;
-  
+
   return (
     <div
       className={`
@@ -31,20 +31,18 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, curren
         ${isCurrentTurn && isCurrentPlayer ? 'bg-green-50 border-green-300 ring-2 ring-green-400 scale-110 animate-pulse' : ''}
       `}
     >
-      <div className={`text-sm font-semibold mb-1 ${
-        isCurrentTurn ? 'text-yellow-800' : 'text-gray-800'
-      }`}>
+      <div className={`text-sm font-semibold mb-1 ${isCurrentTurn ? 'text-yellow-800' : 'text-gray-800'
+        }`}>
         {player.displayName}
       </div>
-      <div className={`text-sm font-bold ${
-        isCurrentTurn ? 'text-yellow-600' : 'text-green-600'
-      }`}>
+      <div className={`text-sm font-bold ${isCurrentTurn ? 'text-yellow-600' : 'text-green-600'
+        }`}>
         {cumulativeScore}点 / +{currentHandScore}点
       </div>
       {isCurrentTurn && (
         <div className="flex items-center justify-center gap-1 mt-1">
           <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce"></div>
-          <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+          <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
         </div>
       )}
     </div>
@@ -154,10 +152,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   const getPlayerPosition = (playerId: number): RelativePosition | '' => {
     if (!currentPlayerId) return '';
-    
+
     const player = players.find(p => p.id === playerId);
     const currentPlayer = players.find(p => p.id === currentPlayerId);
-    
+
     if (!player?.position || !currentPlayer?.position) {
       // positionが設定されていない場合は従来のロジックを使用
       const positions: RelativePosition[] = ['bottom', 'left', 'top', 'right'];
@@ -166,26 +164,42 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       const relativeIndex = (playerIndex - currentIndex + 4) % 4;
       return positions[relativeIndex];
     }
-    
+
     // 現在のプレイヤーを基準とした相対位置を計算
     const currentPlayerPosition = currentPlayer.position;
     const targetPlayerPosition = player.position;
-    
+
     // 現在のプレイヤーが常に下側（bottom）になるよう配置
     if (playerId === currentPlayerId) {
       return 'bottom';
     }
-    
+
     // North, East, South, Westの順序で配置
     const positionOrder = ['North', 'East', 'South', 'West'];
     const currentIndex = positionOrder.indexOf(currentPlayerPosition);
     const targetIndex = positionOrder.indexOf(targetPlayerPosition);
-    
+
     // 相対位置を計算
     const relativeIndex = (targetIndex - currentIndex + 4) % 4;
     const relativePositions: RelativePosition[] = ['bottom', 'left', 'top', 'right'];
-    
+
     return relativePositions[relativeIndex];
+  };
+
+  const getTrickCardPosition = (playerId: number): string => {
+    const position = getPlayerPosition(playerId);
+    switch (position) {
+      case 'top':
+        return 'absolute top-2 left-1/2 transform -translate-x-1/2';
+      case 'right':
+        return 'absolute right-2 top-1/2 transform -translate-y-1/2';
+      case 'bottom':
+        return 'absolute bottom-2 left-1/2 transform -translate-x-1/2';
+      case 'left':
+        return 'absolute left-2 top-1/2 transform -translate-y-1/2';
+      default:
+        return 'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2';
+    }
   };
 
   const getPhaseMessage = (): string => {
@@ -217,11 +231,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             </div>
           </div>
           <div className="text-right">
-            <div className={`text-xs ${
-              phase === 'playing' && currentTurn === currentPlayerId 
-                ? 'text-yellow-300 font-bold animate-pulse' 
-                : ''
-            }`}>
+            <div className={`text-xs ${phase === 'playing' && currentTurn === currentPlayerId
+              ? 'text-yellow-300 font-bold animate-pulse'
+              : ''
+              }`}>
               {status === 'FINISHED' ? 'ゲーム終了' : getPhaseMessage()}
               {phase === 'playing' && currentTurn === currentPlayerId && (
                 <span className="ml-1 text-yellow-400">👆</span>
@@ -272,104 +285,100 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           <div className="relative w-full max-w-5xl">
             {/* 卓配置レイアウト */}
             <div className="relative h-[28rem] bg-green-800 rounded-lg p-5">
-            
-            {/* 上のプレイヤー */}
-            {players.filter(p => getPlayerPosition(p.id) === 'top').map(player => (
-              <div
-                key={player.id}
-                data-testid={`player-${player.id}`}
-                className="absolute top-2 left-1/2 transform -translate-x-1/2"
-              >
-                <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} />
-              </div>
-            ))}
 
-            {/* 右のプレイヤー */}
-            {players.filter(p => getPlayerPosition(p.id) === 'right').map(player => (
-              <div
-                key={player.id}
-                data-testid={`player-${player.id}`}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2"
-              >
-                <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} />
-              </div>
-            ))}
+              {/* 上のプレイヤー */}
+              {players.filter(p => getPlayerPosition(p.id) === 'top').map(player => (
+                <div
+                  key={player.id}
+                  data-testid={`player-${player.id}`}
+                  className="absolute top-2 left-1/2 transform -translate-x-1/2"
+                >
+                  <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} />
+                </div>
+              ))}
 
-            {/* 下のプレイヤー */}
-            {players.filter(p => getPlayerPosition(p.id) === 'bottom').map(player => (
-              <div
-                key={player.id}
-                data-testid={`player-${player.id}`}
-                className="absolute bottom-2 left-1/2 transform -translate-x-1/2"
-              >
-                <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} />
-              </div>
-            ))}
+              {/* 右のプレイヤー */}
+              {players.filter(p => getPlayerPosition(p.id) === 'right').map(player => (
+                <div
+                  key={player.id}
+                  data-testid={`player-${player.id}`}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                >
+                  <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} />
+                </div>
+              ))}
 
-            {/* 左のプレイヤー */}
-            {players.filter(p => getPlayerPosition(p.id) === 'left').map(player => (
-              <div
-                key={player.id}
-                data-testid={`player-${player.id}`}
-                className="absolute left-2 top-1/2 transform -translate-y-1/2"
-              >
-                <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} />
-              </div>
-            ))}
+              {/* 下のプレイヤー */}
+              {players.filter(p => getPlayerPosition(p.id) === 'bottom').map(player => (
+                <div
+                  key={player.id}
+                  data-testid={`player-${player.id}`}
+                  className="absolute bottom-2 left-1/2 transform -translate-x-1/2"
+                >
+                  <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} />
+                </div>
+              ))}
 
-            {/* 中央エリア（トリック表示） */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div 
-                data-testid="trick-area"
-                className="bg-green-700 rounded-lg p-7 w-96 h-64 flex flex-col items-center justify-center shadow-lg border border-green-600"
-              >
-                <h4 className="text-base font-semibold mb-5 text-center text-white">
-                  トリック {currentTrick}
-                  {getCurrentTrickCards().length > 0 && (
-                    <span className="ml-2 text-xs text-yellow-300">
-                      ({getCurrentTrickCards().length}/4)
-                    </span>
-                  )}
-                </h4>
-                <div className="grid grid-cols-2 gap-4 w-full">
+              {/* 左のプレイヤー */}
+              {players.filter(p => getPlayerPosition(p.id) === 'left').map(player => (
+                <div
+                  key={player.id}
+                  data-testid={`player-${player.id}`}
+                  className="absolute left-2 top-1/2 transform -translate-y-1/2"
+                >
+                  <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} />
+                </div>
+              ))}
+
+              {/* 中央エリア（トリック表示） */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div
+                  data-testid="trick-area"
+                  className="bg-green-700 rounded-lg w-96 h-64 shadow-lg border border-green-600 relative"
+                >
+
+                  {/* カード配置領域 */}
                   {getCurrentTrickCards().map((cardPlay, index) => {
-                    const player = players.find(p => p.id === cardPlay.playerId);
                     const cardInfo = cardPlay.card;
-                    
+
                     return (
-                      <div 
-                        key={`${cardPlay.playerId}-${cardInfo.id}`} 
-                        className="text-center transform transition-all duration-300"
+                      <div
+                        key={`${cardPlay.playerId}-${cardInfo.id}`}
+                        className={`${getTrickCardPosition(cardPlay.playerId)} transform transition-all duration-300 opacity-100`}
                         style={{
                           animationDelay: `${index * 200}ms`,
                           animation: 'fadeInUp 0.5s ease-out forwards'
                         }}
                       >
-                        <div className="text-xs mb-1 text-white font-medium">
-                          {player?.displayName}
-                        </div>
-                        <Card 
-                          card={cardInfo} 
-                          size="small"
-                          isPlayable={false}
+                        <Card
+                          card={cardInfo}
+                          size="medium"
+                          isPlayable={true}
                         />
                       </div>
                     );
                   })}
+
+                  {/* 待機中メッセージ */}
                   {getCurrentTrickCards().length === 0 && (
-                    <div className="col-span-2 text-center text-gray-300 text-sm py-4">
-                      プレイを待機中...
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center text-gray-300 text-sm py-4">
+                        プレイを待機中...
+                      </div>
+                    </div>
+                  )}
+
+                  {/* トリック完了メッセージ */}
+                  {getCurrentTrickCards().length === 4 && (
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                      <div className="text-xs text-yellow-300 font-semibold animate-pulse">
+                        トリック完了！
+                      </div>
                     </div>
                   )}
                 </div>
-                {getCurrentTrickCards().length === 4 && (
-                  <div className="mt-3 text-xs text-yellow-300 font-semibold animate-pulse">
-                    トリック完了！
-                  </div>
-                )}
               </div>
             </div>
-          </div>
           </div>
 
           {/* スコアグラフエリア（右側固定） */}
@@ -432,10 +441,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               maxSelectableCards={3}
               showConfirmButton={false}
               isExchangeCompleted={
-                !!(phase === 'exchanging' && 
-                exchangeProgress && 
-                currentPlayerId && 
-                exchangeProgress.exchangedPlayers.includes(currentPlayerId))
+                !!(phase === 'exchanging' &&
+                  exchangeProgress &&
+                  currentPlayerId &&
+                  exchangeProgress.exchangedPlayers.includes(currentPlayerId))
               }
               isPlayerTurn={currentTurn === currentPlayerId}
               onCardSelect={handleCardSelect}
@@ -502,7 +511,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           isOpen={isGameCompleted}
           gameResult={gameResult}
           players={players}
-          onClose={onCloseGameEndModal || (() => {})}
+          onClose={onCloseGameEndModal || (() => { })}
         />
       )}
     </div>
