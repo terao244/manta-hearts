@@ -29,6 +29,7 @@ interface GameHookState {
   isTrickCompleted: boolean;
   trickCompletedTimeout: NodeJS.Timeout | null;
   pendingTricksUpdate?: TrickData[];
+  currentTrickResult?: TrickResult;
 }
 
 export const useGame = (currentPlayer: PlayerInfo | null) => {
@@ -43,7 +44,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     isGameCompleted: false,
     isTrickCompleted: false,
     trickCompletedTimeout: null,
-    pendingTricksUpdate: undefined
+    pendingTricksUpdate: undefined,
+    currentTrickResult: undefined
   });
 
   // ゲーム参加
@@ -85,7 +87,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
           isGameCompleted: false,
           isTrickCompleted: false,
           trickCompletedTimeout: null,
-          pendingTricksUpdate: undefined
+          pendingTricksUpdate: undefined,
+          currentTrickResult: undefined
         });
       } else {
         setGameHookState(prev => ({
@@ -433,7 +436,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
           },
           isTrickCompleted: clearTrickCompleted ? false : prev.isTrickCompleted,
           trickCompletedTimeout: clearTrickCompleted ? null : prev.trickCompletedTimeout,
-          pendingTricksUpdate: clearTrickCompleted ? undefined : prev.pendingTricksUpdate
+          pendingTricksUpdate: clearTrickCompleted ? undefined : prev.pendingTricksUpdate,
+          currentTrickResult: clearTrickCompleted ? undefined : prev.currentTrickResult
         };
       });
     };
@@ -455,7 +459,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
               ...current,
               isTrickCompleted: false,
               trickCompletedTimeout: null,
-              pendingTricksUpdate: undefined
+              pendingTricksUpdate: undefined,
+              currentTrickResult: undefined
             };
             
             // 保留されていたtricks更新があれば適用
@@ -474,7 +479,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
         return {
           ...prev,
           isTrickCompleted: true,
-          trickCompletedTimeout: timeout
+          trickCompletedTimeout: timeout,
+          currentTrickResult: trickResult
         };
       });
     };
@@ -608,6 +614,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     gameResult: gameHookState.gameResult,
     isGameCompleted: gameHookState.isGameCompleted,
     isTrickCompleted: gameHookState.isTrickCompleted,
+    currentTrickResult: gameHookState.currentTrickResult,
     joinGame: handleJoinGame,
     playCard: handleCardPlay,
     exchangeCards: handleCardExchange,

@@ -60,6 +60,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   gameResult,
   isGameCompleted = false,
   isTrickCompleted = false,
+  currentTrickResult,
   onCardPlay,
   onCardExchange,
   onCloseGameEndModal
@@ -211,6 +212,34 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     }
   };
 
+  const getTrickWinner = (): number | null => {
+    // トリック完了中は、currentTrickResultのwinnerIdを優先使用
+    if (isTrickCompleted && currentTrickResult) {
+      return currentTrickResult.winnerId;
+    }
+    
+    // 通常時は既存のロジック
+    if (tricks.length === 0) return null;
+    const currentTrick = tricks[tricks.length - 1];
+    return currentTrick.winnerId || null;
+  };
+
+  const getWinnerDirection = (winnerId: number): string => {
+    const winnerPosition = getPlayerPosition(winnerId);
+    switch (winnerPosition) {
+      case 'top':
+        return 'card-collect-to-top';
+      case 'right':
+        return 'card-collect-to-right';
+      case 'bottom':
+        return 'card-collect-to-bottom';
+      case 'left':
+        return 'card-collect-to-left';
+      default:
+        return '';
+    }
+  };
+
   const getPhaseMessage = (): string => {
     switch (phase) {
       case 'waiting':
@@ -349,14 +378,22 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   {/* カード配置領域 */}
                   {getCurrentTrickCards().map((cardPlay, index) => {
                     const cardInfo = cardPlay.card;
+                    const winnerId = getTrickWinner();
+                    const isCompleted = isTrickCompleted && getCurrentTrickCards().length === 4;
+                    
+                    // アニメーションクラスを決定
+                    let animationClass = '';
+                    if (isCompleted && winnerId) {
+                      animationClass = `card-collect-animation ${getWinnerDirection(winnerId)}`;
+                    }
 
                     return (
                       <div
                         key={`${cardPlay.playerId}-${cardInfo.id}`}
-                        className={`${getTrickCardPosition(cardPlay.playerId)} transform transition-all duration-300 opacity-100`}
+                        className={`${getTrickCardPosition(cardPlay.playerId)} transform transition-all duration-300 opacity-100 ${animationClass}`}
                         style={{
-                          animationDelay: `${index * 200}ms`,
-                          animation: 'fadeInUp 0.5s ease-out forwards'
+                          animationDelay: isCompleted ? `${index * 150}ms` : `${index * 200}ms`,
+                          animation: isCompleted ? undefined : 'fadeInUp 0.5s ease-out forwards'
                         }}
                       >
                         <Card
@@ -385,7 +422,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                           ? 'text-green-200 text-lg animate-pulse drop-shadow-lg bg-green-900/80 border border-green-600' 
                           : 'text-yellow-300 text-sm bg-yellow-900/60 border border-yellow-600'
                       }`}>
-                        トリック完了！
+                        {isTrickCompleted && getTrickWinner() ? (
+                          <>
+                            <div>トリック完了！</div>
+                            <div className="text-sm mt-1">
+                              {players.find(p => p.id === getTrickWinner())?.displayName}の勝利
+                            </div>
+                          </>
+                        ) : (
+                          'トリック完了！'
+                        )}
                       </div>
                     </div>
                   )}

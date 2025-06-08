@@ -29,6 +29,7 @@ export default function Home() {
     gameResult,
     isGameCompleted,
     isTrickCompleted,
+    currentTrickResult,
     joinGame,
     playCard,
     exchangeCards,
@@ -156,6 +157,7 @@ export default function Home() {
           gameResult={gameResult}
           isGameCompleted={isGameCompleted}
           isTrickCompleted={isTrickCompleted}
+          currentTrickResult={currentTrickResult}
           onCardPlay={playCard}
           onCardExchange={exchangeCards}
           onCloseGameEndModal={closeGameEndModal}

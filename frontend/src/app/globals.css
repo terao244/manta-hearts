@@ -67,3 +67,38 @@ body {
   transform: translateY(-5px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
+
+/* トリック完了時のカード収集アニメーション */
+@keyframes cardCollectToWinner {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.8);
+  }
+  100% {
+    transform: scale(0.3) translate(var(--winner-direction));
+    opacity: 0.3;
+  }
+}
+
+.card-collect-animation {
+  animation: cardCollectToWinner 1.5s ease-in-out forwards;
+}
+
+.card-collect-to-top {
+  --winner-direction: 0, -150px;
+}
+
+.card-collect-to-right {
+  --winner-direction: 150px, 0;
+}
+
+.card-collect-to-bottom {
+  --winner-direction: 0, 150px;
+}
+
+.card-collect-to-left {
+  --winner-direction: -150px, 0;
+}
