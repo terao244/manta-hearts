@@ -270,8 +270,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
             handCards: {
               ...prev.gameState.handCards,
               [currentPlayer.id]: cards
-            },
-            phase: 'exchanging' as const
+            }
           },
           isInGame: true, // カード配布でゲームに参加状態にする
           error: null
