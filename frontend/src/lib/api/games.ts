@@ -228,3 +228,38 @@ export async function fetchHandCardsWithRetry(gameId: number, handId: number): P
 export async function fetchHandExchangesWithRetry(gameId: number, handId: number): Promise<HandExchangesResponse['data']> {
   return fetchWithRetry(() => fetchHandExchanges(gameId, handId));
 }
+
+// プレイヤー関連の型定義とAPI
+export interface PlayersResponse {
+  success: boolean;
+  data: Array<{
+    id: number;
+    name: string;
+    displayName: string;
+    displayOrder: number;
+    isActive: boolean;
+  }>;
+  count: number;
+}
+
+/**
+ * 全プレイヤー一覧を取得
+ */
+export async function fetchPlayers(): Promise<PlayersResponse['data']> {
+  const endpoint = '/api/players';
+  
+  const response = await request<PlayersResponse>(endpoint);
+  
+  if (!response.success) {
+    throw new Error('Failed to fetch players');
+  }
+  
+  return response.data;
+}
+
+/**
+ * リトライ付きプレイヤー一覧取得
+ */
+export async function fetchPlayersWithRetry(): Promise<PlayersResponse['data']> {
+  return fetchWithRetry(() => fetchPlayers());
+}

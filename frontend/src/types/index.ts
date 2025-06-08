@@ -42,7 +42,7 @@ export interface ServerToClientEvents {
 }
 
 export interface ClientToServerEvents {
-  login: (playerName: string, callback: (success: boolean, playerInfo?: PlayerInfo) => void) => void;
+  login: (playerId: number, callback: (success: boolean, playerInfo?: PlayerInfo) => void) => void;
   joinGame: (playerId: number, callback: (success: boolean, gameInfo?: GameInfo) => void) => void;
   playCard: (cardId: number, callback: (success: boolean, error?: string) => void) => void;
   exchangeCards: (cardIds: number[], callback: (success: boolean, error?: string) => void) => void;
@@ -172,7 +172,7 @@ export type RelativePosition = 'top' | 'bottom' | 'left' | 'right';
 
 // コンポーネントProps型
 export interface PlayerSelectProps {
-  onPlayerSelect: (playerName: string) => void;
+  onPlayerSelect: (playerId: number) => void;
   isLoading: boolean;
   error?: string;
 }

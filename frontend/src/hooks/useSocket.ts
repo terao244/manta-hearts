@@ -118,14 +118,14 @@ export const useSocket = () => {
   }, []);
 
   // ログイン関数
-  const login = async (playerName: string): Promise<{ success: boolean; playerInfo?: PlayerInfo; error?: string }> => {
+  const login = async (playerId: number): Promise<{ success: boolean; playerInfo?: PlayerInfo; error?: string }> => {
     return new Promise((resolve) => {
       if (!socketRef.current?.connected) {
         resolve({ success: false, error: 'Not connected to server' });
         return;
       }
 
-      socketRef.current.emit('login', playerName, (success, playerInfo) => {
+      socketRef.current.emit('login', playerId, (success, playerInfo) => {
         if (success && playerInfo) {
           // ログイン成功時にlocalStorageに保存
           localStorage.setItem('currentPlayer', JSON.stringify(playerInfo));

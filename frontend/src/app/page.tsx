@@ -63,11 +63,11 @@ export default function Home() {
     }
   }, [shouldAutoJoin, loginState.isLoggedIn, loginState.playerInfo, isInGame, joinGame]);
 
-  const handlePlayerSelect = async (playerName: string) => {
+  const handlePlayerSelect = async (playerId: number) => {
     setLoginState(prev => ({ ...prev, isLoading: true, error: undefined }));
 
     try {
-      const result = await login(playerName);
+      const result = await login(playerId);
       
       if (result.success && result.playerInfo) {
         setLoginState({
