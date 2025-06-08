@@ -187,6 +187,7 @@ export interface GameBoardProps {
   showScoreGraph?: boolean;
   gameResult?: GameResult;
   isGameCompleted?: boolean;
+  isTrickCompleted?: boolean;
   onCardPlay: (cardId: number) => void;
   onCardExchange: (cardIds: number[]) => void;
   onCloseGameEndModal?: () => void;

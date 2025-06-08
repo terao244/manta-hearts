@@ -28,6 +28,7 @@ export default function Home() {
     scoreHistory,
     gameResult,
     isGameCompleted,
+    isTrickCompleted,
     joinGame,
     playCard,
     exchangeCards,
@@ -154,6 +155,7 @@ export default function Home() {
           scoreHistory={scoreHistory}
           gameResult={gameResult}
           isGameCompleted={isGameCompleted}
+          isTrickCompleted={isTrickCompleted}
           onCardPlay={playCard}
           onCardExchange={exchangeCards}
           onCloseGameEndModal={closeGameEndModal}

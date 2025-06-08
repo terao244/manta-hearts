@@ -59,6 +59,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   showScoreGraph = false,
   gameResult,
   isGameCompleted = false,
+  isTrickCompleted = false,
   onCardPlay,
   onCardExchange,
   onCloseGameEndModal
@@ -86,7 +87,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const getCurrentTrickCards = () => {
     if (tricks.length === 0) return [];
     const currentTrick = tricks[tricks.length - 1];
-    return currentTrick.cards || [];
+    const currentTrickCards = currentTrick.cards || [];
+    
+    // トリック完了中は現在のトリックカードを表示し続ける
+    if (isTrickCompleted && currentTrickCards.length === 4) {
+      return currentTrickCards;
+    }
+    
+    // トリック完了状態でない場合、または4枚未満の場合は通常通り
+    return currentTrickCards;
   };
 
 
@@ -370,8 +379,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
                   {/* トリック完了メッセージ */}
                   {getCurrentTrickCards().length === 4 && (
-                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-                      <div className="text-xs text-yellow-300 font-semibold animate-pulse">
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+                      <div className={`font-bold text-center px-3 py-2 rounded-lg ${
+                        isTrickCompleted 
+                          ? 'text-green-200 text-lg animate-pulse drop-shadow-lg bg-green-900/80 border border-green-600' 
+                          : 'text-yellow-300 text-sm bg-yellow-900/60 border border-yellow-600'
+                      }`}>
                         トリック完了！
                       </div>
                     </div>

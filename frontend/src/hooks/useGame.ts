@@ -11,7 +11,8 @@ import type {
   TrickResult, 
   HandResult, 
   GameResult,
-  ScoreHistoryEntry
+  ScoreHistoryEntry,
+  TrickData
 } from '@/types';
 
 interface GameHookState {
@@ -25,6 +26,9 @@ interface GameHookState {
   scoreHistory: ScoreHistoryEntry[];
   gameResult?: GameResult;
   isGameCompleted: boolean;
+  isTrickCompleted: boolean;
+  trickCompletedTimeout: NodeJS.Timeout | null;
+  pendingTricksUpdate?: TrickData[];
 }
 
 export const useGame = (currentPlayer: PlayerInfo | null) => {
@@ -36,7 +40,10 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     error: null,
     validCardIds: [],
     scoreHistory: [],
-    isGameCompleted: false
+    isGameCompleted: false,
+    isTrickCompleted: false,
+    trickCompletedTimeout: null,
+    pendingTricksUpdate: undefined
   });
 
   // ゲーム参加
@@ -75,7 +82,10 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
           error: null,
           validCardIds: [],
           scoreHistory: result.gameInfo.scoreHistory || [],
-          isGameCompleted: false
+          isGameCompleted: false,
+          isTrickCompleted: false,
+          trickCompletedTimeout: null,
+          pendingTricksUpdate: undefined
         });
       } else {
         setGameHookState(prev => ({
@@ -166,14 +176,25 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       setGameHookState(prev => {
         if (!prev.gameState) return prev;
         
+        // トリック完了中はtricksの更新を保留して、ウェイト期間中の表示を維持
+        const updatedState = { ...stateUpdate };
+        let pendingTricksUpdate = prev.pendingTricksUpdate;
+        
+        if (prev.isTrickCompleted && stateUpdate.tricks) {
+          console.log('Trick completed: preserving current tricks during wait period, storing pending update');
+          pendingTricksUpdate = stateUpdate.tricks;
+          delete updatedState.tricks;
+        }
+        
         return {
           ...prev,
           gameState: {
             ...prev.gameState,
-            ...stateUpdate,
+            ...updatedState,
             // scoresが既に存在する場合は保持、新しいscoresがあれば更新
-            scores: stateUpdate.scores || prev.gameState.scores || {}
-          }
+            scores: updatedState.scores || prev.gameState.scores || {}
+          },
+          pendingTricksUpdate
         };
       });
     };
@@ -354,6 +375,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
         const updatedTricks = [...prev.gameState.tricks];
         const currentTrickIndex = updatedTricks.length - 1;
         
+        let clearTrickCompleted = false;
+        
         if (currentTrickIndex >= 0) {
           const currentTrick = updatedTricks[currentTrickIndex];
           const updatedCards = [...(currentTrick.cards || [])];
@@ -369,7 +392,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
             cards: updatedCards
           };
         } else {
-          // 新しいトリックを作成
+          // 新しいトリックを作成（新しいトリック開始時はトリック完了状態をクリア）
           updatedTricks.push({
             trickNumber: 1,
             cards: [{
@@ -380,6 +403,12 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
             points: 0,
             isCompleted: false
           });
+          clearTrickCompleted = true;
+        }
+        
+        // 既存のタイマーをクリア（新しいトリック開始時）
+        if (clearTrickCompleted && prev.trickCompletedTimeout) {
+          clearTimeout(prev.trickCompletedTimeout);
         }
         
         return {
@@ -387,7 +416,10 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
           gameState: {
             ...prev.gameState,
             tricks: updatedTricks
-          }
+          },
+          isTrickCompleted: clearTrickCompleted ? false : prev.isTrickCompleted,
+          trickCompletedTimeout: clearTrickCompleted ? null : prev.trickCompletedTimeout,
+          pendingTricksUpdate: clearTrickCompleted ? undefined : prev.pendingTricksUpdate
         };
       });
     };
@@ -395,6 +427,42 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     // トリック完了
     const handleTrickCompleted = (trickResult: TrickResult) => {
       console.log('Trick completed:', trickResult);
+      
+      setGameHookState(prev => {
+        // 既存のタイマーがあればクリア
+        if (prev.trickCompletedTimeout) {
+          clearTimeout(prev.trickCompletedTimeout);
+        }
+        
+        // 新しいタイマーを設定（2秒後にトリック完了状態をクリア）
+        const timeout = setTimeout(() => {
+          setGameHookState(current => {
+            const newState = {
+              ...current,
+              isTrickCompleted: false,
+              trickCompletedTimeout: null,
+              pendingTricksUpdate: undefined
+            };
+            
+            // 保留されていたtricks更新があれば適用
+            if (current.pendingTricksUpdate && current.gameState) {
+              console.log('Trick wait period ended: applying pending tricks update');
+              newState.gameState = {
+                ...current.gameState,
+                tricks: current.pendingTricksUpdate
+              };
+            }
+            
+            return newState;
+          });
+        }, 2000);
+        
+        return {
+          ...prev,
+          isTrickCompleted: true,
+          trickCompletedTimeout: timeout
+        };
+      });
     };
 
     // ハンドスコア更新
@@ -483,6 +551,11 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
 
     // クリーンアップ
     return () => {
+      // タイマーをクリア
+      if (gameHookState.trickCompletedTimeout) {
+        clearTimeout(gameHookState.trickCompletedTimeout);
+      }
+      
       off('gameState', handleGameState);
       off('gameStateChanged', handleGameStateChanged);
       off('playerJoined', handlePlayerJoined);
@@ -525,6 +598,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     scoreHistory: gameHookState.scoreHistory,
     gameResult: gameHookState.gameResult,
     isGameCompleted: gameHookState.isGameCompleted,
+    isTrickCompleted: gameHookState.isTrickCompleted,
     joinGame: handleJoinGame,
     playCard: handleCardPlay,
     exchangeCards: handleCardExchange,
