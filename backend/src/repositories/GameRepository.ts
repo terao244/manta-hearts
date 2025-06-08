@@ -147,6 +147,7 @@ export class GameRepository implements IGameRepository {
         sessions: {
           select: {
             playerId: true,
+            playerPosition: true,
             player: {
               select: {
                 id: true,
@@ -191,10 +192,10 @@ export class GameRepository implements IGameRepository {
       // プレイヤー情報を作成
       // game.sessionsが空の場合はfinalScoresからプレイヤー情報を取得
       const players = game.sessions.length > 0
-        ? game.sessions.map((session, index) => ({
+        ? game.sessions.map((session) => ({
             id: session.playerId,
             name: session.player.displayName,
-            position: ['North', 'East', 'South', 'West'][index % 4] as 'North' | 'East' | 'South' | 'West',
+            position: this.convertPlayerPosition(session.playerPosition),
             finalScore: finalScores.find(s => s.playerId === session.playerId)?.score || 0,
           }))
         : finalScores.map((score, index) => ({
@@ -235,6 +236,7 @@ export class GameRepository implements IGameRepository {
         sessions: {
           select: {
             playerId: true,
+            playerPosition: true,
             player: {
               select: {
                 id: true,
@@ -363,10 +365,10 @@ export class GameRepository implements IGameRepository {
     // プレイヤー情報を取得
     // game.sessionsが空の場合はfinalScoresからプレイヤー情報を取得
     const players = game.sessions.length > 0 
-      ? game.sessions.map((session, index) => ({
+      ? game.sessions.map((session) => ({
           id: session.playerId,
           name: session.player.displayName,
-          position: ['North', 'East', 'South', 'West'][index % 4] as 'North' | 'East' | 'South' | 'West',
+          position: this.convertPlayerPosition(session.playerPosition),
           finalScore: finalScores.find(s => s.playerId === session.playerId)?.score || 0,
         }))
       : finalScores.map((score, index) => ({
