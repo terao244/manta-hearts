@@ -16,20 +16,20 @@ const RANKS: {
   shortName: string;
   sortOrder: number;
 }[] = [
-  { value: 'TWO', name: '2', shortName: '2', sortOrder: 0 },
-  { value: 'THREE', name: '3', shortName: '3', sortOrder: 1 },
-  { value: 'FOUR', name: '4', shortName: '4', sortOrder: 2 },
-  { value: 'FIVE', name: '5', shortName: '5', sortOrder: 3 },
-  { value: 'SIX', name: '6', shortName: '6', sortOrder: 4 },
-  { value: 'SEVEN', name: '7', shortName: '7', sortOrder: 5 },
-  { value: 'EIGHT', name: '8', shortName: '8', sortOrder: 6 },
-  { value: 'NINE', name: '9', shortName: '9', sortOrder: 7 },
-  { value: 'TEN', name: '10', shortName: 'T', sortOrder: 8 },
-  { value: 'JACK', name: 'ジャック', shortName: 'J', sortOrder: 9 },
-  { value: 'QUEEN', name: 'クイーン', shortName: 'Q', sortOrder: 10 },
-  { value: 'KING', name: 'キング', shortName: 'K', sortOrder: 11 },
-  { value: 'ACE', name: 'エース', shortName: 'A', sortOrder: 12 },
-];
+    { value: 'TWO', name: '2', shortName: '2', sortOrder: 0 },
+    { value: 'THREE', name: '3', shortName: '3', sortOrder: 1 },
+    { value: 'FOUR', name: '4', shortName: '4', sortOrder: 2 },
+    { value: 'FIVE', name: '5', shortName: '5', sortOrder: 3 },
+    { value: 'SIX', name: '6', shortName: '6', sortOrder: 4 },
+    { value: 'SEVEN', name: '7', shortName: '7', sortOrder: 5 },
+    { value: 'EIGHT', name: '8', shortName: '8', sortOrder: 6 },
+    { value: 'NINE', name: '9', shortName: '9', sortOrder: 7 },
+    { value: 'TEN', name: '10', shortName: 'T', sortOrder: 8 },
+    { value: 'JACK', name: 'ジャック', shortName: 'J', sortOrder: 9 },
+    { value: 'QUEEN', name: 'クイーン', shortName: 'Q', sortOrder: 10 },
+    { value: 'KING', name: 'キング', shortName: 'K', sortOrder: 11 },
+    { value: 'ACE', name: 'エース', shortName: 'A', sortOrder: 12 },
+  ];
 
 // スート略記号
 const SUIT_CODES: Record<Suit, string> = {
@@ -47,26 +47,26 @@ async function main() {
   await prisma.player.createMany({
     data: [
       {
-        name: 'プレイヤー1',
-        displayName: 'プレイヤー1',
+        name: 'あ',
+        displayName: 'あ',
         displayOrder: 1,
         isActive: true,
       },
       {
-        name: 'プレイヤー2',
-        displayName: 'プレイヤー2',
+        name: 'ま',
+        displayName: 'ま',
         displayOrder: 2,
         isActive: true,
       },
       {
-        name: 'プレイヤー3',
-        displayName: 'プレイヤー3',
+        name: 'つ',
+        displayName: 'つ',
         displayOrder: 3,
         isActive: true,
       },
       {
-        name: 'プレイヤー4',
-        displayName: 'プレイヤー4',
+        name: 'て',
+        displayName: 'て',
         displayOrder: 4,
         isActive: true,
       },
