@@ -31,6 +31,7 @@ body {
     opacity: 0;
     transform: translateY(20px) scale(0.8);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -41,18 +42,23 @@ body {
   0% {
     transform: translateY(0) scale(1);
   }
+
   50% {
     transform: translateY(-10px) scale(1.1);
   }
+
   100% {
     transform: translateY(0) scale(1);
   }
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -74,12 +80,14 @@ body {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(0.8);
   }
+
   100% {
-    transform: scale(0.3) translate(var(--winner-direction));
-    opacity: 0.3;
+    transform: scale(0.7) translate(var(--winner-direction));
+    opacity: 0.6;
   }
 }
 
