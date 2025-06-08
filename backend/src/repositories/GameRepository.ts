@@ -378,11 +378,11 @@ export class GameRepository implements IGameRepository {
           finalScore: score.score,
         }));
 
-    // スコア履歴を作成
+    // スコア履歴を作成（フロントエンドで累積計算するため、各ハンドのスコアを返す）
     const scoreHistory = game.hands.map((hand) => ({
       hand: hand.handNumber,
       scores: hand.scores.reduce((acc, score) => {
-        acc[score.playerId] = score.cumulativePoints;
+        acc[score.playerId] = score.handPoints;
         return acc;
       }, {} as Record<number, number>),
     }));
