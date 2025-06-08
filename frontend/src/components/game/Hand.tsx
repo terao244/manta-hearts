@@ -215,36 +215,6 @@ export const Hand: React.FC<HandProps> = ({
         </div>
       )}
 
-      {/* 選択されたカードの詳細（交換モード時） */}
-      {mode === 'exchange' && selectedCardIds.length > 0 && (
-        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="text-sm font-medium text-blue-800 mb-2">
-            選択されたカード:
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {cards.filter(card => selectedCardIds.includes(card.id)).map(card => {
-              const suitName = { 'SPADES': '♠', 'HEARTS': '♥', 'DIAMONDS': '♦', 'CLUBS': '♣' }[card.suit];
-              const rankName = { 
-                'ACE': 'A', 'TWO': '2', 'THREE': '3', 'FOUR': '4', 'FIVE': '5', 'SIX': '6', 
-                'SEVEN': '7', 'EIGHT': '8', 'NINE': '9', 'TEN': '10', 'JACK': 'J', 
-                'QUEEN': 'Q', 'KING': 'K' 
-              }[card.rank];
-              return (
-                <span 
-                  key={card.id}
-                  className={`inline-block px-2 py-1 text-xs rounded ${
-                    card.suit === 'HEARTS' || card.suit === 'DIAMONDS' 
-                      ? 'bg-red-100 text-red-700' 
-                      : 'bg-gray-100 text-gray-700'
-                  }`}
-                >
-                  {suitName}{rankName}
-                </span>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* 交換完了メッセージ */}
       {mode === 'exchange' && isExchangeCompleted && (
@@ -261,45 +231,6 @@ export const Hand: React.FC<HandProps> = ({
         </div>
       )}
 
-      {/* 交換モード時のコントロール */}
-      {mode === 'exchange' && showConfirmButton && !isExchangeCompleted && (
-        <div className="mt-4 text-center">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
-            <div className="text-sm text-yellow-800 mb-2">
-              選択されたカード: {selectedCardIds.length}/{maxSelectableCards}枚
-            </div>
-            {selectedCardIds.length === maxSelectableCards && (
-              <div className="text-xs text-green-700 animate-pulse">
-                ✓ 交換の準備が完了しました
-              </div>
-            )}
-          </div>
-          
-          <div className="flex justify-center gap-3">
-            {onCancel && (
-              <button
-                onClick={onCancel}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                キャンセル
-              </button>
-            )}
-            {onConfirm && (
-              <button
-                onClick={onConfirm}
-                disabled={!isConfirmEnabled()}
-                className={`px-4 py-2 rounded-lg transition-all duration-300 ${
-                  isConfirmEnabled()
-                    ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-lg hover:scale-105 active:scale-95'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                {isConfirmEnabled() ? '🔄 交換確定' : '3枚選択してください'}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* プレイモード時の情報表示 */}
       {mode === 'play' && playableCardIds.length > 0 && isPlayerTurn && (

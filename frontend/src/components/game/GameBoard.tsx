@@ -390,12 +390,38 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         {/* 手札エリア */}
         <div className="bg-white rounded-lg p-3 mb-4">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="text-black text-base font-semibold">あなたの手札</h3>
-            {(phase === 'exchanging' || phase === 'playing') && (
-              <div className="text-sm font-medium text-blue-600">
-                {phase === 'exchanging' ? '交換モード' : 'プレイモード'}
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              <h3 className="text-black text-base font-semibold">あなたの手札</h3>
+              {phase === 'exchanging' && exchangeDirection && (
+                <div className="flex items-center gap-1 text-sm text-purple-600 font-medium">
+                  <span>{getExchangeDirectionIcon()}</span>
+                  <span>{getExchangeDirectionText()}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              {phase === 'exchanging' && selectedCards.length === 3 && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleExchangeCancel}
+                    className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    onClick={handleExchangeConfirm}
+                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors shadow-md"
+                  >
+                    🔄 交換確定
+                  </button>
+                </div>
+              )}
+              {(phase === 'exchanging' || phase === 'playing') && (
+                <div className="text-sm font-medium text-blue-600">
+                  {phase === 'exchanging' ? '交換モード' : 'プレイモード'}
+                </div>
+              )}
+            </div>
           </div>
           {currentPlayerCards.length > 0 ? (
             <Hand
@@ -404,7 +430,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               playableCardIds={validCardIds}
               mode={phase === 'exchanging' ? 'exchange' : phase === 'playing' ? 'play' : 'view'}
               maxSelectableCards={3}
-              showConfirmButton={phase === 'exchanging' && selectedCards.length === 3}
+              showConfirmButton={false}
               isExchangeCompleted={
                 !!(phase === 'exchanging' && 
                 exchangeProgress && 
@@ -414,8 +440,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               isPlayerTurn={currentTurn === currentPlayerId}
               onCardSelect={handleCardSelect}
               onCardPlay={handleCardPlay}
-              onConfirm={handleExchangeConfirm}
-              onCancel={handleExchangeCancel}
             />
           ) : (
             <div className="text-center py-4 text-gray-500">
