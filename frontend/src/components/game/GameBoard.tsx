@@ -452,7 +452,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               playableCardIds={validCardIds}
               mode={phase === 'exchanging' ? 'exchange' : phase === 'playing' ? 'play' : 'view'}
               maxSelectableCards={3}
-              showConfirmButton={false}
               isExchangeCompleted={
                 !!(phase === 'exchanging' &&
                   exchangeProgress &&

@@ -575,7 +575,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       off('gameCompleted', handleGameCompleted);
       off('error', handleError);
     };
-  }, [socket, on, off, currentPlayer]);
+  }, [socket, on, off, currentPlayer, gameHookState.trickCompletedTimeout]);
 
   // ゲーム終了モーダルを閉じる
   const closeGameEndModal = useCallback(() => {

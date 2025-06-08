@@ -10,13 +10,10 @@ interface HandProps {
   playableCardIds?: number[];
   mode?: 'play' | 'exchange' | 'view';
   maxSelectableCards?: number;
-  showConfirmButton?: boolean;
   isExchangeCompleted?: boolean;
   isPlayerTurn?: boolean;
   onCardSelect?: (card: CardInfo) => void;
   onCardPlay?: (card: CardInfo) => void;
-  onConfirm?: () => void;
-  onCancel?: () => void;
 }
 
 export const Hand: React.FC<HandProps> = ({
@@ -25,13 +22,10 @@ export const Hand: React.FC<HandProps> = ({
   playableCardIds = [],
   mode = 'view',
   maxSelectableCards = 3,
-  showConfirmButton = false,
   isExchangeCompleted = false,
   isPlayerTurn = true,
   onCardSelect,
-  onCardPlay,
-  onConfirm,
-  onCancel
+  onCardPlay
 }) => {
   // カードを直感的にソート（スート別、ランク順）
   const sortedCards = [...cards].sort((a, b) => {
@@ -104,9 +98,6 @@ export const Hand: React.FC<HandProps> = ({
   };
 
 
-  const isConfirmEnabled = (): boolean => {
-    return mode === 'exchange' && selectedCardIds.length === maxSelectableCards;
-  };
 
   if (cards.length === 0) {
     return (
