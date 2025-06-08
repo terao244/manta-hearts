@@ -376,8 +376,35 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
         const currentTrickIndex = updatedTricks.length - 1;
         
         let clearTrickCompleted = false;
+        let isNewTrick = false;
         
         if (currentTrickIndex >= 0) {
+          const currentTrick = updatedTricks[currentTrickIndex];
+          // 最後のトリックが4枚揃っている場合は新しいトリック
+          if (currentTrick.cards && currentTrick.cards.length === 4) {
+            isNewTrick = true;
+            clearTrickCompleted = true;
+          }
+        } else {
+          // tricksが空の場合も新しいトリック
+          isNewTrick = true;
+          clearTrickCompleted = true;
+        }
+        
+        if (isNewTrick) {
+          // 新しいトリックを作成（新しいトリック開始時はトリック完了状態をクリア）
+          updatedTricks.push({
+            trickNumber: updatedTricks.length + 1,
+            cards: [{
+              playerId: playData.playerId,
+              card: playData.card
+            }],
+            winnerId: null,
+            points: 0,
+            isCompleted: false
+          });
+        } else {
+          // 既存トリックにカード追加
           const currentTrick = updatedTricks[currentTrickIndex];
           const updatedCards = [...(currentTrick.cards || [])];
           
@@ -391,19 +418,6 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
             ...currentTrick,
             cards: updatedCards
           };
-        } else {
-          // 新しいトリックを作成（新しいトリック開始時はトリック完了状態をクリア）
-          updatedTricks.push({
-            trickNumber: 1,
-            cards: [{
-              playerId: playData.playerId,
-              card: playData.card
-            }],
-            winnerId: null,
-            points: 0,
-            isCompleted: false
-          });
-          clearTrickCompleted = true;
         }
         
         // 既存のタイマーをクリア（新しいトリック開始時）
@@ -551,11 +565,6 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
 
     // クリーンアップ
     return () => {
-      // タイマーをクリア
-      if (gameHookState.trickCompletedTimeout) {
-        clearTimeout(gameHookState.trickCompletedTimeout);
-      }
-      
       off('gameState', handleGameState);
       off('gameStateChanged', handleGameStateChanged);
       off('playerJoined', handlePlayerJoined);
@@ -575,7 +584,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       off('gameCompleted', handleGameCompleted);
       off('error', handleError);
     };
-  }, [socket, on, off, currentPlayer, gameHookState.trickCompletedTimeout]);
+  }, [socket, on, off, currentPlayer]);
 
   // ゲーム終了モーダルを閉じる
   const closeGameEndModal = useCallback(() => {
