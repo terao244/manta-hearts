@@ -32,15 +32,15 @@ describe('cardImages', () => {
 
   describe('getCardImagePath', () => {
     it('正しいカード画像パスを生成する', () => {
-      expect(getCardImagePath('HEARTS', 'ACE')).toBe('/cards/heart_A.svg');
-      expect(getCardImagePath('DIAMONDS', 'KING')).toBe('/cards/diamond_K.svg');
-      expect(getCardImagePath('CLUBS', 'TWO')).toBe('/cards/club_2.svg');
-      expect(getCardImagePath('SPADES', 'QUEEN')).toBe('/cards/spade_Q.svg');
+      expect(getCardImagePath('HEARTS', 'ACE')).toBe('/cards_png/heart_A.png');
+      expect(getCardImagePath('DIAMONDS', 'KING')).toBe('/cards_png/diamond_K.png');
+      expect(getCardImagePath('CLUBS', 'TWO')).toBe('/cards_png/club_2.png');
+      expect(getCardImagePath('SPADES', 'QUEEN')).toBe('/cards_png/spade_Q.png');
     });
 
     it('数字カードの画像パスを正しく生成する', () => {
-      expect(getCardImagePath('HEARTS', 'TEN')).toBe('/cards/heart_10.svg');
-      expect(getCardImagePath('SPADES', 'FIVE')).toBe('/cards/spade_5.svg');
+      expect(getCardImagePath('HEARTS', 'TEN')).toBe('/cards_png/heart_10.png');
+      expect(getCardImagePath('SPADES', 'FIVE')).toBe('/cards_png/spade_5.png');
     });
 
     it('無効なスートでエラーをスローする', () => {
@@ -67,7 +67,7 @@ describe('cardImages', () => {
       }, 0);
       
       await expect(promise).resolves.toBeUndefined();
-      expect(mockImage.src).toBe('/cards/heart_A.svg');
+      expect(mockImage.src).toBe('/cards_png/heart_A.png');
     });
 
     it('画像読み込み失敗時にrejectする', async () => {

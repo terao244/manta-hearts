@@ -42,7 +42,7 @@ export const getCardImagePath = (suit: string, rank: string): string => {
     throw new Error(`Invalid card: ${suit} ${rank}`);
   }
 
-  return `/cards/${suitName}_${rankName}.svg`;
+  return `/cards_png/${suitName}_${rankName}.png`;
 };
 
 /**

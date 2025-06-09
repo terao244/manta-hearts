@@ -100,10 +100,10 @@ describe('Card', () => {
 
   it('スートシンボルが正しく表示される', () => {
     const testCases = [
-      { suit: 'HEARTS' as const, expectedPath: '/cards/heart_A.svg' },
-      { suit: 'DIAMONDS' as const, expectedPath: '/cards/diamond_A.svg' },
-      { suit: 'CLUBS' as const, expectedPath: '/cards/club_A.svg' },
-      { suit: 'SPADES' as const, expectedPath: '/cards/spade_A.svg' }
+      { suit: 'HEARTS' as const, expectedPath: '/cards_png/heart_A.png' },
+      { suit: 'DIAMONDS' as const, expectedPath: '/cards_png/diamond_A.png' },
+      { suit: 'CLUBS' as const, expectedPath: '/cards_png/club_A.png' },
+      { suit: 'SPADES' as const, expectedPath: '/cards_png/spade_A.png' }
     ];
 
     testCases.forEach(({ suit, expectedPath }) => {
@@ -118,11 +118,11 @@ describe('Card', () => {
 
   it('ランク表示が正しく変換される', () => {
     const testCases = [
-      { rank: 'ACE' as const, expectedPath: '/cards/heart_A.svg' },
-      { rank: 'JACK' as const, expectedPath: '/cards/heart_J.svg' },
-      { rank: 'QUEEN' as const, expectedPath: '/cards/heart_Q.svg' },
-      { rank: 'KING' as const, expectedPath: '/cards/heart_K.svg' },
-      { rank: 'TEN' as const, expectedPath: '/cards/heart_10.svg' }
+      { rank: 'ACE' as const, expectedPath: '/cards_png/heart_A.png' },
+      { rank: 'JACK' as const, expectedPath: '/cards_png/heart_J.png' },
+      { rank: 'QUEEN' as const, expectedPath: '/cards_png/heart_Q.png' },
+      { rank: 'KING' as const, expectedPath: '/cards_png/heart_K.png' },
+      { rank: 'TEN' as const, expectedPath: '/cards_png/heart_10.png' }
     ];
 
     testCases.forEach(({ rank, expectedPath }) => {
@@ -140,7 +140,7 @@ describe('Card', () => {
     
     const imageElement = screen.getByAltText('HEARTS ACE');
     expect(imageElement).toBeInTheDocument();
-    expect(imageElement).toHaveAttribute('src', '/cards/heart_A.svg');
+    expect(imageElement).toHaveAttribute('src', '/cards_png/heart_A.png');
   });
 
   it('画像読み込みエラー時にフォールバック表示される', () => {
