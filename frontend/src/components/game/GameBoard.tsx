@@ -294,14 +294,23 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             </div>
           </div>
           <div className="text-right">
-            <div className={`text-xs ${phase === 'playing' && currentTurn === currentPlayerId
-              ? 'text-yellow-300 font-bold animate-pulse'
-              : ''
-              }`}>
-              {status === 'FINISHED' ? 'ゲーム終了' : getPhaseMessage()}
-              {phase === 'playing' && currentTurn === currentPlayerId && (
-                <span className="ml-1 text-yellow-400">👆</span>
-              )}
+            <div className="flex items-center justify-end gap-3 mb-1">
+              <div className={`text-xs ${phase === 'playing' && currentTurn === currentPlayerId
+                ? 'text-yellow-300 font-bold animate-pulse'
+                : ''
+                }`}>
+                {status === 'FINISHED' ? 'ゲーム終了' : getPhaseMessage()}
+                {phase === 'playing' && currentTurn === currentPlayerId && (
+                  <span className="ml-1 text-yellow-400">👆</span>
+                )}
+              </div>
+              <button
+                onClick={() => setIsScoreGraphVisible(!isScoreGraphVisible)}
+                className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
+                title={isScoreGraphVisible ? 'グラフを非表示' : 'グラフを表示'}
+              >
+                {isScoreGraphVisible ? '📊→📋' : '📋→📊'}
+              </button>
             </div>
             {phase === 'exchanging' && exchangeDirection && (
               <div className="text-yellow-300 text-xs font-semibold flex items-center justify-end gap-1 mt-0.5">
@@ -540,52 +549,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           )}
         </div>
 
-        {/* ゲーム情報サイドバー */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* ゲーム状態 */}
-          <div className="bg-green-800 rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-3">ゲーム状態</h3>
-            <div className="space-y-2 text-sm">
-              <div>ゲームID: {gameId}</div>
-              <div>フェーズ: {phase}</div>
-              <div>ハンド: {currentHand}</div>
-              <div>トリック: {currentTrick}</div>
-              <div className="font-semibold">{getPhaseMessage()}</div>
-            </div>
-          </div>
-
-          {/* ゲームルール情報 */}
-          <div className="bg-green-800 rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-3">ルール状態</h3>
-            <div className="space-y-2 text-sm">
-              <div>ハートブレイク: {heartsBroken ? 'はい' : 'いいえ'}</div>
-              <div>完了トリック: {tricks.length}</div>
-              <div>状態: {status}</div>
-            </div>
-          </div>
-
-          {/* スコア一覧とコントロール */}
-          <div className="bg-green-800 rounded-lg p-4">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold">スコア</h3>
-              <button
-                onClick={() => setIsScoreGraphVisible(!isScoreGraphVisible)}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
-                title={isScoreGraphVisible ? 'グラフを非表示' : 'グラフを表示'}
-              >
-                {isScoreGraphVisible ? '📊→📋' : '📋→📊'}
-              </button>
-            </div>
-            <div className="space-y-1 text-sm">
-              {players.map(player => (
-                <div key={player.id} className="flex justify-between">
-                  <span>{player.displayName}</span>
-                  <span className="font-bold">{scores[player.id] || 0}点</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* 同点継続メッセージ */}

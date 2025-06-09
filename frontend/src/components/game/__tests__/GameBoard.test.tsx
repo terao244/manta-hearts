@@ -57,8 +57,7 @@ describe('GameBoard', () => {
     );
     
     expect(screen.getByText('ハーツゲーム')).toBeInTheDocument();
-    expect(screen.getByText('ハンド: 1')).toBeInTheDocument();
-    expect(screen.getByText('トリック: 1')).toBeInTheDocument();
+    expect(screen.getByText('ゲーム#1 | ハンド: 1 | トリック: 1')).toBeInTheDocument();
   });
 
   it('プレイヤー情報が表示される', () => {
@@ -89,9 +88,6 @@ describe('GameBoard', () => {
     expect(screen.getAllByText('0点 / +0点')).toHaveLength(2); // プレイヤー1と4がテーブル配置で表示
     expect(screen.getAllByText('5点 / +0点')).toHaveLength(1); // プレイヤー2がテーブル配置で表示
     expect(screen.getAllByText('10点 / +0点')).toHaveLength(1); // プレイヤー3がテーブル配置で表示
-    expect(screen.getAllByText('0点')).toHaveLength(2); // スコア一覧で表示
-    expect(screen.getAllByText('5点')).toHaveLength(1); // スコア一覧で表示
-    expect(screen.getAllByText('10点')).toHaveLength(1); // スコア一覧で表示
   });
 
   it('現在ハンドスコアが表示される', () => {
@@ -247,7 +243,7 @@ describe('GameBoard', () => {
       />
     );
     
-    expect(screen.getAllByText('ゲーム終了')).toHaveLength(2); // ヘッダーとゲーム状態エリア
+    expect(screen.getAllByText('ゲーム終了')).toHaveLength(1); // ヘッダーのみ
   });
 
   it('待機状態が表示される', () => {
@@ -265,7 +261,7 @@ describe('GameBoard', () => {
       />
     );
     
-    expect(screen.getAllByText('他のプレイヤーを待っています...')).toHaveLength(2); // ヘッダーとゲーム状態エリア
+    expect(screen.getAllByText('他のプレイヤーを待っています...')).toHaveLength(1); // ヘッダーのみ
   });
 
   it('現在の手番プレイヤーが強調表示される', () => {
@@ -298,7 +294,7 @@ describe('GameBoard', () => {
       />
     );
     
-    expect(screen.getAllByText('他のプレイヤーの番です')).toHaveLength(2);
+    expect(screen.getAllByText('他のプレイヤーの番です')).toHaveLength(1);
   });
 
   it('自分の手番時にメッセージが強調表示される', () => {
@@ -311,7 +307,7 @@ describe('GameBoard', () => {
       />
     );
     
-    expect(screen.getAllByText('あなたの番です')).toHaveLength(2);
+    expect(screen.getAllByText('あなたの番です')).toHaveLength(1);
     expect(screen.getByText('👆')).toBeInTheDocument();
   });
 
@@ -340,7 +336,7 @@ describe('GameBoard', () => {
       expect(screen.queryByTestId('game-end-modal')).not.toBeInTheDocument();
       
       // 通常のゲーム状態表示は維持されることを確認
-      expect(screen.getAllByText('ゲーム終了')).toHaveLength(2);
+      expect(screen.getAllByText('ゲーム終了')).toHaveLength(1);
     });
 
     it('勝者確定時はゲーム終了モーダルを表示する', () => {
