@@ -129,6 +129,8 @@ export interface GameStateUpdate {
   players: PlayerInfo[];
   phase: string;
   currentTurn?: number;
+  currentHand: number;
+  currentTrick: number;
   heartsBroken: boolean;
   tricks: Array<any>;
   scores: Record<number, number>;

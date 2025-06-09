@@ -796,4 +796,75 @@ describe('GameService', () => {
       );
     });
   });
+
+  describe('gameStateChanged event', () => {
+    it('should include currentHand and currentTrick in gameStateChanged event', async () => {
+      // Arrange
+      const playerId = 1;
+      const gameId = 123;
+      const playerData = {
+        id: playerId,
+        name: 'TestPlayer',
+        displayName: 'Test Player',
+        isActive: true,
+      };
+
+      mockPrismaClient.player.findUnique.mockResolvedValue(playerData);
+      mockPrismaClient.game.create.mockResolvedValue({ id: gameId });
+
+      // GameEngineのモックを更新してcurrentHandとcurrentTrickを含める
+      const mockGameState = {
+        isFull: jest.fn().mockReturnValue(false),
+        status: 'PLAYING',
+        phase: 'playing',
+        currentHand: 2,
+        currentTrick: 5,
+        currentTurn: 1,
+        heartsBroken: true,
+        tricks: [],
+        cumulativeScores: new Map([[1, 10], [2, 15]]),
+        getAllPlayers: jest.fn().mockReturnValue([
+          { id: 1, name: 'Player 1', displayName: 'Player 1', position: 'North' },
+          { id: 2, name: 'Player 2', displayName: 'Player 2', position: 'East' }
+        ]),
+        getPlayer: jest.fn(),
+        getFinalRankings: jest.fn().mockReturnValue([]),
+        startedAt: new Date('2025-01-01T00:00:00Z'),
+      };
+
+      mockGameEngine.getGameState.mockReturnValue(mockGameState);
+
+      // ゲームに参加
+      await gameService.joinGame(playerId);
+
+      // broadcastToGameメソッドをスパイ
+      const broadcastToGameSpy = jest.spyOn(gameService as any, 'broadcastToGame');
+
+      // GameEngineのコンストラクタから渡されたeventListenersを取得
+      const gameEngineConstructorCall = (GameEngine as jest.MockedClass<typeof GameEngine>).mock.calls[0];
+      const eventListeners = gameEngineConstructorCall[1];
+
+      // Act - onGameStateChangedコールバックを直接呼び出す
+      if (eventListeners && eventListeners.onGameStateChanged) {
+        eventListeners.onGameStateChanged(mockGameState as any);
+      }
+
+      // Assert - broadcastToGameが適切なデータで呼ばれることを確認
+      expect(broadcastToGameSpy).toHaveBeenCalledWith(gameId, 'gameStateChanged', expect.objectContaining({
+        gameId,
+        status: 'PLAYING',
+        phase: 'playing',
+        currentHand: 2,
+        currentTrick: 5,
+        currentTurn: 1,
+        heartsBroken: true,
+        tricks: [],
+        scores: { 1: 10, 2: 15 },
+        players: expect.arrayContaining([
+          expect.objectContaining({ id: 1, position: 'North' }),
+          expect.objectContaining({ id: 2, position: 'East' })
+        ])
+      }));
+    });
+  });
 });

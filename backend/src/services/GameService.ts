@@ -348,6 +348,8 @@ export class GameService {
           players,
           phase: gameState.phase,
           currentTurn: gameState.currentTurn,
+          currentHand: gameState.currentHand,
+          currentTrick: gameState.currentTrick,
           heartsBroken: gameState.heartsBroken,
           tricks: gameState.tricks,
           scores: Object.fromEntries(gameState.cumulativeScores)
