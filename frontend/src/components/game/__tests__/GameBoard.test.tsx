@@ -314,4 +314,193 @@ describe('GameBoard', () => {
     expect(screen.getAllByText('あなたの番です')).toHaveLength(2);
     expect(screen.getByText('👆')).toBeInTheDocument();
   });
+
+  describe('同点継続UI制御テスト', () => {
+    it('同点継続時はゲーム終了モーダルを表示しない', () => {
+      const tiedGameState = {
+        ...mockGameState,
+        status: 'FINISHED' as const,
+        phase: 'completed' as const,
+        // 2人同点の状態をシミュレート
+        scores: { 1: 100, 2: 85, 3: 85, 4: 95 }
+      };
+
+      render(
+        <GameBoard 
+          gameState={tiedGameState}
+          currentPlayerId={1}
+          onCardPlay={mockOnCardPlay}
+          onCardExchange={mockOnCardExchange}
+          isGameCompleted={false} // 同点継続時はfalse
+          gameResult={undefined} // 同点継続時はundefined
+        />
+      );
+      
+      // ゲーム終了モーダルが表示されないことを確認
+      expect(screen.queryByTestId('game-end-modal')).not.toBeInTheDocument();
+      
+      // 通常のゲーム状態表示は維持されることを確認
+      expect(screen.getAllByText('ゲーム終了')).toHaveLength(2);
+    });
+
+    it('勝者確定時はゲーム終了モーダルを表示する', () => {
+      const finishedGameState = {
+        ...mockGameState,
+        status: 'FINISHED' as const,
+        phase: 'completed' as const,
+        scores: { 1: 100, 2: 85, 3: 95, 4: 110 }
+      };
+
+      const mockGameResult = {
+        gameId: 1,
+        finalScores: { 1: 100, 2: 85, 3: 95, 4: 110 },
+        winnerId: 2,
+        completedAt: '2025-01-09T10:00:00Z',
+        scoreHistory: [],
+        rankings: [
+          { playerId: 2, rank: 1, score: 85 },
+          { playerId: 3, rank: 2, score: 95 },
+          { playerId: 1, rank: 3, score: 100 },
+          { playerId: 4, rank: 4, score: 110 }
+        ]
+      };
+
+      render(
+        <GameBoard 
+          gameState={finishedGameState}
+          currentPlayerId={1}
+          onCardPlay={mockOnCardPlay}
+          onCardExchange={mockOnCardExchange}
+          isGameCompleted={true} // 勝者確定時はtrue
+          gameResult={mockGameResult} // 勝者確定時はGameResult設定
+        />
+      );
+      
+      // ゲーム終了モーダルが表示されることを確認
+      expect(screen.getByTestId('game-end-modal')).toBeInTheDocument();
+    });
+
+    it('同点継続時に継続メッセージが表示される', () => {
+      const tiedGameState = {
+        ...mockGameState,
+        status: 'FINISHED' as const,
+        phase: 'completed' as const,
+        scores: { 1: 100, 2: 85, 3: 85, 4: 95 }
+      };
+
+      render(
+        <GameBoard 
+          gameState={tiedGameState}
+          currentPlayerId={1}
+          onCardPlay={mockOnCardPlay}
+          onCardExchange={mockOnCardExchange}
+          isGameCompleted={false}
+          gameResult={undefined}
+          isTieContinuation={true} // 同点継続フラグ
+        />
+      );
+      
+      // 同点継続メッセージが表示されることを確認
+      expect(screen.getByText('同点のため次のハンドに進みます')).toBeInTheDocument();
+      expect(screen.getByTestId('tie-continuation-message')).toBeInTheDocument();
+    });
+
+    it('3人同点時に継続メッセージが表示される', () => {
+      const threeTiedGameState = {
+        ...mockGameState,
+        status: 'FINISHED' as const,
+        phase: 'completed' as const,
+        scores: { 1: 100, 2: 85, 3: 85, 4: 85 }
+      };
+
+      render(
+        <GameBoard 
+          gameState={threeTiedGameState}
+          currentPlayerId={1}
+          onCardPlay={mockOnCardPlay}
+          onCardExchange={mockOnCardExchange}
+          isGameCompleted={false}
+          gameResult={undefined}
+          isTieContinuation={true}
+        />
+      );
+      
+      expect(screen.getByText('同点のため次のハンドに進みます')).toBeInTheDocument();
+      expect(screen.getByTestId('tie-continuation-message')).toBeInTheDocument();
+    });
+
+    it('4人同点時に継続メッセージが表示される', () => {
+      const fourTiedGameState = {
+        ...mockGameState,
+        status: 'FINISHED' as const,
+        phase: 'completed' as const,
+        scores: { 1: 85, 2: 85, 3: 85, 4: 85 }
+      };
+
+      render(
+        <GameBoard 
+          gameState={fourTiedGameState}
+          currentPlayerId={1}
+          onCardPlay={mockOnCardPlay}
+          onCardExchange={mockOnCardExchange}
+          isGameCompleted={false}
+          gameResult={undefined}
+          isTieContinuation={true}
+        />
+      );
+      
+      expect(screen.getByText('同点のため次のハンドに進みます')).toBeInTheDocument();
+      expect(screen.getByTestId('tie-continuation-message')).toBeInTheDocument();
+    });
+
+    it('同点継続フラグが無い場合は継続メッセージを表示しない', () => {
+      const tiedGameState = {
+        ...mockGameState,
+        status: 'FINISHED' as const,
+        phase: 'completed' as const,
+        scores: { 1: 100, 2: 85, 3: 85, 4: 95 }
+      };
+
+      render(
+        <GameBoard 
+          gameState={tiedGameState}
+          currentPlayerId={1}
+          onCardPlay={mockOnCardPlay}
+          onCardExchange={mockOnCardExchange}
+          isGameCompleted={false}
+          gameResult={undefined}
+          // isTieContinuationプロパティなし
+        />
+      );
+      
+      // 継続メッセージが表示されないことを確認
+      expect(screen.queryByText('同点のため次のハンドに進みます')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('tie-continuation-message')).not.toBeInTheDocument();
+    });
+
+    it('同点継続時のスコア表示が正しく強調される', () => {
+      const tiedGameState = {
+        ...mockGameState,
+        status: 'FINISHED' as const,
+        phase: 'completed' as const,
+        scores: { 1: 100, 2: 85, 3: 85, 4: 95 }
+      };
+
+      render(
+        <GameBoard 
+          gameState={tiedGameState}
+          currentPlayerId={1}
+          onCardPlay={mockOnCardPlay}
+          onCardExchange={mockOnCardExchange}
+          isGameCompleted={false}
+          gameResult={undefined}
+          isTieContinuation={true}
+        />
+      );
+      
+      // 同点プレイヤーのスコアが強調表示されることを確認
+      const tiedScoreElements = screen.getAllByTestId('tied-score');
+      expect(tiedScoreElements).toHaveLength(2); // プレイヤー2と3が同点
+    });
+  });
 });

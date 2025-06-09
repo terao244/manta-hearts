@@ -14,9 +14,10 @@ interface PlayerCardProps {
   currentTurn?: number;
   scores?: Record<number, number>;
   currentHandScores?: Record<number, number>;
+  isTied?: boolean;
 }
 
-const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, currentTurn, scores = {}, currentHandScores = {} }) => {
+const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, currentTurn, scores = {}, currentHandScores = {}, isTied = false }) => {
   const isCurrentPlayer = player.id === currentPlayerId;
   const isCurrentTurn = player.id === currentTurn;
   const currentHandScore = currentHandScores[player.id] || 0;
@@ -35,9 +36,13 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, curren
         }`}>
         {player.displayName}
       </div>
-      <div className={`text-sm font-bold ${isCurrentTurn ? 'text-yellow-600' : 'text-green-600'
-        }`}>
+      <div 
+        className={`text-sm font-bold ${isCurrentTurn ? 'text-yellow-600' : 'text-green-600'
+        }`}
+        data-testid={isTied ? 'tied-score' : undefined}
+      >
         {cumulativeScore}点 / +{currentHandScore}点
+        {isTied && <span className="ml-1 text-red-500">🟰</span>}
       </div>
       {isCurrentTurn && (
         <div className="flex items-center justify-center gap-1 mt-1">
@@ -61,12 +66,32 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   isGameCompleted = false,
   isTrickCompleted = false,
   currentTrickResult,
+  isTieContinuation = false,
   onCardPlay,
   onCardExchange,
   onCloseGameEndModal
 }) => {
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
   const [isScoreGraphVisible, setIsScoreGraphVisible] = useState<boolean>(showScoreGraph);
+
+  // 同点プレイヤーの判定
+  const getTiedPlayerIds = () => {
+    if (!isTieContinuation || !gameState.scores) return new Set<number>();
+    
+    const scores = Object.values(gameState.scores);
+    const minScore = Math.min(...scores);
+    const tiedPlayerIds = new Set<number>();
+    
+    Object.entries(gameState.scores).forEach(([playerId, score]) => {
+      if (score === minScore) {
+        tiedPlayerIds.add(Number(playerId));
+      }
+    });
+    
+    return tiedPlayerIds.size > 1 ? tiedPlayerIds : new Set<number>();
+  };
+
+  const tiedPlayerIds = getTiedPlayerIds();
 
   const {
     gameId,
@@ -331,7 +356,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   data-testid={`player-${player.id}`}
                   className="absolute top-2 left-1/2 transform -translate-x-1/2"
                 >
-                  <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} />
+                  <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} isTied={tiedPlayerIds.has(player.id)} />
                 </div>
               ))}
 
@@ -342,7 +367,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   data-testid={`player-${player.id}`}
                   className="absolute right-2 top-1/2 transform -translate-y-1/2"
                 >
-                  <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} />
+                  <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} isTied={tiedPlayerIds.has(player.id)} />
                 </div>
               ))}
 
@@ -353,7 +378,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   data-testid={`player-${player.id}`}
                   className="absolute bottom-2 left-1/2 transform -translate-x-1/2"
                 >
-                  <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} />
+                  <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} isTied={tiedPlayerIds.has(player.id)} />
                 </div>
               ))}
 
@@ -364,7 +389,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   data-testid={`player-${player.id}`}
                   className="absolute left-2 top-1/2 transform -translate-y-1/2"
                 >
-                  <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} />
+                  <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} isTied={tiedPlayerIds.has(player.id)} />
                 </div>
               ))}
 
@@ -563,13 +588,33 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         </div>
       </div>
 
-      {/* ゲーム終了モーダル */}
-      {isGameCompleted && gameResult && (
+      {/* 同点継続メッセージ */}
+      {isTieContinuation && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          data-testid="tie-continuation-message"
+        >
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 text-center">
+            <div className="text-2xl mb-4">🔄</div>
+            <h2 className="text-xl font-bold text-gray-800 mb-4">同点継続</h2>
+            <p className="text-gray-600 mb-6">
+              同点のため次のハンドに進みます
+            </p>
+            <div className="text-sm text-gray-500">
+              最低得点者が複数いるため、ゲームを継続します
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ゲーム終了モーダル（勝者確定時のみ表示） */}
+      {isGameCompleted && gameResult && !isTieContinuation && (
         <GameEndModal
           isOpen={isGameCompleted}
           gameResult={gameResult}
           players={players}
           onClose={onCloseGameEndModal || (() => { })}
+          data-testid="game-end-modal"
         />
       )}
     </div>

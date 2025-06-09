@@ -30,6 +30,7 @@ interface GameHookState {
   trickCompletedTimeout: NodeJS.Timeout | null;
   pendingTricksUpdate?: TrickData[];
   currentTrickResult?: TrickResult;
+  isTieContinuation: boolean;
 }
 
 export const useGame = (currentPlayer: PlayerInfo | null) => {
@@ -45,7 +46,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     isTrickCompleted: false,
     trickCompletedTimeout: null,
     pendingTricksUpdate: undefined,
-    currentTrickResult: undefined
+    currentTrickResult: undefined,
+    isTieContinuation: false
   });
 
   // ゲーム参加
@@ -532,10 +534,28 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     // ゲーム完了
     const handleGameCompleted = (gameResult: GameResult) => {
       console.log('Game completed:', gameResult);
+      
+      // 同点継続の判定: winnerIdがnullの場合は同点継続
+      const isTieContinuation = gameResult.winnerId === null;
+      
       setGameHookState(prev => ({
         ...prev,
-        gameResult,
-        isGameCompleted: true
+        gameResult: isTieContinuation ? undefined : gameResult, // 同点時はgameResultをundefinedに
+        isGameCompleted: !isTieContinuation, // 同点時はfalse、勝者確定時はtrue
+        isTieContinuation, // 同点継続フラグを追加
+        // isInGameはtrueのままにしてGameBoardを表示し続ける
+      }));
+    };
+
+    // 同点継続
+    const handleGameContinuedFromTie = (tieResult: { message: string; finalScores: Record<number, number>; gameId: number; completedAt: string }) => {
+      console.log('Game continued from tie:', tieResult);
+      
+      setGameHookState(prev => ({
+        ...prev,
+        gameResult: undefined, // 同点継続時はgameResultはundefined
+        isGameCompleted: false, // ゲーム終了モーダルは表示しない
+        isTieContinuation: true, // 同点継続フラグをtrue
         // isInGameはtrueのままにしてGameBoardを表示し続ける
       }));
     };
@@ -567,6 +587,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     on('handCompleted', handleHandCompleted);
     on('scoreHistoryUpdate', handleScoreHistoryUpdate);
     on('gameCompleted', handleGameCompleted);
+    on('gameContinuedFromTie', handleGameContinuedFromTie);
     on('error', handleError);
 
     // クリーンアップ
@@ -588,6 +609,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       off('handCompleted', handleHandCompleted);
       off('scoreHistoryUpdate', handleScoreHistoryUpdate);
       off('gameCompleted', handleGameCompleted);
+      off('gameContinuedFromTie', handleGameContinuedFromTie);
       off('error', handleError);
     };
   }, [socket, on, off, currentPlayer]);
@@ -598,6 +620,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       ...prev,
       isGameCompleted: false,
       gameResult: undefined,
+      isTieContinuation: false,
       isInGame: false  // モーダルを閉じた時にゲームから退出
     }));
   }, []);
@@ -615,6 +638,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     isGameCompleted: gameHookState.isGameCompleted,
     isTrickCompleted: gameHookState.isTrickCompleted,
     currentTrickResult: gameHookState.currentTrickResult,
+    isTieContinuation: gameHookState.isTieContinuation,
     joinGame: handleJoinGame,
     playCard: handleCardPlay,
     exchangeCards: handleCardExchange,

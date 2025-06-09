@@ -132,10 +132,12 @@ export interface HandResult {
 }
 
 export interface GameResult {
-  winnerId: number;
+  gameId: number;
+  winnerId: number | null; // 同点継続時はnull
   finalScores: Record<number, number>;
-  rankings: Array<{ playerId: number; rank: number; score: number }>;
+  rankings?: Array<{ playerId: number; rank: number; score: number }>; // 同点継続時はオプショナル
   scoreHistory: Array<{ hand: number; scores: Record<number, number> }>;
+  completedAt: string;
 }
 
 // フロントエンド固有の型定義
@@ -189,6 +191,7 @@ export interface GameBoardProps {
   isGameCompleted?: boolean;
   isTrickCompleted?: boolean;
   currentTrickResult?: TrickResult;
+  isTieContinuation?: boolean;
   onCardPlay: (cardId: number) => void;
   onCardExchange: (cardIds: number[]) => void;
   onCloseGameEndModal?: () => void;

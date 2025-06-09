@@ -32,13 +32,13 @@ export default function GameEndModal({ isOpen, gameResult, players, onClose }: G
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-testid="game-end-modal">
       <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* タイトル */}
         <div className="text-center mb-6">
           <h2 className="text-3xl font-bold text-gray-800 mb-2">ゲーム終了</h2>
           <div className="text-lg text-gray-600">
-            優勝: <span className="font-semibold text-blue-600">{getPlayerName(gameResult.winnerId)}</span>
+            優勝: <span className="font-semibold text-blue-600">{gameResult.winnerId ? getPlayerName(gameResult.winnerId) : '不明'}</span>
           </div>
         </div>
 
@@ -47,7 +47,7 @@ export default function GameEndModal({ isOpen, gameResult, players, onClose }: G
           <h3 className="text-xl font-semibold mb-4 text-center text-gray-800">最終順位</h3>
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="grid gap-3">
-              {gameResult.rankings.map((ranking) => (
+              {(gameResult.rankings || []).map((ranking) => (
                 <div
                   key={ranking.playerId}
                   className={`flex items-center justify-between p-3 rounded-lg ${

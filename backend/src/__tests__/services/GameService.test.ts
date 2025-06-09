@@ -13,6 +13,8 @@ describe('GameService', () => {
   let mockPrismaService: jest.Mocked<PrismaService>;
   let mockPrismaClient: any;
   let mockSocketIO: jest.Mocked<Server>;
+  let mockGameEngine: any;
+  let mockSocketEmit: jest.Mock;
 
   beforeEach(() => {
     // consoleのモック設定
@@ -44,10 +46,19 @@ describe('GameService', () => {
     (PrismaService.getInstance as jest.Mock).mockReturnValue(mockPrismaService);
 
     // Socket.IOのモック設定
+    mockSocketEmit = jest.fn();
+    const mockSocket = {
+      id: 'socket_1',
+      data: { playerId: 1 },
+      emit: mockSocketEmit
+    };
+
     mockSocketIO = {
       sockets: {
-        sockets: new Map(),
+        sockets: new Map([['socket_1', mockSocket]]),
       },
+      to: jest.fn().mockReturnThis(),
+      emit: jest.fn(),
     } as any;
 
     // GameServiceのインスタンスを取得
@@ -55,7 +66,7 @@ describe('GameService', () => {
     gameService.setSocketIO(mockSocketIO);
 
     // GameEngineのモック設定
-    (GameEngine as jest.MockedClass<typeof GameEngine>).mockImplementation(() => ({
+    mockGameEngine = {
       addPlayer: jest.fn().mockReturnValue(true),
       getGameState: jest.fn().mockReturnValue({
         isFull: jest.fn().mockReturnValue(false),
@@ -70,6 +81,13 @@ describe('GameService', () => {
           id: 1,
           position: 'North',
         }),
+        getFinalRankings: jest.fn().mockReturnValue([
+          { playerId: 2, rank: 1, score: 85 },
+          { playerId: 3, rank: 2, score: 90 },
+          { playerId: 4, rank: 3, score: 95 },
+          { playerId: 1, rank: 4, score: 105 }
+        ]),
+        startedAt: new Date('2025-01-01T00:00:00Z'),
       }),
       getPlayerHand: jest.fn().mockReturnValue([]),
       getScore: jest.fn().mockReturnValue(0),
@@ -77,7 +95,11 @@ describe('GameService', () => {
       playCard: jest.fn().mockReturnValue(true),
       exchangeCards: jest.fn().mockReturnValue(true),
       removePlayer: jest.fn().mockReturnValue(true),
-    } as any));
+      on: jest.fn(),
+      off: jest.fn(),
+    };
+
+    (GameEngine as jest.MockedClass<typeof GameEngine>).mockImplementation(() => mockGameEngine);
   });
 
   afterEach(() => {
@@ -401,6 +423,13 @@ describe('GameService', () => {
         cumulativeScores: new Map(),
         getAllPlayers: jest.fn().mockReturnValue([]),
         getPlayer: jest.fn(),
+        getFinalRankings: jest.fn().mockReturnValue([
+          { playerId: 2, rank: 1, score: 85 },
+          { playerId: 3, rank: 2, score: 90 },
+          { playerId: 4, rank: 3, score: 95 },
+          { playerId: 1, rank: 4, score: 105 }
+        ]),
+        startedAt: new Date('2025-01-01T00:00:00Z'),
       };
 
       mockGameEngine = {
@@ -557,6 +586,214 @@ describe('GameService', () => {
 
       // Assert
       expect(mockGameEngine.startGame).not.toHaveBeenCalled(); // 復帰時は自動開始しない
+    });
+  });
+
+  describe('同点継続機能テスト', () => {
+    let gameCompletedHandler: any;
+
+    beforeEach(() => {
+      // GameEngineのコンストラクタから実際のイベントハンドラーをキャプチャ
+      (GameEngine as jest.MockedClass<typeof GameEngine>).mockImplementation((gameId, eventListeners) => {
+        gameCompletedHandler = eventListeners?.onGameCompleted;
+        return mockGameEngine;
+      });
+    });
+
+    it('同点時にゲーム継続イベントを正しく処理する', async () => {
+      // Arrange
+      const playerId = 1;
+      const gameId = 123;
+
+      const playerData = {
+        id: playerId,
+        name: 'TestPlayer',
+        displayName: 'Test Player',
+        isActive: true,
+      };
+
+      mockPrismaClient.player.findUnique.mockResolvedValue(playerData);
+      mockPrismaClient.game.create.mockResolvedValue({ id: gameId });
+
+      await gameService.joinGame(playerId);
+
+      const tiedGameResult = {
+        gameId: gameId,
+        winnerId: null, // 同点時はnull
+        finalScores: { 1: 100, 2: 85, 3: 85, 4: 95 },
+        scoreHistory: [],
+        completedAt: new Date().toISOString()
+      };
+
+      // Act
+      await gameCompletedHandler(tiedGameResult.winnerId, new Map(Object.entries(tiedGameResult.finalScores)));
+
+      // Assert - 同点時はゲーム継続メッセージを送信
+      // setTimeoutを考慮して少し待つ
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      expect(mockSocketEmit).toHaveBeenCalledWith(
+        'gameContinuedFromTie',
+        expect.objectContaining({
+          message: '同点のため次のハンドに進みます',
+          finalScores: tiedGameResult.finalScores
+        })
+      );
+    });
+
+    it('勝者確定時に正常なゲーム終了イベントを処理する', async () => {
+      // Arrange
+      const playerId = 1;
+      const gameId = 123;
+
+      const playerData = {
+        id: playerId,
+        name: 'TestPlayer',
+        displayName: 'Test Player',
+        isActive: true,
+      };
+
+      mockPrismaClient.player.findUnique.mockResolvedValue(playerData);
+      mockPrismaClient.game.create.mockResolvedValue({ id: gameId });
+
+      await gameService.joinGame(playerId);
+
+      const winnerGameResult = {
+        gameId: gameId,
+        winnerId: 2, // 勝者確定
+        finalScores: { 1: 100, 2: 85, 3: 95, 4: 110 },
+        rankings: [
+          { playerId: 2, rank: 1, score: 85 },
+          { playerId: 3, rank: 2, score: 95 },
+          { playerId: 1, rank: 3, score: 100 },
+          { playerId: 4, rank: 4, score: 110 }
+        ],
+        scoreHistory: [],
+        completedAt: new Date().toISOString()
+      };
+
+      // Act
+      await gameCompletedHandler(winnerGameResult.winnerId, new Map(Object.entries(winnerGameResult.finalScores)));
+
+      // Assert - 勝者確定時は通常のゲーム完了イベントを送信
+      // setTimeoutを考慮して少し待つ
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      expect(mockSocketEmit).toHaveBeenCalledWith('gameCompleted', expect.objectContaining({
+        winnerId: winnerGameResult.winnerId,
+        finalScores: winnerGameResult.finalScores
+      }));
+    });
+
+    it('同点継続と勝者確定の状態遷移が正しく動作する', async () => {
+      // Arrange
+      const playerId = 1;
+      const gameId = 123;
+
+      const playerData = {
+        id: playerId,
+        name: 'TestPlayer',
+        displayName: 'Test Player',
+        isActive: true,
+      };
+
+      mockPrismaClient.player.findUnique.mockResolvedValue(playerData);
+      mockPrismaClient.game.create.mockResolvedValue({ id: gameId });
+
+      await gameService.joinGame(playerId);
+
+      // Act 1 - 同点継続
+      const tiedGameResult = {
+        gameId: gameId,
+        winnerId: null,
+        finalScores: { 1: 100, 2: 85, 3: 85, 4: 95 },
+        scoreHistory: [],
+        completedAt: new Date().toISOString()
+      };
+
+      await gameCompletedHandler(tiedGameResult.winnerId, new Map(Object.entries(tiedGameResult.finalScores)));
+
+      // Assert 1 - 同点継続イベント送信
+      // setTimeoutを考慮して少し待つ
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      expect(mockSocketEmit).toHaveBeenCalledWith(
+        'gameContinuedFromTie',
+        expect.objectContaining({
+          message: '同点のため次のハンドに進みます'
+        })
+      );
+
+      // Act 2 - その後勝者確定
+      mockSocketEmit.mockClear(); // 前の呼び出しをクリア
+      
+      const winnerGameResult = {
+        gameId: gameId,
+        winnerId: 2,
+        finalScores: { 1: 105, 2: 85, 3: 90, 4: 95 },
+        rankings: [
+          { playerId: 2, rank: 1, score: 85 },
+          { playerId: 3, rank: 2, score: 90 },
+          { playerId: 4, rank: 3, score: 95 },
+          { playerId: 1, rank: 4, score: 105 }
+        ],
+        scoreHistory: [],
+        completedAt: new Date().toISOString()
+      };
+
+      await gameCompletedHandler(winnerGameResult.winnerId, new Map(Object.entries(winnerGameResult.finalScores)));
+
+      // setTimeoutを考慮して少し待つ
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // Assert 2 - 勝者確定時の正常なゲーム完了イベント送信
+      expect(mockSocketEmit).toHaveBeenCalledWith('gameCompleted', expect.objectContaining({
+        winnerId: winnerGameResult.winnerId,
+        finalScores: winnerGameResult.finalScores
+      }));
+    });
+
+    it('同点継続時にSocket.io通信エラーが適切にハンドリングされる', async () => {
+      // Arrange
+      const playerId = 1;
+      const gameId = 123;
+
+      const playerData = {
+        id: playerId,
+        name: 'TestPlayer',
+        displayName: 'Test Player',
+        isActive: true,
+      };
+
+      mockPrismaClient.player.findUnique.mockResolvedValue(playerData);
+      mockPrismaClient.game.create.mockResolvedValue({ id: gameId });
+
+      await gameService.joinGame(playerId);
+
+      // Socket.ioエラーをシミュレート
+      mockSocketEmit.mockImplementation(() => {
+        throw new Error('Socket.io connection error');
+      });
+
+      const tiedGameResult = {
+        gameId: gameId,
+        winnerId: null,
+        finalScores: { 1: 100, 2: 85, 3: 85, 4: 95 },
+        scoreHistory: [],
+        completedAt: new Date().toISOString()
+      };
+
+      // Act & Assert - エラーが適切にキャッチされること
+      await expect(gameCompletedHandler(tiedGameResult.winnerId, new Map(Object.entries(tiedGameResult.finalScores)))).resolves.not.toThrow();
+      
+      // setTimeoutを考慮して少し待つ
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      // エラーログが出力されることを確認
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('Error handling tie continuation'),
+        expect.any(Error)
+      );
     });
   });
 });

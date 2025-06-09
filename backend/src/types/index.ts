@@ -51,10 +51,18 @@ export interface ServerToClientEvents {
   handCompleted: (handResult: { handNumber: number; scores: Record<number, number> }) => void;
   scoreHistoryUpdate: (scoreHistory: Array<{ hand: number; scores: Record<number, number> }>) => void;
   gameCompleted: (gameResult: { 
-    winnerId: number; 
+    gameId: number;
+    winnerId: number | null; 
     finalScores: Record<number, number>; 
-    rankings: Array<{ playerId: number; rank: number; score: number }>; 
+    rankings?: Array<{ playerId: number; rank: number; score: number }>; 
     scoreHistory: Array<{ hand: number; scores: Record<number, number> }>; 
+    completedAt: string;
+  }) => void;
+  gameContinuedFromTie: (tieResult: {
+    message: string;
+    finalScores: Record<number, number>;
+    gameId: number;
+    completedAt: string;
   }) => void;
   error: (error: string) => void;
   connectionStatus: (
