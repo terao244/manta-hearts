@@ -378,7 +378,9 @@ describe('GameState', () => {
 
     it('誰かが100点以上になるとゲーム終了', () => {
       gameState.cumulativeScores.set(1, 105);
-      gameState.cumulativeScores.set(2, 50);
+      gameState.cumulativeScores.set(2, 50);  // 最低点（1人のみ）
+      gameState.cumulativeScores.set(3, 60);
+      gameState.cumulativeScores.set(4, 70);
       
       expect(gameState.isGameCompleted()).toBe(true);
     });
@@ -386,6 +388,8 @@ describe('GameState', () => {
     it('全員100点未満だとゲーム継続', () => {
       gameState.cumulativeScores.set(1, 95);
       gameState.cumulativeScores.set(2, 80);
+      gameState.cumulativeScores.set(3, 85);
+      gameState.cumulativeScores.set(4, 90);
       
       expect(gameState.isGameCompleted()).toBe(false);
     });
@@ -408,6 +412,8 @@ describe('GameState', () => {
     it('ゲーム未完了時はnullを返す', () => {
       gameState.cumulativeScores.set(1, 50);
       gameState.cumulativeScores.set(2, 60);
+      gameState.cumulativeScores.set(3, 70);
+      gameState.cumulativeScores.set(4, 80);
       
       expect(gameState.getWinnerId()).toBeNull();
     });
@@ -522,6 +528,115 @@ describe('GameState', () => {
       expect(currentHandScores.get(2)).toBe(0);   // 未完了トリックはカウントしない
       expect(currentHandScores.get(3)).toBe(0);
       expect(currentHandScores.get(4)).toBe(0);
+    });
+  });
+
+  // 同点時ゲーム継続機能のテスト（TDD RED Phase）
+  describe('hasTiedLowestScores - 同点判定メソッド', () => {
+    beforeEach(() => {
+      mockPlayers.forEach(player => gameState.addPlayer(player));
+    });
+
+    it('2人同点時にtrueを返す', () => {
+      gameState.cumulativeScores.set(1, 90);
+      gameState.cumulativeScores.set(2, 90);  // 同点
+      gameState.cumulativeScores.set(3, 100);
+      gameState.cumulativeScores.set(4, 95);
+      
+      expect(gameState.hasTiedLowestScores()).toBe(true);
+    });
+
+    it('3人同点時にtrueを返す', () => {
+      gameState.cumulativeScores.set(1, 85);  // 同点
+      gameState.cumulativeScores.set(2, 85);  // 同点
+      gameState.cumulativeScores.set(3, 85);  // 同点
+      gameState.cumulativeScores.set(4, 100);
+      
+      expect(gameState.hasTiedLowestScores()).toBe(true);
+    });
+
+    it('4人同点時にtrueを返す', () => {
+      gameState.cumulativeScores.set(1, 80);  // 同点
+      gameState.cumulativeScores.set(2, 80);  // 同点
+      gameState.cumulativeScores.set(3, 80);  // 同点
+      gameState.cumulativeScores.set(4, 80);  // 同点
+      
+      expect(gameState.hasTiedLowestScores()).toBe(true);
+    });
+
+    it('1人最低点時にfalseを返す', () => {
+      gameState.cumulativeScores.set(1, 75);  // 最低点（1人のみ）
+      gameState.cumulativeScores.set(2, 90);
+      gameState.cumulativeScores.set(3, 95);
+      gameState.cumulativeScores.set(4, 85);
+      
+      expect(gameState.hasTiedLowestScores()).toBe(false);
+    });
+
+    it('0点台での同点テスト', () => {
+      gameState.cumulativeScores.set(1, 5);   // 同点
+      gameState.cumulativeScores.set(2, 5);   // 同点
+      gameState.cumulativeScores.set(3, 10);
+      gameState.cumulativeScores.set(4, 15);
+      
+      expect(gameState.hasTiedLowestScores()).toBe(true);
+    });
+  });
+
+  describe('isGameCompleted - 同点継続機能対応', () => {
+    beforeEach(() => {
+      mockPlayers.forEach(player => gameState.addPlayer(player));
+    });
+
+    it('終了点数超過かつ同点時にfalseを返す（ゲーム継続）', () => {
+      gameState.cumulativeScores.set(1, 105);  // 終了点数超過
+      gameState.cumulativeScores.set(2, 85);   // 同点最低点
+      gameState.cumulativeScores.set(3, 85);   // 同点最低点
+      gameState.cumulativeScores.set(4, 90);
+      
+      expect(gameState.isGameCompleted()).toBe(false);
+    });
+
+    it('終了点数超過かつ勝者1人時にtrueを返す（ゲーム終了）', () => {
+      gameState.cumulativeScores.set(1, 105);  // 終了点数超過
+      gameState.cumulativeScores.set(2, 75);   // 最低点（1人のみ）
+      gameState.cumulativeScores.set(3, 90);
+      gameState.cumulativeScores.set(4, 85);
+      
+      expect(gameState.isGameCompleted()).toBe(true);
+    });
+
+    it('終了点数未達時にfalseを返す', () => {
+      gameState.cumulativeScores.set(1, 95);
+      gameState.cumulativeScores.set(2, 90);
+      gameState.cumulativeScores.set(3, 85);
+      gameState.cumulativeScores.set(4, 80);
+      
+      expect(gameState.isGameCompleted()).toBe(false);
+    });
+  });
+
+  describe('getWinnerId - 同点時処理対応', () => {
+    beforeEach(() => {
+      mockPlayers.forEach(player => gameState.addPlayer(player));
+    });
+
+    it('同点時にnullを返す', () => {
+      gameState.cumulativeScores.set(1, 105);  // 終了点数超過
+      gameState.cumulativeScores.set(2, 85);   // 同点最低点
+      gameState.cumulativeScores.set(3, 85);   // 同点最低点
+      gameState.cumulativeScores.set(4, 90);
+      
+      expect(gameState.getWinnerId()).toBeNull();
+    });
+
+    it('勝者確定時に正しいIDを返す', () => {
+      gameState.cumulativeScores.set(1, 105);  // 終了点数超過
+      gameState.cumulativeScores.set(2, 75);   // 最低点（勝者）
+      gameState.cumulativeScores.set(3, 90);
+      gameState.cumulativeScores.set(4, 85);
+      
+      expect(gameState.getWinnerId()).toBe(2);
     });
   });
 });

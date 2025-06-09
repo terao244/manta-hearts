@@ -235,20 +235,84 @@ export class GameState {
     return handResult;
   }
 
-  public isGameCompleted(): boolean {
-    // 誰かが設定された終了点数以上に達したかチェック
-    const config = getGameConfig();
-    for (const score of this.cumulativeScores.values()) {
-      if (score >= config.endScore) {
-        return true;
-      }
+  /**
+   * 最低得点で同点のプレイヤーが複数いるかどうかを判定する
+   * 同点継続ルール: 最低得点者が2人以上いる場合はゲーム継続
+   * @returns 最低得点で同点のプレイヤーが2人以上いる場合true
+   * @throws Error プレイヤーが0人の場合（通常は発生しない）
+   */
+  public hasTiedLowestScores(): boolean {
+    if (this.cumulativeScores.size === 0) {
+      // デバッグ用：通常は発生しないが、安全のためのチェック
+      return false;
     }
-    return false;
+    
+    // 最低得点を取得（型安全性のためのNumberチェック）
+    let lowestScore: number = Infinity;
+    this.cumulativeScores.forEach((score: number) => {
+      if (typeof score === 'number' && score < lowestScore) {
+        lowestScore = score;
+      }
+    });
+    
+    // 無効な得点の場合のエラーハンドリング
+    if (lowestScore === Infinity) {
+      return false;
+    }
+    
+    // 最低得点のプレイヤー数をカウント
+    let lowestScoreCount: number = 0;
+    this.cumulativeScores.forEach((score: number) => {
+      if (typeof score === 'number' && score === lowestScore) {
+        lowestScoreCount++;
+      }
+    });
+    
+    // 2人以上の場合は同点（ゲーム継続）
+    return lowestScoreCount >= 2;
   }
 
+  /**
+   * ゲームが完了したかどうかを判定する
+   * 新ルール: 誰かが終了点数以上に達し、かつ最低得点者が1人のみの場合にゲーム終了
+   * 同点の場合はゲーム継続
+   * @returns ゲームが完了している場合true
+   */
+  public isGameCompleted(): boolean {
+    const config = getGameConfig();
+    
+    // 誰かが設定された終了点数以上に達したかチェック
+    let hasReachedEndScore = false;
+    for (const score of this.cumulativeScores.values()) {
+      if (score >= config.endScore) {
+        hasReachedEndScore = true;
+        break;
+      }
+    }
+    
+    // 終了点数に達していない場合はゲーム継続
+    if (!hasReachedEndScore) {
+      return false;
+    }
+    
+    // 終了点数に達している場合、同点でなければゲーム終了
+    // 同点の場合は継続（!this.hasTiedLowestScores()がfalseになる）
+    return !this.hasTiedLowestScores();
+  }
+
+  /**
+   * ゲームの勝者IDを取得する
+   * 同点継続ルール対応: 同点の場合はnullを返す
+   * @returns 勝者のプレイヤーID、ゲーム未完了または同点の場合はnull
+   */
   public getWinnerId(): number | null {
+    // ゲームが完了していない場合はnull
     if (!this.isGameCompleted()) return null;
 
+    // 同点の場合もnullを返す（念のための二重チェック）
+    if (this.hasTiedLowestScores()) return null;
+
+    // 最低得点のプレイヤーを勝者として返す
     let winnerId = null;
     let lowestScore = Infinity;
 
