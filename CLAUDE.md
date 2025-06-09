@@ -133,7 +133,7 @@ cd frontend && npm run type-check && npm run lint
 - 4人固定のプレイヤー（North, East, South, West）
 - 13トリック×4ラウンド = 1ゲーム
 - ハート = 1点、スペードQ = 13点
-- 100点到達で終了、最低得点者が勝利
+- 100点到達し、かつ最低得点者が1人のみの場合に終了（同点時は継続）、最低得点者が勝利
 
 ## 開発ガイドライン
 
@@ -182,6 +182,7 @@ cd frontend && npm run type-check && npm run lint
 - `getValidCards`: 有効カード取得（Phase 9で追加）
 - `gameState`: ゲーム状態更新
 - `playerJoined`: プレイヤー参加通知
+- `gameContinuedFromTie`: 同点によるゲーム継続通知
 - `ping`/`pong`: ハートビート機能
 
 ### フロントエンド実装済み
@@ -211,6 +212,11 @@ cd frontend && npm run type-check && npm run lint
 - **現在ハンド点数表示**: プレイヤーエリアでの現在ハンド累積点数表示実装済み
 - **ゲーム終了点数設定**: 環境変数GAME_END_SCOREで30点設定可能
 - **ゲーム復帰機能**: ブラウザ再起動時の進行中ゲーム復帰機能実装済み
+- **同点継続機能**: 最低得点者が複数いる場合のゲーム継続機能実装済み（TDD実装完了）
+  - バックエンド: GameState.hasTiedLowestScores()、GameEngine同点判定
+  - フロントエンド: useGame同点継続状態管理、GameBoard UI対応
+  - Socket.io: gameContinuedFromTieイベント処理完備
+  - 全テスト通過: バックエンド新規63テスト、フロントエンド新規23テスト
 - **全テスト正常通過**: バックエンド168テスト、フロントエンド30テスト
 
 ### 開発中機能（Phase 11以降）

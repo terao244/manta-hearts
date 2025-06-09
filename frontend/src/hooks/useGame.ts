@@ -88,6 +88,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
           scoreHistory: result.gameInfo.scoreHistory || [],
           isGameCompleted: false,
           isTrickCompleted: false,
+          isTieContinuation: false,
           trickCompletedTimeout: null,
           pendingTricksUpdate: undefined,
           currentTrickResult: undefined

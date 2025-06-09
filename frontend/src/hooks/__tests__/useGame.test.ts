@@ -49,7 +49,7 @@ describe('useGame - Tie Game Continuation', () => {
     handCards: {}
   };
 
-  const setupGameInProgress = (result: any) => {
+  const setupGameInProgress = () => {
     // ゲームに参加させる（gameStateイベントでisInGameをtrueにする）
     const gameStateHandler = mockOn.mock.calls.find(
       call => call[0] === 'gameState'

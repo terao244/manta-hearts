@@ -132,6 +132,7 @@ backend/
 - ハートブレイク判定
 - シュートザムーン判定
 - ゲーム進行状態管理
+- **同点継続判定**：最低得点者が複数いる場合のゲーム継続処理
 
 ```typescript
 export interface GameEngineEvents {
@@ -140,7 +141,8 @@ export interface GameEngineEvents {
   onCardPlayed: (playerId: number, card: Card) => void;
   onTrickCompleted: (trickNumber: number, winnerId: number, points: number) => void;
   onHandCompleted: (handNumber: number, scores: Map<number, number>) => void;
-  onGameCompleted: (winnerId: number, finalScores: Map<number, number>) => void;
+  onGameCompleted: (winnerId: number | null, finalScores: Map<number, number>) => void;
+  onGameContinuedFromTie: (scores: Map<number, number>, tiedPlayerIds: number[]) => void;
 }
 ```
 
@@ -174,6 +176,7 @@ export interface GameEngineEvents {
 - `trickCompleted`: トリック完了通知
 - `handCompleted`: ハンド完了通知
 - `gameCompleted`: ゲーム完了通知
+- `gameContinuedFromTie`: 同点によるゲーム継続通知
 
 ## 4. フロントエンドアーキテクチャ詳細
 
@@ -343,9 +346,105 @@ frontend/src/
 - 適切なハートビート間隔（25秒）
 - ルーム機能による効率的なイベント配信
 
-## 8. テスト戦略
+## 8. 同点継続機能アーキテクチャ
 
-### 8.1 テストカバレッジ
+### 8.1 同点継続の実装概要
+
+ハーツゲームでは通常、誰かが終了点数（デフォルト100点）に達した時点でゲーム終了となりますが、本システムでは最低得点者が複数いる場合（同点）にゲームを継続する機能を実装しています。
+
+#### 判定ロジック
+```typescript
+// GameState.ts
+public isGameCompleted(): boolean {
+  // 終了点数に達したプレイヤーがいるかチェック
+  const hasReachedEndScore = Array.from(this.cumulativeScores.values())
+    .some(score => score >= config.endScore);
+  
+  if (!hasReachedEndScore) return false;
+  
+  // 同点でなければゲーム終了、同点なら継続
+  return !this.hasTiedLowestScores();
+}
+
+public hasTiedLowestScores(): boolean {
+  const scores = Array.from(this.cumulativeScores.values());
+  const lowestScore = Math.min(...scores);
+  const lowestScoreCount = scores.filter(score => score === lowestScore).length;
+  return lowestScoreCount >= 2;
+}
+```
+
+### 8.2 イベントフロー
+
+#### 通常のゲーム終了
+```
+ハンド終了 → 終了点数判定 → 勝者確定 → gameCompleted イベント
+```
+
+#### 同点継続
+```
+ハンド終了 → 終了点数判定 → 同点判定 → gameContinuedFromTie イベント → 次ハンド開始
+```
+
+### 8.3 フロントエンド対応
+
+#### useGame.ts での状態管理
+```typescript
+const handleGameContinuedFromTie = useCallback((data: GameContinuedFromTieData) => {
+  // 同点継続の通知を表示
+  setNotificationMessage(`同点のため、ゲームを継続します（${data.tiedPlayerCount}人同点）`);
+  
+  // ゲーム終了モーダルを非表示
+  setShowGameEndModal(false);
+  
+  // 次ハンドの準備
+  setGameState(prev => prev ? { ...prev, isTieContinuation: true } : null);
+}, []);
+```
+
+#### GameBoard.tsx での UI 表示
+```typescript
+// 同点継続時は終了モーダルを表示しない
+const shouldShowEndModal = gameState?.isCompleted && 
+                          gameState?.winnerId !== null && 
+                          !gameState?.isTieContinuation;
+
+// 同点継続の通知メッセージ表示
+{gameState?.isTieContinuation && (
+  <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+    同点のため、ゲームを継続します
+  </div>
+)}
+```
+
+### 8.4 テスト戦略
+
+#### バックエンド TDD テスト（63テスト）
+- `GameState.hasTiedLowestScores()` のユニットテスト
+- `GameState.isGameCompleted()` の同点継続テスト
+- `GameEngine.completeHand()` の同点継続処理テスト
+- `GameService` の Socket.io イベント処理テスト
+
+#### フロントエンド テスト（23テスト）
+- `useGame.ts` の同点継続状態管理テスト
+- `GameBoard.tsx` の UI 表示制御テスト
+- Socket.io イベントハンドリングテスト
+
+### 8.5 エラーハンドリング
+
+#### 境界値チェック
+- プレイヤー数が0の場合の安全処理
+- 不正なスコア値（非数値）の処理
+- Socket.io 通信エラー時のフォールバック
+
+#### デバッグ支援
+- 同点判定の詳細ログ出力
+- フロントエンドでの同点継続状態の視覚的インジケーター
+- 開発環境での詳細なエラーメッセージ
+
+## 9. テスト戦略
+
+### 9.1 テストカバレッジ
 
 #### バックエンド（168テスト）
 - **単体テスト**: ゲームロジック、モデル、サービス
@@ -357,7 +456,7 @@ frontend/src/
 - **フックテスト**: renderHook によるカスタムフックテスト
 - **モック**: Socket.io クライアントのモック
 
-### 8.2 テスト環境
+### 9.2 テスト環境
 
 #### Jest設定
 - TypeScript サポート
@@ -369,9 +468,9 @@ frontend/src/
 - 型安全なモック実装
 - テストデータ生成ユーティリティ
 
-## 9. デプロイメントアーキテクチャ
+## 10. デプロイメントアーキテクチャ
 
-### 9.1 Docker Compose構成
+### 10.1 Docker Compose構成
 
 ```yaml
 services:
@@ -406,7 +505,7 @@ services:
       - ./frontend:/app
 ```
 
-### 9.2 環境変数管理
+### 10.2 環境変数管理
 
 #### バックエンド
 - `DATABASE_URL`: PostgreSQL接続文字列
@@ -418,9 +517,9 @@ services:
 #### フロントエンド
 - `NEXT_PUBLIC_BACKEND_URL`: バックエンドURL
 
-## 10. 今後の拡張性
+## 11. 今後の拡張性
 
-### 10.1 アーキテクチャの拡張ポイント
+### 11.1 アーキテクチャの拡張ポイント
 
 1. **マルチルーム対応**
    - GameServiceの拡張による複数ゲームルーム管理
@@ -438,7 +537,7 @@ services:
    - レスポンシブデザインの実装
    - タッチ操作の最適化
 
-### 10.2 技術的改善案
+### 11.2 技術的改善案
 
 1. **マイクロサービス化**
    - ゲームロジックサービスの分離
@@ -452,7 +551,7 @@ services:
    - セッション管理の高速化
    - ゲーム状態のキャッシング
 
-## 11. まとめ
+## 12. まとめ
 
 Mantaは、モダンなWeb技術スタックを活用した、拡張性と保守性に優れたハーツゲームアプリケーションです。レイヤードアーキテクチャと適切なデザインパターンの採用により、各コンポーネントの責務が明確に分離され、テスタブルで変更に強い設計となっています。
 
