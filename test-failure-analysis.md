@@ -2,198 +2,117 @@
 
 ## 概要
 
-2025年6月5日時点でのテスト実行結果：
-- **バックエンド**: 6テストFAIL / 242テスト中 (成功率: 97.5%)
-- **フロントエンド**: 12テストFAIL / 140テスト中 (成功率: 91.4%)
+2025年6月10日時点でのテスト実行結果：
+- **バックエンド**: 269テスト中6テスト失敗
+- **フロントエンド**: 162テスト中8テスト失敗
 
----
+## バックエンドテスト失敗原因
 
-## バックエンド失敗テスト詳細
+### 1. GamePersistenceService.test.ts (1テスト失敗)
 
-### 1. GamePersistenceService削除処理テスト
+**失敗テスト**: "should retry on failure and eventually succeed"
 
-**ファイル**: `src/__tests__/services/GamePersistenceService.test.ts:84`
+**原因**: テスト自体は成功しているが、console.warnの出力が期待されていない
 
-**問題の詳細**:
-- ゲーム削除処理のテストが失敗
-- 削除ロジックの期待値と実装の不一致
+**詳細**: 
+- リトライロジックのテストで、意図的に失敗させているため、console.warnが出力される
+- これは正常な動作だが、テスト実行時にwarningとして表示される
 
-**失敗しているテストコード**:
+**修正案**:
+- console.warnをモックして、出力を抑制する
+- または、このwarningは意図的なものとして無視する
+
+### 2. games.test.ts (5テスト失敗)
+
+**失敗テスト**: すべて型エラーによる失敗
+
+**原因**: 
+1. `GameData`インターフェースに`players`プロパティが必須として定義されているが、`mockGames`にはこのプロパティが含まれていない
+2. `HandData`インターフェースに`exchangeDirection`プロパティが必須として定義されているが、`mockGameDetail`のhandsにはこのプロパティが含まれていない
+
+**詳細**:
 ```typescript
-// GamePersistenceService.test.ts:84付近
-$transaction: jest.fn().mockImplementation(async (callback) => {
-  const mockTx = {
-    cardExchange: { createMany: jest.fn().mockResolvedValue({ count: 2 }) }
-  };
-  return await callback(mockTx);
-})
+// GameDataインターフェース（必須プロパティ）
+players: Array<{
+  id: number;
+  name: string;
+  position: 'North' | 'East' | 'South' | 'West';
+  finalScore: number;
+}>;
+
+// HandDataインターフェース（必須プロパティ）
+exchangeDirection: 'left' | 'right' | 'across' | 'none';
 ```
 
-**対処方針の質問**:
-> **Q1**: GamePersistenceServiceのゲーム削除処理について
-> - A) テストを修正して、現在の実装に合わせた期待値に調整する
-> - B) 実装のゲーム削除ロジックを修正して、テストの期待動作に合わせる
+**修正案**:
+- `mockGames`に`players`プロパティを追加
+- `mockGameDetail`のhandsに`exchangeDirection`プロパティを追加
 
----
+## フロントエンドテスト失敗原因
 
-### 2. Socket.ioハンドラのエラー処理テスト
+### 1. PlayerSelect.test.tsx (3テスト失敗)
 
-**ファイル**: 
-- `src/__tests__/services/GameService.test.ts:147, 157, 167, 183`
-- `src/__tests__/socket/handlers.test.ts:152`
+**失敗原因**: `ReferenceError: fetch is not defined`
 
-**問題の詳細**:
-- Socket.ioイベント処理でのエラーハンドリング失敗
-- tryagainイベント処理の問題
-- モック設定とエラーハンドリングの不整合
+**詳細**: 
+- テスト環境でfetchが定義されていない
+- Node.jsテスト環境ではfetch APIが標準で利用できない
 
-**失敗しているテストコード**:
-```typescript
-// GameService.test.ts:147付近
-describe('playCard', () => {
-  it('should successfully play a card', async () => {
-    // Arrange
-    const playerId = 1;
-    const cardId = 1;
-    const gameId = 123;
-    // テストは期待通りの成功を要求するが実装が異なる
-    expect(result.success).toBe(false);
-  });
-});
+**修正案**:
+- jest.setup.jsでglobal.fetchをモックする
+- または、node-fetchやwhatwg-fetchをポリフィルとして追加
 
-// handlers.test.ts:152付近
-const playerData = {
-  displayOrder: 1,
-  isActive: false, // 非アクティブプレイヤーでの処理
-};
-const callback = jest.fn();
-await loginHandler(playerName, callback);
-```
+### 2. useGameDetail.test.ts (4テスト失敗)
 
-**対処方針の質問**:
-> **Q2**: Socket.ioハンドラのエラー処理について
-> - A) テストのモック設定を修正して、現在の実装のエラーハンドリングに合わせる
-> - B) 実装のエラーハンドリングロジックを修正して、テストの期待動作に合わせる
+**失敗原因**: 型エラー - `finalScores`の型不一致
 
----
+**詳細**:
+- テストでは`finalScores: { 1: 45, 2: 67, 3: 23, 4: 89 }`（Record型）として定義
+- 実際の`GameDetailData`では配列型が期待されている
 
-## フロントエンド失敗テスト詳細
+**修正案**:
+- モックデータの`finalScores`を配列形式に変更:
+  ```typescript
+  finalScores: [
+    { playerId: 1, playerName: 'Player 1', score: 45 },
+    { playerId: 2, playerName: 'Player 2', score: 67 },
+    { playerId: 3, playerName: 'Player 3', score: 23 },
+    { playerId: 4, playerName: 'Player 4', score: 89 },
+  ]
+  ```
 
-### 3. ScoreGraphコンポーネントテスト
+### 3. history/[gameId]/page.test.tsx (1テスト失敗)
 
-**ファイル**: `src/components/game/__tests__/ScoreGraph.test.tsx`
+**失敗テスト**: "should display player positions correctly"
 
-**失敗テスト**:
-1. **グラフオプション設定テスト**
-   ```
-   Expected: true
-   Received: false
-   
-   expect(chartOptions.plugins.title.display).toBe(true);
-   ```
+**原因**: プレイヤー名（'Player 1'など）が画面に表示されていない
 
-2. **プレイヤー強調表示テスト**
-   ```
-   Expected: 4
-   Received: 2
-   
-   expect(chartData.datasets[0].borderWidth).toBe(4);
-   ```
+**詳細**:
+- テストは`screen.getByText('Player 1')`を期待しているが、実際のコンポーネントではプレイヤー名が異なる形式で表示されている可能性がある
+- PlayerPositionsコンポーネントの実装を確認する必要がある
 
-**失敗しているテストコード**:
-```typescript
-// ScoreGraph.test.tsx:131-136
-const chartOptions = JSON.parse(screen.getByTestId('chart-options').textContent || '{}');
-expect(chartOptions.responsive).toBe(true);
-expect(chartOptions.plugins.title.display).toBe(true); // ← 失敗
-expect(chartOptions.plugins.title.text).toBe('スコア推移グラフ');
-expect(chartOptions.scales.y.min).toBe(0);
-expect(chartOptions.scales.y.title.text).toBe('累積スコア (点)');
-expect(chartOptions.scales.x.title.text).toBe('ハンド番号');
+**修正案**:
+- 実際にレンダリングされているテキストを確認し、テストの期待値を修正
+- または、PlayerPositionsコンポーネントがプレイヤー名を正しく表示するように修正
 
-// プレイヤー強調表示テスト（150行目付近）
-expect(chartData.datasets[0].borderWidth).toBe(4); // ← 失敗（実際は2）
-```
+## 推奨される修正順序
 
-**問題の詳細**:
-- Chart.jsの設定オプション (`plugins.title.display`) が期待値と異なる
-- currentPlayerIdが指定された際のプレイヤー強調表示 (`borderWidth`) が期待値と異なる
+1. **最も簡単な修正から開始**:
+   - フロントエンドのfetchモック追加（jest.setup.js）
+   - バックエンドのモックデータ修正（型エラー解消）
+   - フロントエンドのモックデータ修正（型エラー解消）
 
-**対処方針の質問**:
-> **Q3**: ScoreGraphコンポーネントのChart.js設定について
-> - A) テストの期待値を現在の実装に合わせて修正する
-> - B) 実装のChart.js設定を修正して、テストの期待値に合わせる
+2. **コンポーネントの実装確認が必要な修正**:
+   - PlayerPositionsコンポーネントの表示内容確認と修正
 
----
+3. **オプション（警告の抑制）**:
+   - GamePersistenceServiceのconsole.warnモック
 
-### 4. GameBoardコンポーネントテスト
+## 型安全性の重要性
 
-**ファイル**: `src/components/game/__tests__/GameBoard.test.tsx`
+今回の失敗の多くは型の不一致によるものです。これは：
+- TypeScriptの型チェックが正しく機能している証拠
+- モックデータと実際のインターフェースの同期が取れていない
+- 型定義の変更時にテストの更新が漏れている
 
-**失敗テスト数**: 10個
-
-**主な問題**:
-1. **手番プレイヤー表示**
-   ```
-   expect(screen.getByText('手番')).toBeInTheDocument();
-   ```
-   「手番」テキストが見つからない
-
-2. **ゲーム状態表示**
-   - プレイヤー情報の表示内容
-   - 手番インジケーターの表示
-   - アニメーション状態の不一致
-
-**失敗しているテストコード**:
-```typescript
-// GameBoard.test.tsx:281行目
-const currentTurnPlayerElement = screen.getByTestId('player-1');
-const playerCard = currentTurnPlayerElement.querySelector('div');
-expect(playerCard).toHaveClass('animate-pulse');
-expect(screen.getByText('手番')).toBeInTheDocument(); // ← 失敗：「手番」が見つからない
-
-// 手番でないプレイヤーのテスト（284行目付近）
-const gameStateWithDifferentTurn = {
-  ...mockGameState,
-  currentTurn: 2 // プレイヤー2の手番
-};
-// この状態での表示内容がテストの期待値と異なる
-```
-
-**問題の詳細**:
-- 手番プレイヤーのUI表示ロジックと期待値の不一致
-- ゲーム状態に応じた画面表示内容の相違
-- プレイヤー情報表示フォーマットの変更
-
-**対処方針の質問**:
-> **Q4**: GameBoardコンポーネントのUI表示について
-> - A) テストの期待値を現在のUI実装に合わせて修正する
-> - B) 実装のUI表示ロジックを修正して、テストの期待値に合わせる
-
----
-
-## 推奨対処順序
-
-1. **優先度高**: GameBoardテスト（10個のFAIL、ユーザー体験に直結）
-2. **優先度中**: Socket.ioハンドラテスト（5個のFAIL、通信の安定性）
-3. **優先度低**: ScoreGraphテスト（2個のFAIL、表示の詳細）
-4. **優先度低**: GamePersistenceServiceテスト（1個のFAIL、削除機能）
-
----
-
-## 次のアクション
-
-各質問（Q1-Q4）について方針を決定してください：
-
-- **A）テスト修正**: 現在の実装を正とし、テストを実装に合わせて調整
-- **B）実装修正**: テストの期待値を正とし、実装をテストに合わせて修正
-
-決定後、選択された方針に従って修正作業を実行します。
-
-
-# 方針
-
-
-Q3: A) テストの期待値を現在の実装に合わせて修正する
-Q4: A) テストの期待値を現在のUI実装に合わせて修正する
-Q1とQ2の修正は保留します
+今後は、型定義を変更する際には、関連するテストのモックデータも同時に更新することが重要です。
