@@ -9,6 +9,9 @@ describe('GamePersistenceService', () => {
   let mockPrismaService: ReturnType<typeof createMockPrismaService>;
 
   beforeEach(() => {
+    jest.clearAllMocks();
+    // シングルトンインスタンスをリセット
+    (GamePersistenceService as any).instance = undefined;
     mockPrismaService = createMockPrismaService();
     jest.spyOn(PrismaService, 'getInstance').mockReturnValue(mockPrismaService as any);
     gamePersistenceService = GamePersistenceService.getInstance();
@@ -35,16 +38,9 @@ describe('GamePersistenceService', () => {
 
       const mockHand = { id: 101, gameId, handNumber, heartsBroken: false, shootTheMoonPlayerId: null };
       
-      // モックトランザクションの設定
-      mockPrismaService.getClient.mockReturnValue({
-        $transaction: jest.fn().mockImplementation(async (callback) => {
-          const mockTx = {
-            hand: { create: jest.fn().mockResolvedValue(mockHand) },
-            handCard: { createMany: jest.fn().mockResolvedValue({ count: 4 }) }
-          };
-          return await callback(mockTx);
-        })
-      } as any);
+      // mockHelpers.tsのモックメソッドに戻り値を設定
+      mockPrismaService.client.hand.create.mockResolvedValue(mockHand);
+      mockPrismaService.client.handCard.createMany.mockResolvedValue({ count: 4 });
 
       const result = await gamePersistenceService.persistHandStart(gameId, handNumber, playerCards);
 
@@ -58,10 +54,13 @@ describe('GamePersistenceService', () => {
         [1, [{ id: 1, suit: 'HEARTS', rank: 'ACE', code: 'AH', pointValue: 1, sortOrder: 0 } as Card]]
       ]);
 
-      // トランザクション失敗をモック
-      mockPrismaService.getClient.mockReturnValue({
-        $transaction: jest.fn().mockRejectedValue(new Error('Transaction failed'))
-      } as any);
+      // トランザクション失敗をモック - 新しいインスタンスで上書き
+      const failingTransaction = jest.fn().mockRejectedValue(new Error('Transaction failed'));
+      const failingClient = {
+        ...mockPrismaService.client,
+        $transaction: failingTransaction
+      };
+      mockPrismaService.getClient.mockReturnValue(failingClient);
 
       await expect(gamePersistenceService.persistHandStart(gameId, handNumber, playerCards))
         .rejects.toThrow('Transaction failed');
@@ -76,14 +75,8 @@ describe('GamePersistenceService', () => {
         { fromPlayerId: 2, toPlayerId: 3, cardId: 10, exchangeOrder: 2 }
       ];
 
-      mockPrismaService.getClient.mockReturnValue({
-        $transaction: jest.fn().mockImplementation(async (callback) => {
-          const mockTx = {
-            cardExchange: { createMany: jest.fn().mockResolvedValue({ count: 2 }) }
-          };
-          return await callback(mockTx);
-        })
-      } as any);
+      // mockHelpers.tsのモックメソッドに戻り値を設定
+      mockPrismaService.client.cardExchange.createMany.mockResolvedValue({ count: 2 });
 
       await gamePersistenceService.persistCardExchanges(handId, exchanges);
 
@@ -96,8 +89,10 @@ describe('GamePersistenceService', () => {
 
       await gamePersistenceService.persistCardExchanges(handId, exchanges);
 
-      // 空配列の場合は何も処理しないことを確認
-      expect(mockPrismaService.getClient).not.toHaveBeenCalled();
+      // 空配列の場合でもgetClient()は呼ばれるが、トランザクションは実行されない
+      expect(mockPrismaService.getClient).toHaveBeenCalled();
+      // $transactionは呼ばれないことを確認
+      expect(mockPrismaService.client.$transaction).not.toHaveBeenCalled();
     });
   });
 
@@ -116,15 +111,9 @@ describe('GamePersistenceService', () => {
       };
 
       const mockTrick = { id: 201 };
-      mockPrismaService.getClient.mockReturnValue({
-        $transaction: jest.fn().mockImplementation(async (callback) => {
-          const mockTx = {
-            trick: { create: jest.fn().mockResolvedValue(mockTrick) },
-            trickCard: { createMany: jest.fn().mockResolvedValue({ count: 2 }) }
-          };
-          return await callback(mockTx);
-        })
-      } as any);
+      // mockHelpers.tsのモックメソッドに戻り値を設定
+      mockPrismaService.client.trick.create.mockResolvedValue(mockTrick);
+      mockPrismaService.client.trickCard.createMany.mockResolvedValue({ count: 2 });
 
       const result = await gamePersistenceService.persistTrick(trickData);
 
@@ -149,15 +138,9 @@ describe('GamePersistenceService', () => {
         }
       ];
 
-      mockPrismaService.getClient.mockReturnValue({
-        $transaction: jest.fn().mockImplementation(async (callback) => {
-          const mockTx = {
-            hand: { update: jest.fn().mockResolvedValue({}) },
-            handScore: { createMany: jest.fn().mockResolvedValue({ count: 1 }) }
-          };
-          return await callback(mockTx);
-        })
-      } as any);
+      // mockHelpers.tsのモックメソッドに戻り値を設定
+      mockPrismaService.client.hand.update.mockResolvedValue({});
+      mockPrismaService.client.handScore.createMany.mockResolvedValue({ count: 1 });
 
       await gamePersistenceService.persistHandCompletion(
         handId, handNumber, heartsBroken, shootTheMoonPlayerId, handScores
@@ -173,15 +156,9 @@ describe('GamePersistenceService', () => {
       const shootTheMoonPlayerId = null;
       const handScores: HandScoreData[] = [];
 
-      mockPrismaService.getClient.mockReturnValue({
-        $transaction: jest.fn().mockImplementation(async (callback) => {
-          const mockTx = {
-            hand: { update: jest.fn() },
-            handScore: { createMany: jest.fn() }
-          };
-          return await callback(mockTx);
-        })
-      } as any);
+      // mockHelpers.tsのモックメソッドを使用（戻り値設定不要）
+      // heartsBroken=false, shootTheMoonPlayerId=null, handScores=[]の場合、
+      // 実装上は何も更新せずに終了するため、モックも呼ばれない
 
       await gamePersistenceService.persistHandCompletion(
         handId, handNumber, heartsBroken, shootTheMoonPlayerId, handScores
@@ -197,14 +174,8 @@ describe('GamePersistenceService', () => {
       const winnerId = 2;
       const duration = 45;
 
-      mockPrismaService.getClient.mockReturnValue({
-        $transaction: jest.fn().mockImplementation(async (callback) => {
-          const mockTx = {
-            game: { update: jest.fn().mockResolvedValue({}) }
-          };
-          return await callback(mockTx);
-        })
-      } as any);
+      // mockHelpers.tsのモックメソッドに戻り値を設定
+      mockPrismaService.client.game.update.mockResolvedValue({});
 
       await gamePersistenceService.persistGameCompletion(gameId, winnerId, duration);
 

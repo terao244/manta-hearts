@@ -78,22 +78,43 @@ export const createMockPrismaService = () => {
     findUnique: jest.fn()
   };
 
+  const mockGameMethods = {
+    create: jest.fn(),
+    update: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn()
+  };
+
+  // トランザクション内で使用されるtxオブジェクトのモック
+  const mockTransactionClient = {
+    hand: mockHandMethods,
+    handCard: mockHandCardMethods,
+    cardExchange: mockCardExchangeMethods,
+    trick: mockTrickMethods,
+    trickCard: mockTrickCardMethods,
+    handScore: mockHandScoreMethods,
+    game: mockGameMethods
+  };
+
+  // $transactionメソッドのモック
+  const mockTransaction = jest.fn().mockImplementation(async (callback) => {
+    return await callback(mockTransactionClient);
+  });
+
+  const mockPrismaClient = {
+    hand: mockHandMethods,
+    handCard: mockHandCardMethods,
+    cardExchange: mockCardExchangeMethods,
+    trick: mockTrickMethods,
+    trickCard: mockTrickCardMethods,
+    handScore: mockHandScoreMethods,
+    game: mockGameMethods,
+    $transaction: mockTransaction
+  };
+
   return {
-    client: {
-      hand: mockHandMethods,
-      handCard: mockHandCardMethods,
-      cardExchange: mockCardExchangeMethods,
-      trick: mockTrickMethods,
-      trickCard: mockTrickCardMethods,
-      handScore: mockHandScoreMethods
-    },
-    getClient: jest.fn().mockReturnValue({
-      hand: mockHandMethods,
-      handCard: mockHandCardMethods,
-      cardExchange: mockCardExchangeMethods,
-      trick: mockTrickMethods,
-      trickCard: mockTrickCardMethods,
-      handScore: mockHandScoreMethods
-    })
+    client: mockPrismaClient,
+    getClient: jest.fn().mockReturnValue(mockPrismaClient),
+    mockTransaction // テストでトランザクション動作をカスタマイズ可能
   };
 };
