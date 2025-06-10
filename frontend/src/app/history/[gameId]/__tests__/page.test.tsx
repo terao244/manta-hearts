@@ -114,7 +114,7 @@ describe('GameDetailPage', () => {
     // プレイヤー名とスコアが表示されていることを確認
     const playerNames = screen.getAllByText('Player 1');
     expect(playerNames.length).toBeGreaterThan(0);
-    expect(screen.getByText('23点')).toBeInTheDocument();
+    expect(screen.getAllByText('23点').length).toBeGreaterThan(0);
   });
 
   it('renders score chart section', () => {
@@ -136,17 +136,17 @@ describe('GameDetailPage', () => {
   it('should display player positions correctly', () => {
     render(<GameDetailPage />);
 
-    // プレイヤー席順情報が表示されることを確認
-    expect(screen.getByText('Player 1')).toBeInTheDocument(); // North
-    expect(screen.getByText('Player 2')).toBeInTheDocument(); // East  
-    expect(screen.getByText('Player 3')).toBeInTheDocument(); // South
-    expect(screen.getByText('Player 4')).toBeInTheDocument(); // West
+    // プレイヤー席順情報が表示されることを確認（複数箇所に表示される可能性があるため getAllByText を使用）
+    expect(screen.getAllByText('Player 1').length).toBeGreaterThan(0); // North
+    expect(screen.getAllByText('Player 2').length).toBeGreaterThan(0); // East  
+    expect(screen.getAllByText('Player 3').length).toBeGreaterThan(0); // South
+    expect(screen.getAllByText('Player 4').length).toBeGreaterThan(0); // West
 
     // 最終スコアも正しく表示されることを確認
-    expect(screen.getByText('23点')).toBeInTheDocument(); // Player 1 score
-    expect(screen.getByText('67点')).toBeInTheDocument(); // Player 2 score
-    expect(screen.getByText('45点')).toBeInTheDocument(); // Player 3 score
-    expect(screen.getByText('89点')).toBeInTheDocument(); // Player 4 score
+    expect(screen.getAllByText('23点').length).toBeGreaterThan(0); // Player 1 score
+    expect(screen.getAllByText('67点').length).toBeGreaterThan(0); // Player 2 score
+    expect(screen.getAllByText('45点').length).toBeGreaterThan(0); // Player 3 score
+    expect(screen.getAllByText('89点').length).toBeGreaterThan(0); // Player 4 score
   });
 
   it('renders back to history link', () => {

@@ -15,7 +15,12 @@ describe('useGameDetail', () => {
     endTime: '2025-06-03T11:30:00Z',
     duration: 90,
     status: 'FINISHED',
-    finalScores: { 1: 45, 2: 67, 3: 23, 4: 89 },
+    finalScores: [
+      { playerId: 1, playerName: 'Player 1', score: 45 },
+      { playerId: 2, playerName: 'Player 2', score: 67 },
+      { playerId: 3, playerName: 'Player 3', score: 23 },
+      { playerId: 4, playerName: 'Player 4', score: 89 },
+    ],
     winnerId: 3,
     players: [
       { id: 1, name: 'Player 1', position: 'North', finalScore: 45 },
