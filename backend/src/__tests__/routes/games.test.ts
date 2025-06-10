@@ -24,6 +24,12 @@ describe('Games API', () => {
         { playerId: 3, playerName: '南', score: 30 },
         { playerId: 4, playerName: '西', score: 30 },
       ],
+      players: [
+        { id: 1, name: '北', position: 'North' as const, finalScore: 15 },
+        { id: 2, name: '東', position: 'East' as const, finalScore: 25 },
+        { id: 3, name: '南', position: 'South' as const, finalScore: 30 },
+        { id: 4, name: '西', position: 'West' as const, finalScore: 30 },
+      ],
     },
     {
       id: 2,
@@ -39,6 +45,12 @@ describe('Games API', () => {
         { playerId: 2, playerName: '東', score: 8 },
         { playerId: 3, playerName: '南', score: 12 },
         { playerId: 4, playerName: '西', score: 6 },
+      ],
+      players: [
+        { id: 1, name: '北', position: 'North' as const, finalScore: 10 },
+        { id: 2, name: '東', position: 'East' as const, finalScore: 8 },
+        { id: 3, name: '南', position: 'South' as const, finalScore: 12 },
+        { id: 4, name: '西', position: 'West' as const, finalScore: 6 },
       ],
     },
   ];
@@ -60,6 +72,12 @@ describe('Games API', () => {
         { playerId: 3, playerName: '南', score: 30 },
         { playerId: 4, playerName: '西', score: 30 },
       ],
+      players: [
+        { id: 1, name: '北', position: 'North', finalScore: 15 },
+        { id: 2, name: '東', position: 'East', finalScore: 25 },
+        { id: 3, name: '南', position: 'South', finalScore: 30 },
+        { id: 4, name: '西', position: 'West', finalScore: 30 },
+      ],
     },
     {
       id: 2,
@@ -75,6 +93,12 @@ describe('Games API', () => {
         { playerId: 2, playerName: '東', score: 8 },
         { playerId: 3, playerName: '南', score: 12 },
         { playerId: 4, playerName: '西', score: 6 },
+      ],
+      players: [
+        { id: 1, name: '北', position: 'North', finalScore: 10 },
+        { id: 2, name: '東', position: 'East', finalScore: 8 },
+        { id: 3, name: '南', position: 'South', finalScore: 12 },
+        { id: 4, name: '西', position: 'West', finalScore: 6 },
       ],
     },
   ];
