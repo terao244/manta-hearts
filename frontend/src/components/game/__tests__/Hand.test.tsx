@@ -149,22 +149,6 @@ describe('Hand', () => {
     expect(screen.getByText(/3枚のカードを選択しました/)).toBeInTheDocument();
   });
 
-  it('確認ボタンが正しい条件で有効化される', () => {
-    const mockOnConfirm = jest.fn();
-    render(
-      <Hand 
-        cards={mockCards} 
-        mode="exchange"
-        selectedCardIds={[1, 14, 39]}
-        maxSelectableCards={3}
-        showConfirmButton={true}
-        onConfirm={mockOnConfirm}
-      />
-    );
-    
-    const confirmButton = screen.getByText('🔄 交換確定');
-    expect(confirmButton).not.toBeDisabled();
-  });
 
   it('カードが正しくソートされて表示される', () => {
     const unsortedCards = [...mockCards].reverse();

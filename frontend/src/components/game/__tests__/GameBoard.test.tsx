@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@/test-utils';
+import { render, screen, fireEvent } from '@/test-utils';
 import { GameBoard } from '../GameBoard';
 import type { GameState, PlayerInfo, CardInfo } from '@/types';
 
@@ -309,6 +309,38 @@ describe('GameBoard', () => {
     
     expect(screen.getAllByText('あなたの番です')).toHaveLength(1);
     expect(screen.getByText('👆')).toBeInTheDocument();
+  });
+
+  it('確認ボタンが3枚選択時に表示される', () => {
+    const mockOnExchange = jest.fn();
+    const exchangeGameState = {
+      ...mockGameState,
+      phase: 'exchanging' as const
+    };
+
+    render(
+      <GameBoard 
+        gameState={exchangeGameState}
+        currentPlayerId={1}
+        onCardPlay={mockOnCardPlay}
+        onCardExchange={mockOnExchange}
+      />
+    );
+    
+    // 3枚のカードを選択する
+    const cardElements = screen.getAllByRole('button').filter(button => 
+      button.getAttribute('data-testid') === 'card'
+    );
+    
+    // 最初の3枚のカードをクリック
+    fireEvent.click(cardElements[0]);
+    fireEvent.click(cardElements[1]);
+    fireEvent.click(cardElements[2]);
+    
+    // 3枚選択後に確認ボタンが表示されることを確認
+    const confirmButton = screen.getByText('🔄 交換確定');
+    expect(confirmButton).toBeInTheDocument();
+    expect(confirmButton).not.toBeDisabled();
   });
 
   describe('同点継続UI制御テスト', () => {
