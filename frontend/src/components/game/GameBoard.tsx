@@ -27,6 +27,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, curren
   const currentHandScore = currentHandScores[player.id] || 0;
   const cumulativeScore = scores[player.id] || 0;
 
+
   return (
     <div className="relative">
       <div
@@ -79,6 +80,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   isTrickCompleted = false,
   currentTrickResult,
   isTieContinuation = false,
+  playerEmotes = {},
   onCardPlay,
   onCardExchange,
   onCloseGameEndModal,
@@ -87,8 +89,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
   const [isScoreGraphVisible, setIsScoreGraphVisible] = useState<boolean>(showScoreGraph);
   
-  // エモート状態管理
-  const [playerEmotes, setPlayerEmotes] = useState<Record<number, { emoteType: EmoteType; isVisible: boolean; timestamp: number }>>({});
 
   // 同点プレイヤーの判定
   const getTiedPlayerIds = () => {
@@ -109,38 +109,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   const tiedPlayerIds = getTiedPlayerIds();
 
-  // エモートイベントリスナーの設定
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleReceiveEmote = (data: { fromPlayerId: number; emoteType: EmoteType; timestamp: number }) => {
-      setPlayerEmotes(prev => ({
-        ...prev,
-        [data.fromPlayerId]: {
-          emoteType: data.emoteType,
-          isVisible: true,
-          timestamp: data.timestamp
-        }
-      }));
-
-      // 2秒後に非表示にする
-      setTimeout(() => {
-        setPlayerEmotes(prev => ({
-          ...prev,
-          [data.fromPlayerId]: {
-            ...prev[data.fromPlayerId],
-            isVisible: false
-          }
-        }));
-      }, 2000);
-    };
-
-    socket.on('receiveEmote', handleReceiveEmote);
-
-    return () => {
-      socket.off('receiveEmote', handleReceiveEmote);
-    };
-  }, [socket]);
 
   const {
     gameId,
@@ -466,11 +434,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     />
                   </div>
                   {/* 自分のプレイヤーのエモートボタン */}
-                  {player.id === currentPlayerId && socket && (phase === 'exchanging' || phase === 'playing') && (
-                    <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-10">
-                      <EmoteButtons socket={socket} gameState={gameState} />
-                    </div>
-                  )}
+                  {(() => {
+                    const shouldShowEmoteButtons = player.id === currentPlayerId && socket && (phase === 'exchanging' || phase === 'playing');
+                    return shouldShowEmoteButtons && (
+                      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-10">
+                        <EmoteButtons socket={socket} gameState={gameState} />
+                      </div>
+                    );
+                  })()}
                 </div>
               ))}
 

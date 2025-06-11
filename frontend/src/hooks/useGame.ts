@@ -166,7 +166,9 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
 
   // エモート送信
   const sendEmote = useCallback((emoteType: EmoteType) => {
-    if (!socket) return;
+    if (!socket) {
+      return;
+    }
     socket.emit('sendEmote', emoteType);
   }, [socket]);
 
@@ -544,7 +546,6 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
 
     // エモート受信
     const handleReceiveEmote = (data: { fromPlayerId: number; emoteType: EmoteType; timestamp: number }) => {
-      console.log('Emote received:', data);
       setGameHookState(prev => ({
         ...prev,
         playerEmotes: {

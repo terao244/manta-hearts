@@ -12,6 +12,7 @@ describe('SocketHandlers', () => {
   let mockSocket: jest.Mocked<Socket>;
   let mockGameService: jest.Mocked<GameService>;
   let mockPrismaClient: any;
+  let mockIo: any;
 
   beforeEach(() => {
     // setIntervalとclearIntervalをモック化
@@ -38,10 +39,19 @@ describe('SocketHandlers', () => {
       playCard: jest.fn(),
       exchangeCards: jest.fn(),
       removePlayer: jest.fn(),
+      getPlayerGameId: jest.fn(),
+      getGamePlayerIds: jest.fn(),
       io: undefined,
     } as any;
 
     (GameService.getInstance as jest.Mock).mockReturnValue(mockGameService);
+
+    // Socket.IOサーバーのモック
+    mockIo = {
+      sockets: {
+        sockets: new Map()
+      }
+    };
 
     // Socketのモック設定
     mockSocket = {
@@ -52,7 +62,7 @@ describe('SocketHandlers', () => {
       connected: true,
     } as any;
 
-    socketHandlers = new SocketHandlers();
+    socketHandlers = new SocketHandlers(mockIo);
   });
 
   afterEach(() => {

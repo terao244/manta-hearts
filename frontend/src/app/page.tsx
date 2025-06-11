@@ -31,6 +31,7 @@ export default function Home() {
     isTrickCompleted,
     currentTrickResult,
     isTieContinuation,
+    playerEmotes,
     joinGame,
     playCard,
     exchangeCards,
@@ -160,6 +161,7 @@ export default function Home() {
           isTrickCompleted={isTrickCompleted}
           currentTrickResult={currentTrickResult}
           isTieContinuation={isTieContinuation}
+          playerEmotes={playerEmotes}
           onCardPlay={playCard}
           onCardExchange={exchangeCards}
           onCloseGameEndModal={closeGameEndModal}

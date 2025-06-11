@@ -201,6 +201,7 @@ export interface GameBoardProps {
   isTrickCompleted?: boolean;
   currentTrickResult?: TrickResult;
   isTieContinuation?: boolean;
+  playerEmotes?: Record<number, { emoteType: EmoteType; isVisible: boolean; timestamp: number }>;
   onCardPlay: (cardId: number) => void;
   onCardExchange: (cardIds: number[]) => void;
   onCloseGameEndModal?: () => void;

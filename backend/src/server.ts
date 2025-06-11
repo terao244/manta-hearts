@@ -84,7 +84,7 @@ const gameService = GameService.getInstance();
 gameService.setSocketIO(io);
 
 // Socket.ioハンドラーの初期化
-const socketHandlers = new SocketHandlers();
+const socketHandlers = new SocketHandlers(io);
 
 // Socket.io接続処理
 io.on('connection', (socket) => {

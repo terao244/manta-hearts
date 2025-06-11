@@ -15,12 +15,14 @@ type SocketType = Socket<ClientToServerEvents, ServerToClientEvents, InterServer
 export class SocketHandlers {
   private gameService: GameService;
   private prisma: PrismaClient;
+  private io?: SocketType['server'];
   private static playerSocketMap: Map<number, string> = new Map(); // プレイヤーID -> ソケットID
   private static socketPlayerMap: Map<string, number> = new Map(); // ソケットID -> プレイヤーID
 
-  constructor() {
+  constructor(io?: SocketType['server']) {
     this.gameService = GameService.getInstance();
     this.prisma = PrismaService.getInstance().getClient();
+    this.io = io;
   }
 
   public handleConnection(socket: SocketType): void {
@@ -57,6 +59,20 @@ export class SocketHandlers {
         await this.prisma.player.update({
           where: { id: player.id },
           data: { updatedAt: new Date() }
+        });
+
+        // プレイヤーが既にゲームに参加しているか確認
+        const existingGameId = this.gameService.getPlayerGameId(player.id);
+        if (existingGameId) {
+          socket.data.gameId = existingGameId;
+          console.log(`Player ${player.name} (ID: ${player.id}) already in game ${existingGameId}`);
+        }
+
+        console.log('[login] Socket data after login:', {
+          socketId: socket.id,
+          playerId: socket.data.playerId,
+          gameId: socket.data.gameId,
+          playerName: socket.data.playerName
         });
 
         console.log(`Player logged in: ${player.name} (ID: ${player.id}) on socket ${socket.id}`);
@@ -108,7 +124,16 @@ export class SocketHandlers {
         console.log(`Game service result for socket ${socket.id}:`, result);
         
         if (result.success && result.gameInfo) {
-          console.log(`Successful join, sending gameInfo back on socket ${socket.id}`);
+          // ゲームIDをsocket.dataに保存
+          socket.data.gameId = result.gameInfo.gameId;
+
+          console.log('[joinGame] Socket data after join:', {
+            socketId: socket.id,
+            playerId: socket.data.playerId,
+            gameId: socket.data.gameId,
+            playerName: socket.data.playerName
+          });
+          console.log(`Successful join, sending gameInfo back on socket ${socket.id}, gameId: ${result.gameInfo.gameId}`);
           callback(true, result.gameInfo);
         } else {
           console.log(`Failed to join game on socket ${socket.id}`);
@@ -187,7 +212,16 @@ export class SocketHandlers {
     socket.on('sendEmote', (emoteType: EmoteType) => {
       try {
         const playerId = socket.data.playerId;
-        const gameId = socket.data.gameId;
+        let gameId = socket.data.gameId;
+
+        // ソケットデータにgameIdがない場合は、GameServiceから取得
+        if (!gameId && playerId) {
+          gameId = this.gameService.getPlayerGameId(playerId);
+          if (gameId) {
+            socket.data.gameId = gameId; // ソケットデータも更新
+          }
+        }
+
 
         // バリデーション: ゲーム参加中のプレイヤーのみ許可
         if (!playerId || !gameId) {
@@ -201,11 +235,28 @@ export class SocketHandlers {
           return;
         }
 
-        console.log(`Player ${playerId} sent emote: ${emoteType}`);
 
-        // 全プレイヤーに配信（送信者を含む）
-        socket.broadcast.emit('receiveEmote', { playerId, emoteType });
-        socket.emit('receiveEmote', { playerId, emoteType });
+        // 同じゲームに参加している全プレイヤーに配信
+        const gamePlayerIds = this.gameService.getGamePlayerIds(gameId);
+        if (gamePlayerIds && gamePlayerIds.length > 0) {
+          // タイムスタンプを付与
+          const timestamp = Date.now();
+          
+          // 各プレイヤーのソケットに配信
+          gamePlayerIds.forEach(pid => {
+            const socketId = SocketHandlers.playerSocketMap.get(pid);
+            if (socketId) {
+              const playerSocket = this.io?.sockets.sockets.get(socketId);
+              if (playerSocket) {
+                playerSocket.emit('receiveEmote', { 
+                  fromPlayerId: playerId, 
+                  emoteType,
+                  timestamp 
+                });
+              }
+            }
+          });
+        }
       } catch (error) {
         console.error('Send emote error:', error);
         socket.emit('error', 'エモート送信に失敗しました');
@@ -234,8 +285,8 @@ export class SocketHandlers {
         console.log(`Player ${socket.data.playerId} disconnected`);
         // 即座に削除せず、一定時間後に削除する（再接続を待つ）
         setTimeout(() => {
-          const currentSocket = Array.from(this.gameService['io']?.sockets.sockets.values() || [])
-            .find(s => s.data.playerId === socket.data.playerId);
+          const currentSocket = Array.from(this.io?.sockets.sockets.values() || [])
+            .find((s: any) => s.data.playerId === socket.data.playerId);
           
           if (!currentSocket) {
             console.log(`Removing player ${socket.data.playerId} after timeout`);

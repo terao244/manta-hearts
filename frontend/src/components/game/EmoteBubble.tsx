@@ -6,9 +6,9 @@ interface EmoteBubbleProps {
 }
 
 const EMOTE_EMOJIS: Record<EmoteType, string> = {
-  dislike: '👎',
-  fire: '🔥',
-  trash: '🚮'
+  '👎': '👎',
+  '🔥': '🔥',
+  '🚮': '🚮'
 }
 
 export default function EmoteBubble({ emoteType, isVisible }: EmoteBubbleProps) {

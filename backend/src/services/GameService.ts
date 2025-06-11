@@ -879,6 +879,15 @@ export class GameService {
     return players ? players.size : 0;
   }
 
+  public getPlayerGameId(playerId: number): number | undefined {
+    return this.playerGameMap.get(playerId);
+  }
+
+  public getGamePlayerIds(gameId: number): number[] {
+    const players = this.gamePlayersMap.get(gameId);
+    return players ? Array.from(players) : [];
+  }
+
   public getValidCards(playerId: number): number[] {
     const gameId = this.playerGameMap.get(playerId);
     if (!gameId) return [];
