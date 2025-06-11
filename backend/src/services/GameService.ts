@@ -24,6 +24,7 @@ export class GameService {
   private gamePlayersMap: Map<number, Set<number>> = new Map();
   private gameScoreHistory: Map<number, Array<{ hand: number; scores: Record<number, number> }>> = new Map();
   private gameHandIds: Map<number, Map<number, number>> = new Map(); // gameId -> handNumber -> handId
+  private gameHandCards: Map<number, Map<number, Map<number, number[]>>> = new Map(); // gameId -> handNumber -> playerId -> cardIds[]
   private io?: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
   private gamePersistenceService: GamePersistenceService;
 
@@ -82,6 +83,7 @@ export class GameService {
               this.gameEngines.delete(existingGameId);
               this.gamePlayersMap.delete(existingGameId);
               this.gameHandIds.delete(existingGameId);
+              this.gameHandCards.delete(existingGameId);
             }
           }
           gameId = this.findAvailableGame() || await this.createNewGame();
@@ -291,6 +293,7 @@ export class GameService {
           this.gameEngines.delete(gameId);
           this.gamePlayersMap.delete(gameId);
           this.gameHandIds.delete(gameId);
+          this.gameHandCards.delete(gameId);
         }
       }
     }
@@ -387,28 +390,35 @@ export class GameService {
       },
       onCardsDealt: async (playerHands) => {
         try {
-          // HandCardテーブルに一括保存
-          const handIds = this.gameHandIds.get(gameId);
-          if (handIds) {
-            // 現在のハンド番号を取得（最後に作成されたハンド）
-            const handNumbers = Array.from(handIds.keys()).sort((a, b) => b - a);
-            const currentHandNumber = handNumbers[0];
-            const currentHandId = handIds.get(currentHandNumber);
+          // GameEngineから現在のハンド番号を取得
+          const gameEngine = this.gameEngines.get(gameId);
+          if (!gameEngine) {
+            console.error(`GameEngine not found for game ${gameId}`);
+            return;
+          }
 
-            if (currentHandId) {
-              const container = Container.getInstance();
-              const handCardRepository = container.getHandCardRepository();
+          const gameState = gameEngine.getGameState();
+          const currentHandNumber = gameState.currentHand;
+          console.log(`onCardsDealt: Storing cards for hand ${currentHandNumber} in game ${gameId}`);
 
-              // playerHands（Map<playerId, Card[]>）を Map<playerId, cardId[]> に変換
-              const playerCardIds = new Map<number, number[]>();
-              for (const [playerId, cards] of playerHands) {
-                const cardIds = cards.map(card => card.id);
-                playerCardIds.set(playerId, cardIds);
-              }
+          // メモリ上に手札情報を保存
+          let gameHandCardsMap = this.gameHandCards.get(gameId);
+          if (!gameHandCardsMap) {
+            gameHandCardsMap = new Map();
+            this.gameHandCards.set(gameId, gameHandCardsMap);
+          }
 
-              const result = await handCardRepository.saveHandCards(currentHandId, playerCardIds);
-              console.log(`Saved ${result.count} hand cards for hand ${currentHandNumber} (ID: ${currentHandId})`);
-            }
+          let handPlayerCards = gameHandCardsMap.get(currentHandNumber);
+          if (!handPlayerCards) {
+            handPlayerCards = new Map();
+            gameHandCardsMap.set(currentHandNumber, handPlayerCards);
+          }
+
+          // playerHands（Map<playerId, Card[]>）を Map<playerId, cardId[]> に変換してメモリ保存
+          for (const [playerId, cards] of playerHands) {
+            const cardIds = cards.map(card => card.id);
+            handPlayerCards.set(playerId, cardIds);
+            console.log(`Stored ${cardIds.length} cards for player ${playerId} in hand ${currentHandNumber}`);
           }
 
           // 各プレイヤーに個別に手札を送信
@@ -417,7 +427,7 @@ export class GameService {
             this.sendToPlayer(playerId, 'cardsDealt', cardInfos);
           });
         } catch (error) {
-          console.error(`Error saving hand cards for game ${gameId}:`, error);
+          console.error(`Error in onCardsDealt for game ${gameId}:`, error);
           // エラーがあってもゲーム進行は継続
           playerHands.forEach((cards, playerId) => {
             const cardInfos = cards.map(card => this.cardToCardInfo(card));
@@ -616,6 +626,29 @@ export class GameService {
                 });
 
                 console.log(`Hand ${handNumber} completion persisted for game ${gameId}`);
+
+                // メモリから手札情報を取得してDBに保存
+                const gameHandCardsMap = this.gameHandCards.get(gameId);
+                if (gameHandCardsMap) {
+                  const handPlayerCards = gameHandCardsMap.get(handNumber);
+                  if (handPlayerCards && handPlayerCards.size > 0) {
+                    try {
+                      const container = Container.getInstance();
+                      const handCardRepository = container.getHandCardRepository();
+                      
+                      const result = await handCardRepository.saveHandCards(handId, handPlayerCards);
+                      console.log(`Saved ${result.count} hand cards for hand ${handNumber} (ID: ${handId}) in game ${gameId}`);
+                      
+                      // 保存成功後、メモリから削除
+                      gameHandCardsMap.delete(handNumber);
+                    } catch (error) {
+                      console.error(`Error saving hand cards for hand ${handNumber} in game ${gameId}:`, error);
+                      // エラーがあってもゲーム進行は継続
+                    }
+                  } else {
+                    console.warn(`No hand cards found in memory for hand ${handNumber} in game ${gameId}`);
+                  }
+                }
               }
             }
           }
