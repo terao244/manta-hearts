@@ -1,5 +1,7 @@
 # エモート機能実装計画
 
+仕様は　@docs/emote-feature-spec.md 参照
+
 ## 実装方針
 - **テストファースト開発（TDD）**: 各ステップでテストを先に作成し、テストがパスするように実装を進める
 - **段階的実装**: バックエンド→フロントエンド送信→フロントエンド受信の順で実装
@@ -7,56 +9,58 @@
 
 ## 実装ステップ
 
-### ステップ1: 型定義の追加
-1. **バックエンド型定義テストの作成**
-   - `backend/src/__tests__/types/emote.test.ts`
+### ✅ ステップ1: 型定義の追加 【完了】
+1. **✅ バックエンド型定義テストの作成**
+   - `backend/src/__tests__/types/emote.test.ts` - 5テスト作成・成功
    - エモート型の存在確認テスト
    - Socket.ioイベント型の拡張確認テスト
 
-2. **バックエンド型定義の実装**
+2. **✅ バックエンド型定義の実装**
    - `backend/src/types/index.ts`に追加:
      - `EmoteType`型定義
      - `ClientToServerEvents`に`sendEmote`追加
      - `ServerToClientEvents`に`receiveEmote`追加
 
-3. **フロントエンド型定義テストの作成**
-   - `frontend/src/types/__tests__/emote.test.ts`
+3. **✅ フロントエンド型定義テストの作成**
+   - `frontend/src/types/__tests__/emote.test.ts` - 5テスト作成・成功
    - エモート型の存在確認テスト
 
-4. **フロントエンド型定義の実装**
+4. **✅ フロントエンド型定義の実装**
    - `frontend/src/types/index.ts`に追加:
      - `EmoteType`型定義
      - Socket.ioイベント型の拡張
 
-### ステップ2: バックエンドSocket.ioハンドラー実装
-1. **ハンドラーテストの作成**
-   - `backend/src/__tests__/socket/emoteHandlers.test.ts`
+### ✅ ステップ2: バックエンドSocket.ioハンドラー実装 【完了】
+1. **✅ ハンドラーテストの作成**
+   - `backend/src/__tests__/socket/emoteHandlers.test.ts` - 5テスト作成・成功
    - テストケース:
      - 有効なエモート送信時、全プレイヤーに配信される
      - 無効なエモートタイプは拒否される
      - ゲーム未参加者からの送信は拒否される
      - 送信者情報が正しく含まれる
 
-2. **ハンドラーの実装**
+2. **✅ ハンドラーの実装**
    - `backend/src/socket/handlers.ts`を更新:
      - `sendEmote`イベントハンドラー追加
      - バリデーション処理実装
      - 全プレイヤーへの配信処理実装
 
-### ステップ3: フロントエンドエモートボタンコンポーネント
-1. **EmoteButtonsコンポーネントテストの作成**
-   - `frontend/src/components/game/__tests__/EmoteButtons.test.tsx`
+### ✅ ステップ3: フロントエンドエモートボタンコンポーネント 【完了】
+1. **✅ EmoteButtonsコンポーネントテストの作成**
+   - `frontend/src/components/game/__tests__/EmoteButtons.test.tsx` - 12テスト作成・成功
    - テストケース:
      - 3つのエモートボタンが表示される
-     - ゲーム中のみ表示される
+     - ゲーム中のみ表示される（exchanging/playingフェーズ）
      - ボタンクリックでsendEmoteイベントが発火する
      - 各ボタンが正しいエモートタイプを送信する
+     - ソケット接続状態のハンドリング
 
-2. **EmoteButtonsコンポーネントの実装**
-   - `frontend/src/components/game/EmoteButtons.tsx`
+2. **✅ EmoteButtonsコンポーネントの実装**
+   - `frontend/src/components/game/EmoteButtons.tsx` - 完全実装
    - プロップス: `socket`, `gameState`
-   - 3つのボタンを横並びで表示
+   - 3つのボタンを横並びで表示（👎、🔥、🚮）
    - クリックハンドラーでSocket.io送信
+   - Tailwind CSSによるスタイリング
 
 ### ステップ4: フロントエンドエモート表示コンポーネント
 1. **EmoteBubbleコンポーネントテストの作成**

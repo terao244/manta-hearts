@@ -1,6 +1,9 @@
 // Prismaから生成される型をエクスポート
 export * from '@prisma/client';
 
+// エモート関連の型定義
+export type EmoteType = '👎' | '🔥' | '🚮';
+
 // 基本的なゲーム関連の型定義
 export interface PlayerInfo {
   id: number;
@@ -64,6 +67,7 @@ export interface ServerToClientEvents {
     gameId: number;
     completedAt: string;
   }) => void;
+  receiveEmote: (emoteData: { playerId: number; emoteType: EmoteType }) => void;
   error: (error: string) => void;
   connectionStatus: (
     status: 'connected' | 'disconnected' | 'reconnected'
@@ -89,6 +93,7 @@ export interface ClientToServerEvents {
     callback: (success: boolean, error?: string) => void
   ) => void;
   getValidCards: (callback: (validCardIds: number[]) => void) => void;
+  sendEmote: (emoteType: EmoteType) => void;
   disconnect: () => void;
   reconnect: () => void;
   pong: () => void;
@@ -103,6 +108,10 @@ export interface SocketData {
   playerName?: string;
   gameId?: number;
 }
+
+// Socket.io サーバーソケット型
+import { Socket } from 'socket.io';
+export type ServerSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 
 // ゲーム状態関連の型定義
 export interface GameInfo {

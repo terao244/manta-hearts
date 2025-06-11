@@ -1,3 +1,6 @@
+// エモート関連の型定義
+export type EmoteType = '👎' | '🔥' | '🚮';
+
 // バックエンドと共有する型定義
 export interface PlayerInfo {
   id: number;
@@ -36,6 +39,7 @@ export interface ServerToClientEvents {
   handCompleted: (handResult: HandResult) => void;
   scoreHistoryUpdate: (scoreHistory: ScoreHistoryEntry[]) => void;
   gameCompleted: (gameResult: GameResult) => void;
+  receiveEmote: (emoteData: { playerId: number; emoteType: EmoteType }) => void;
   error: (error: string) => void;
   connectionStatus: (status: 'connected' | 'disconnected' | 'reconnected') => void;
   ping: () => void;
@@ -47,6 +51,7 @@ export interface ClientToServerEvents {
   playCard: (cardId: number, callback: (success: boolean, error?: string) => void) => void;
   exchangeCards: (cardIds: number[], callback: (success: boolean, error?: string) => void) => void;
   getValidCards: (callback: (validCardIds: number[]) => void) => void;
+  sendEmote: (emoteType: EmoteType) => void;
   disconnect: () => void;
   reconnect: () => void;
   pong: () => void;

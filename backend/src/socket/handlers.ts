@@ -7,6 +7,7 @@ import type {
   ClientToServerEvents,
   InterServerEvents,
   SocketData,
+  EmoteType,
 } from '../types';
 
 type SocketType = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
@@ -179,6 +180,35 @@ export class SocketHandlers {
       } catch (error) {
         console.error('Get valid cards error:', error);
         callback([]);
+      }
+    });
+
+    // エモート送信処理
+    socket.on('sendEmote', (emoteType: EmoteType) => {
+      try {
+        const playerId = socket.data.playerId;
+        const gameId = socket.data.gameId;
+
+        // バリデーション: ゲーム参加中のプレイヤーのみ許可
+        if (!playerId || !gameId) {
+          socket.emit('error', 'ゲームに参加していません');
+          return;
+        }
+
+        // バリデーション: 有効なエモートタイプのみ許可
+        if (!['👎', '🔥', '🚮'].includes(emoteType)) {
+          socket.emit('error', '無効なエモートタイプです');
+          return;
+        }
+
+        console.log(`Player ${playerId} sent emote: ${emoteType}`);
+
+        // 全プレイヤーに配信（送信者を含む）
+        socket.broadcast.emit('receiveEmote', { playerId, emoteType });
+        socket.emit('receiveEmote', { playerId, emoteType });
+      } catch (error) {
+        console.error('Send emote error:', error);
+        socket.emit('error', 'エモート送信に失敗しました');
       }
     });
 
