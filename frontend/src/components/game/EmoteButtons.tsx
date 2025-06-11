@@ -28,21 +28,23 @@ export const EmoteButtons: React.FC<EmoteButtonsProps> = ({ socket, gameState })
   ];
 
   return (
-    <div className="flex space-x-2">
+    <div className="flex space-x-2 p-2 bg-green-800 rounded-lg border-2 border-yellow-400 shadow-lg">
       {emotes.map(({ type, label }) => (
         <button
           key={type}
           onClick={() => handleEmoteClick(type)}
           className="
-            w-10 h-10 
-            bg-gray-100 hover:bg-gray-200 
-            border border-gray-300 
+            w-12 h-12 
+            bg-white hover:bg-yellow-100 
+            border-2 border-yellow-400 hover:border-yellow-500
             rounded-lg 
             text-xl 
             flex items-center justify-center 
-            transition-colors duration-150 
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
-            active:bg-gray-300
+            transition-all duration-200 
+            focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50
+            active:bg-yellow-200 active:scale-95
+            shadow-md hover:shadow-lg
+            cursor-pointer
           "
           aria-label={label}
           title={`エモート: ${label}`}
@@ -53,3 +55,5 @@ export const EmoteButtons: React.FC<EmoteButtonsProps> = ({ socket, gameState })
     </div>
   );
 };
+
+export default EmoteButtons;

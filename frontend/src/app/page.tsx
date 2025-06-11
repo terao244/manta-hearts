@@ -10,7 +10,7 @@ import { useGame } from '@/hooks/useGame';
 import type { LoginState } from '@/types';
 
 export default function Home() {
-  const { connectionState, login } = useSocket();
+  const { socket, connectionState, login } = useSocket();
   const [loginState, setLoginState] = useState<LoginState>({
     isLoggedIn: false,
     isLoading: false
@@ -163,6 +163,7 @@ export default function Home() {
           onCardPlay={playCard}
           onCardExchange={exchangeCards}
           onCloseGameEndModal={closeGameEndModal}
+          socket={socket}
         />
       </>
     );

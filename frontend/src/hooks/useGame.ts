@@ -12,7 +12,8 @@ import type {
   HandResult, 
   GameResult,
   ScoreHistoryEntry,
-  TrickData
+  TrickData,
+  EmoteType
 } from '@/types';
 
 interface GameHookState {
@@ -31,6 +32,7 @@ interface GameHookState {
   pendingTricksUpdate?: TrickData[];
   currentTrickResult?: TrickResult;
   isTieContinuation: boolean;
+  playerEmotes: Record<number, { emoteType: EmoteType; isVisible: boolean; timestamp: number }>;
 }
 
 export const useGame = (currentPlayer: PlayerInfo | null) => {
@@ -47,7 +49,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     trickCompletedTimeout: null,
     pendingTricksUpdate: undefined,
     currentTrickResult: undefined,
-    isTieContinuation: false
+    isTieContinuation: false,
+    playerEmotes: {}
   });
 
   // ゲーム参加
@@ -91,7 +94,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
           isTieContinuation: false,
           trickCompletedTimeout: null,
           pendingTricksUpdate: undefined,
-          currentTrickResult: undefined
+          currentTrickResult: undefined,
+          playerEmotes: {}
         });
       } else {
         setGameHookState(prev => ({
@@ -159,6 +163,12 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       }));
     });
   }, [socket, currentPlayer]);
+
+  // エモート送信
+  const sendEmote = useCallback((emoteType: EmoteType) => {
+    if (!socket) return;
+    socket.emit('sendEmote', emoteType);
+  }, [socket]);
 
 
   // Socket.ioイベントリスナー
@@ -532,6 +542,36 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       }));
     };
 
+    // エモート受信
+    const handleReceiveEmote = (data: { fromPlayerId: number; emoteType: EmoteType; timestamp: number }) => {
+      console.log('Emote received:', data);
+      setGameHookState(prev => ({
+        ...prev,
+        playerEmotes: {
+          ...prev.playerEmotes,
+          [data.fromPlayerId]: {
+            emoteType: data.emoteType,
+            isVisible: true,
+            timestamp: data.timestamp
+          }
+        }
+      }));
+
+      // 2秒後に非表示にする
+      setTimeout(() => {
+        setGameHookState(prev => ({
+          ...prev,
+          playerEmotes: {
+            ...prev.playerEmotes,
+            [data.fromPlayerId]: {
+              ...prev.playerEmotes[data.fromPlayerId],
+              isVisible: false
+            }
+          }
+        }));
+      }, 2000);
+    };
+
     // ゲーム完了
     const handleGameCompleted = (gameResult: GameResult) => {
       console.log('Game completed:', gameResult);
@@ -589,6 +629,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     on('scoreHistoryUpdate', handleScoreHistoryUpdate);
     on('gameCompleted', handleGameCompleted);
     on('gameContinuedFromTie', handleGameContinuedFromTie);
+    on('receiveEmote', handleReceiveEmote);
     on('error', handleError);
 
     // クリーンアップ
@@ -611,6 +652,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
       off('scoreHistoryUpdate', handleScoreHistoryUpdate);
       off('gameCompleted', handleGameCompleted);
       off('gameContinuedFromTie', handleGameContinuedFromTie);
+      off('receiveEmote', handleReceiveEmote);
       off('error', handleError);
     };
   }, [socket, on, off, currentPlayer]);
@@ -640,10 +682,12 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     isTrickCompleted: gameHookState.isTrickCompleted,
     currentTrickResult: gameHookState.currentTrickResult,
     isTieContinuation: gameHookState.isTieContinuation,
+    playerEmotes: gameHookState.playerEmotes,
     joinGame: handleJoinGame,
     playCard: handleCardPlay,
     exchangeCards: handleCardExchange,
     updateValidCards,
+    sendEmote,
     closeGameEndModal
   };
 };

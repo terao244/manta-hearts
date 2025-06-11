@@ -1,3 +1,5 @@
+import { Socket } from 'socket.io-client';
+
 // エモート関連の型定義
 export type EmoteType = '👎' | '🔥' | '🚮';
 
@@ -202,6 +204,7 @@ export interface GameBoardProps {
   onCardPlay: (cardId: number) => void;
   onCardExchange: (cardIds: number[]) => void;
   onCloseGameEndModal?: () => void;
+  socket?: Socket;
 }
 
 export interface CardProps {

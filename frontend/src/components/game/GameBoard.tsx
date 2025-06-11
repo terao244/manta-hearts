@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Hand } from './Hand';
 import { Card } from './Card';
 import { ScoreGraph } from './ScoreGraph';
 import GameEndModal from './GameEndModal';
-import type { GameBoardProps, CardInfo, PlayerInfo, RelativePosition } from '@/types';
+import EmoteButtons from './EmoteButtons';
+import EmoteBubble from './EmoteBubble';
+import type { GameBoardProps, CardInfo, PlayerInfo, RelativePosition, EmoteType } from '@/types';
 
 // プレイヤーカードコンポーネント
 interface PlayerCardProps {
@@ -15,40 +17,50 @@ interface PlayerCardProps {
   scores?: Record<number, number>;
   currentHandScores?: Record<number, number>;
   isTied?: boolean;
+  emoteType?: EmoteType;
+  isEmoteVisible?: boolean;
 }
 
-const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, currentTurn, scores = {}, currentHandScores = {}, isTied = false }) => {
+const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, currentTurn, scores = {}, currentHandScores = {}, isTied = false, emoteType, isEmoteVisible = false }) => {
   const isCurrentPlayer = player.id === currentPlayerId;
   const isCurrentTurn = player.id === currentTurn;
   const currentHandScore = currentHandScores[player.id] || 0;
   const cumulativeScore = scores[player.id] || 0;
 
   return (
-    <div
-      className={`
-        px-3 py-2 bg-white rounded-lg shadow-md border-2 transition-all min-w-28 text-center transform
-        ${isCurrentPlayer ? 'ring-2 ring-blue-500 border-blue-300 scale-105' : 'border-gray-200'}
-        ${isCurrentTurn && !isCurrentPlayer ? 'bg-yellow-50 border-yellow-300 ring-2 ring-yellow-400 scale-110 animate-pulse' : ''}
-        ${isCurrentTurn && isCurrentPlayer ? 'bg-green-50 border-green-300 ring-2 ring-green-400 scale-110 animate-pulse' : ''}
-      `}
-    >
-      <div className={`text-sm font-semibold mb-1 ${isCurrentTurn ? 'text-yellow-800' : 'text-gray-800'
-        }`}>
-        {player.displayName}
-      </div>
-      <div 
-        className={`text-sm font-bold ${isCurrentTurn ? 'text-yellow-600' : 'text-green-600'
-        }`}
-        data-testid={isTied ? 'tied-score' : undefined}
+    <div className="relative">
+      <div
+        className={`
+          px-3 py-2 bg-white rounded-lg shadow-md border-2 transition-all min-w-28 text-center transform
+          ${isCurrentPlayer ? 'ring-2 ring-blue-500 border-blue-300 scale-105' : 'border-gray-200'}
+          ${isCurrentTurn && !isCurrentPlayer ? 'bg-yellow-50 border-yellow-300 ring-2 ring-yellow-400 scale-110 animate-pulse' : ''}
+          ${isCurrentTurn && isCurrentPlayer ? 'bg-green-50 border-green-300 ring-2 ring-green-400 scale-110 animate-pulse' : ''}
+        `}
       >
-        {cumulativeScore}点 / +{currentHandScore}点
-        {isTied && <span className="ml-1 text-red-500">🟰</span>}
-      </div>
-      {isCurrentTurn && (
-        <div className="flex items-center justify-center gap-1 mt-1">
-          <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce"></div>
-          <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+        <div className={`text-sm font-semibold mb-1 ${isCurrentTurn ? 'text-yellow-800' : 'text-gray-800'
+          }`}>
+          {player.displayName}
         </div>
+        <div 
+          className={`text-sm font-bold ${isCurrentTurn ? 'text-yellow-600' : 'text-green-600'
+          }`}
+          data-testid={isTied ? 'tied-score' : undefined}
+        >
+          {cumulativeScore}点 / +{currentHandScore}点
+          {isTied && <span className="ml-1 text-red-500">🟰</span>}
+        </div>
+        {isCurrentTurn && (
+          <div className="flex items-center justify-center gap-1 mt-1">
+            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce"></div>
+            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          </div>
+        )}
+      </div>
+      {emoteType && (
+        <EmoteBubble 
+          emoteType={emoteType} 
+          isVisible={isEmoteVisible}
+        />
       )}
     </div>
   );
@@ -69,10 +81,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   isTieContinuation = false,
   onCardPlay,
   onCardExchange,
-  onCloseGameEndModal
+  onCloseGameEndModal,
+  socket
 }) => {
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
   const [isScoreGraphVisible, setIsScoreGraphVisible] = useState<boolean>(showScoreGraph);
+  
+  // エモート状態管理
+  const [playerEmotes, setPlayerEmotes] = useState<Record<number, { emoteType: EmoteType; isVisible: boolean; timestamp: number }>>({});
 
   // 同点プレイヤーの判定
   const getTiedPlayerIds = () => {
@@ -92,6 +108,39 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   const tiedPlayerIds = getTiedPlayerIds();
+
+  // エモートイベントリスナーの設定
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleReceiveEmote = (data: { fromPlayerId: number; emoteType: EmoteType; timestamp: number }) => {
+      setPlayerEmotes(prev => ({
+        ...prev,
+        [data.fromPlayerId]: {
+          emoteType: data.emoteType,
+          isVisible: true,
+          timestamp: data.timestamp
+        }
+      }));
+
+      // 2秒後に非表示にする
+      setTimeout(() => {
+        setPlayerEmotes(prev => ({
+          ...prev,
+          [data.fromPlayerId]: {
+            ...prev[data.fromPlayerId],
+            isVisible: false
+          }
+        }));
+      }, 2000);
+    };
+
+    socket.on('receiveEmote', handleReceiveEmote);
+
+    return () => {
+      socket.off('receiveEmote', handleReceiveEmote);
+    };
+  }, [socket]);
 
   const {
     gameId,
@@ -365,7 +414,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   data-testid={`player-${player.id}`}
                   className="absolute top-2 left-1/2 transform -translate-x-1/2"
                 >
-                  <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} isTied={tiedPlayerIds.has(player.id)} />
+                  <PlayerCard 
+                    player={player} 
+                    currentPlayerId={currentPlayerId} 
+                    currentTurn={currentTurn} 
+                    scores={scores} 
+                    currentHandScores={currentHandScores} 
+                    isTied={tiedPlayerIds.has(player.id)}
+                    emoteType={playerEmotes[player.id]?.emoteType}
+                    isEmoteVisible={playerEmotes[player.id]?.isVisible || false}
+                  />
                 </div>
               ))}
 
@@ -376,18 +434,43 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   data-testid={`player-${player.id}`}
                   className="absolute right-2 top-1/2 transform -translate-y-1/2"
                 >
-                  <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} isTied={tiedPlayerIds.has(player.id)} />
+                  <PlayerCard 
+                    player={player} 
+                    currentPlayerId={currentPlayerId} 
+                    currentTurn={currentTurn} 
+                    scores={scores} 
+                    currentHandScores={currentHandScores} 
+                    isTied={tiedPlayerIds.has(player.id)}
+                    emoteType={playerEmotes[player.id]?.emoteType}
+                    isEmoteVisible={playerEmotes[player.id]?.isVisible || false}
+                  />
                 </div>
               ))}
 
               {/* 下のプレイヤー */}
               {players.filter(p => getPlayerPosition(p.id) === 'bottom').map(player => (
-                <div
-                  key={player.id}
-                  data-testid={`player-${player.id}`}
-                  className="absolute bottom-2 left-1/2 transform -translate-x-1/2"
-                >
-                  <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} isTied={tiedPlayerIds.has(player.id)} />
+                <div key={player.id}>
+                  <div
+                    data-testid={`player-${player.id}`}
+                    className="absolute bottom-2 left-1/2 transform -translate-x-1/2"
+                  >
+                    <PlayerCard 
+                      player={player} 
+                      currentPlayerId={currentPlayerId} 
+                      currentTurn={currentTurn} 
+                      scores={scores} 
+                      currentHandScores={currentHandScores} 
+                      isTied={tiedPlayerIds.has(player.id)}
+                      emoteType={playerEmotes[player.id]?.emoteType}
+                      isEmoteVisible={playerEmotes[player.id]?.isVisible || false}
+                    />
+                  </div>
+                  {/* 自分のプレイヤーのエモートボタン */}
+                  {player.id === currentPlayerId && socket && (phase === 'exchanging' || phase === 'playing') && (
+                    <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-10">
+                      <EmoteButtons socket={socket} gameState={gameState} />
+                    </div>
+                  )}
                 </div>
               ))}
 
@@ -398,7 +481,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   data-testid={`player-${player.id}`}
                   className="absolute left-2 top-1/2 transform -translate-y-1/2"
                 >
-                  <PlayerCard player={player} currentPlayerId={currentPlayerId} currentTurn={currentTurn} scores={scores} currentHandScores={currentHandScores} isTied={tiedPlayerIds.has(player.id)} />
+                  <PlayerCard 
+                    player={player} 
+                    currentPlayerId={currentPlayerId} 
+                    currentTurn={currentTurn} 
+                    scores={scores} 
+                    currentHandScores={currentHandScores} 
+                    isTied={tiedPlayerIds.has(player.id)}
+                    emoteType={playerEmotes[player.id]?.emoteType}
+                    isEmoteVisible={playerEmotes[player.id]?.isVisible || false}
+                  />
                 </div>
               ))}
 

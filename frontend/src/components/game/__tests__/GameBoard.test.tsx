@@ -138,7 +138,7 @@ describe('GameBoard', () => {
     );
     
     const currentPlayerElement = screen.getByTestId('player-1');
-    const playerCard = currentPlayerElement.querySelector('div');
+    const playerCard = currentPlayerElement.querySelector('.relative > div');
     expect(playerCard).toHaveClass('ring-blue-500');
   });
 
@@ -275,7 +275,7 @@ describe('GameBoard', () => {
     );
     
     const currentTurnPlayerElement = screen.getByTestId('player-1');
-    const playerCard = currentTurnPlayerElement.querySelector('div');
+    const playerCard = currentTurnPlayerElement.querySelector('.relative > div');
     expect(playerCard).toHaveClass('animate-pulse');
   });
 
