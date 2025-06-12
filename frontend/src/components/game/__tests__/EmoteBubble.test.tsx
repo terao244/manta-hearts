@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import EmoteBubble from '../EmoteBubble'
 import { EmoteType } from '../../../types'
 
@@ -74,7 +74,6 @@ describe('EmoteBubble', () => {
     
     // 疑似要素の三角形はテストしにくいが、コンテナの構造を確認
     const container = screen.getByRole('presentation')
-    const triangle = container.querySelector('.before\\:content-\\[\\\'\\\'\\]')
     
     // 三角形用のクラスがコンテナに適用されているかチェック
     expect(container).toHaveClass('before:absolute')

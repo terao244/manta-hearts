@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Hand } from './Hand';
 import { Card } from './Card';
 import { ScoreGraph } from './ScoreGraph';

@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react'
 import { useGame } from '../useGame'
 import { useSocket } from '../useSocket'
-import type { EmoteType } from '../../types'
+import type { EmoteType, CustomSocket } from '../../types'
 
 // useSocketのモック
 jest.mock('../useSocket')
@@ -30,9 +30,10 @@ describe('useGame エモート機能', () => {
     
     // useSocketのモック設定
     mockUseSocket.mockReturnValue({
-      socket: mockSocket as any,
+      socket: mockSocket as CustomSocket,
       isConnected: true,
-      gameService: mockGameService as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      gameService: mockGameService as unknown as any,
       joinGame: jest.fn(),
       playCard: jest.fn(),
       exchangeCards: jest.fn(),
@@ -131,7 +132,8 @@ describe('useGame エモート機能', () => {
     mockUseSocket.mockReturnValue({
       socket: null,
       isConnected: false,
-      gameService: mockGameService as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      gameService: mockGameService as unknown as any,
       joinGame: jest.fn(),
       playCard: jest.fn(),
       exchangeCards: jest.fn(),

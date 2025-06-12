@@ -1,5 +1,8 @@
 import { Socket } from 'socket.io-client';
 
+// Socket型エイリアス
+export type CustomSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
+
 // エモート関連の型定義
 export type EmoteType = '👎' | '🔥' | '🚮';
 
@@ -205,7 +208,7 @@ export interface GameBoardProps {
   onCardPlay: (cardId: number) => void;
   onCardExchange: (cardIds: number[]) => void;
   onCloseGameEndModal?: () => void;
-  socket?: Socket;
+  socket?: CustomSocket | null;
 }
 
 export interface CardProps {

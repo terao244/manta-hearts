@@ -1,7 +1,6 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { GameBoard } from '../GameBoard'
-import type { GameBoardProps } from '../../../types'
-import { Socket } from 'socket.io-client'
+import type { GameBoardProps, CustomSocket, EmoteType } from '../../../types'
 
 // Socket.ioのモック
 const mockSocket = {
@@ -9,7 +8,7 @@ const mockSocket = {
   on: jest.fn(),
   off: jest.fn(),
   connected: true
-} as unknown as Socket
+} as unknown as CustomSocket
 
 // GameBoardのモックプロップス
 const mockGameBoardProps: GameBoardProps = {
@@ -46,7 +45,7 @@ const mockGameBoardProps: GameBoardProps = {
 
 // EmoteButtons と EmoteBubble コンポーネントのモック
 jest.mock('../EmoteButtons', () => {
-  return function MockEmoteButtons({ socket, gameState }: any) {
+  return function MockEmoteButtons({ socket }: { socket: CustomSocket | null; gameState: GameBoardProps['gameState'] }) {
     return (
       <div data-testid="emote-buttons">
         <button onClick={() => socket.emit('sendEmote', '👎')}>👎</button>
@@ -58,7 +57,7 @@ jest.mock('../EmoteButtons', () => {
 })
 
 jest.mock('../EmoteBubble', () => {
-  return function MockEmoteBubble({ emoteType, isVisible }: any) {
+  return function MockEmoteBubble({ emoteType, isVisible }: { emoteType: string; isVisible: boolean }) {
     return (
       <div data-testid={`emote-bubble-${emoteType}`} className={isVisible ? 'visible' : 'hidden'}>
         {emoteType === '👎' && '👎'}
@@ -93,8 +92,8 @@ describe('GameBoard エモート統合', () => {
       ...mockGameBoardProps,
       socket: mockSocket,
       playerEmotes: {
-        1: { emoteType: '👎' as any, isVisible: true },
-        2: { emoteType: '🔥' as any, isVisible: true }
+        1: { emoteType: '👎' as EmoteType, isVisible: true },
+        2: { emoteType: '🔥' as EmoteType, isVisible: true }
       }
     }
     
@@ -117,7 +116,7 @@ describe('GameBoard エモート統合', () => {
       ...mockGameBoardProps,
       socket: mockSocket,
       playerEmotes: {
-        2: { emoteType: '🔥' as any, isVisible: true }
+        2: { emoteType: '🔥' as EmoteType, isVisible: true }
       }
     }
     
@@ -133,8 +132,8 @@ describe('GameBoard エモート統合', () => {
       ...mockGameBoardProps,
       socket: mockSocket,
       playerEmotes: {
-        2: { emoteType: '🔥' as any, isVisible: true },
-        3: { emoteType: '👎' as any, isVisible: true }
+        2: { emoteType: '🔥' as EmoteType, isVisible: true },
+        3: { emoteType: '👎' as EmoteType, isVisible: true }
       }
     }
     

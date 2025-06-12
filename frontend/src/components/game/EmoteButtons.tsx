@@ -1,8 +1,8 @@
 import React from 'react';
-import { GameState, EmoteType } from '../../types';
+import { GameState, EmoteType, CustomSocket } from '../../types';
 
 interface EmoteButtonsProps {
-  socket: any; // Socket instance or null
+  socket: CustomSocket | null;
   gameState: GameState;
 }
 
