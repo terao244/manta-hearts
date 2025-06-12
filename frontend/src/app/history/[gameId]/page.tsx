@@ -503,8 +503,6 @@ function HandDetail({ hand, players, gameId }: { hand: HandDetailData; players: 
                                     </span>
                                     <span className="ml-1 text-gray-600">
                                       {playerName.charAt(0)}
-                                      {isLeader && '👑'}
-                                      {isWinner && '🏆'}
                                     </span>
                                   </span>
                                 );
