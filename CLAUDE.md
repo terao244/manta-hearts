@@ -47,7 +47,7 @@ npm run dev             # 開発サーバー起動 (http://localhost:3000)
 npm run build           # プロダクションビルド
 npm run lint            # ESLint実行
 npm run type-check      # TypeScriptの型チェック
-npm test               # テスト実行（30テスト）
+npm test               # テスト実行（198テスト、一部エモート関連テスト失敗）
 npm run test:watch     # テスト監視モード
 npm run format         # Prettierでコード整形
 npm run format:check   # Prettierでフォーマットチェック
@@ -61,7 +61,7 @@ npm run build           # TypeScriptビルド
 npm run start           # プロダクション実行
 npm run lint            # ESLint実行
 npm run type-check      # TypeScriptの型チェック
-npm test               # テスト実行（168テスト）
+npm test               # テスト実行（292テスト）
 npm run test:watch     # テスト監視モード
 npm run format         # Prettierでコード整形
 npm run format:check   # Prettierでフォーマットチェック
@@ -83,10 +83,10 @@ docker-compose logs -f   # ログ表示
 
 ### テスト実行推奨順序
 ```bash
-# バックエンドテスト（168テスト）
+# バックエンドテスト（292テスト）
 cd backend && npm test
 
-# フロントエンドテスト（30テスト）
+# フロントエンドテスト（198テスト、一部エモート関連テスト失敗）
 cd frontend && npm test
 
 # 型チェック・lint確認
@@ -172,7 +172,7 @@ cd frontend && npm run type-check && npm run lint
 - **Player、GamePlayer**: プレイヤー管理とゲーム状態
 - **GameState**: ゲーム状態管理（フェーズ、トリック、スコア）
 - **GameEngine**: ゲーム制御（カード配布、交換、プレイ、スコア計算）
-- **テスト**: 166個のユニットテスト（全て合格）
+- **テスト**: 292個のユニットテスト（全て合格）
 
 ### Socket.ioイベント（実装済み）
 - `login`: プレイヤーログイン
@@ -180,9 +180,11 @@ cd frontend && npm run type-check && npm run lint
 - `playCard`: カードプレイ
 - `exchangeCards`: カード交換
 - `getValidCards`: 有効カード取得（Phase 9で追加）
+- `sendEmote`: エモート送信
 - `gameState`: ゲーム状態更新
 - `playerJoined`: プレイヤー参加通知
 - `gameContinuedFromTie`: 同点によるゲーム継続通知
+- `emoteReceived`: エモート受信通知
 - `ping`/`pong`: ハートビート機能
 
 ### フロントエンド実装済み
@@ -194,6 +196,7 @@ cd frontend && npm run type-check && npm run lint
 - **リアルタイム同期**: Socket.ioによる状態管理
 - **手札配布**: 4人揃った時の自動配布とリアルタイム表示
 - **カード操作UI**: 有効カードハイライト、ホバー効果、選択UI改善（Phase 9）
+- **エモート機能**: 感情表現エモートボタン、アニメーション表示
 
 ### 現在動作可能な機能
 - http://localhost:3000 でプレイヤー選択画面表示
@@ -206,8 +209,9 @@ cd frontend && npm run type-check && npm run lint
 - 有効カードハイライト機能（リアルタイム判定、視覚的フィードバック）
 - 複数プレイヤー参加時のリアルタイム同期
 - 4人揃った時の自動手札配布
+- エモート機能（感情表現、リアルタイム表示、アニメーション）
 
-### 完了済み実装（2025/06/01最新）
+### 完了済み実装（2025/06/12最新）
 - **手札ソート順変更**: クラブ→ダイヤ→スペード→ハートに変更済み
 - **現在ハンド点数表示**: プレイヤーエリアでの現在ハンド累積点数表示実装済み
 - **ゲーム終了点数設定**: 環境変数GAME_END_SCOREで30点設定可能
@@ -217,7 +221,11 @@ cd frontend && npm run type-check && npm run lint
   - フロントエンド: useGame同点継続状態管理、GameBoard UI対応
   - Socket.io: gameContinuedFromTieイベント処理完備
   - 全テスト通過: バックエンド新規63テスト、フロントエンド新規23テスト
-- **全テスト正常通過**: バックエンド168テスト、フロントエンド30テスト
+- **エモート機能**: プレイヤー間のリアルタイムエモート送受信機能実装済み
+  - バックエンド: Socket.ioエモートハンドラー、型安全なエモート通信
+  - フロントエンド: エモートボタン、アニメーション表示、useGameフック統合
+  - テスト: バックエンド41テスト、フロントエンド22テスト（一部エモート関連テスト修正中）
+- **全テスト状況**: バックエンド292テスト（全て通過）、フロントエンド198テスト（一部エモート関連テスト失敗）
 
 ### 開発中機能（Phase 11以降）
 - **データ永続化詳細**: ゲーム保存処理、統計機能
