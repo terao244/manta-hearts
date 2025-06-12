@@ -38,7 +38,7 @@ export const EmoteButtons: React.FC<EmoteButtonsProps> = ({ socket, gameState })
             bg-white hover:bg-yellow-100 
             border-2 border-yellow-400 hover:border-yellow-500
             rounded-lg 
-            text-xl 
+            text-3xl 
             flex items-center justify-center 
             transition-all duration-200 
             focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50

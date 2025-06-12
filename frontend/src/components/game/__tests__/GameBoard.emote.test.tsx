@@ -49,9 +49,9 @@ jest.mock('../EmoteButtons', () => {
   return function MockEmoteButtons({ socket, gameState }: any) {
     return (
       <div data-testid="emote-buttons">
-        <button onClick={() => socket.emit('sendEmote', 'dislike')}>👎</button>
-        <button onClick={() => socket.emit('sendEmote', 'fire')}>🔥</button>
-        <button onClick={() => socket.emit('sendEmote', 'trash')}>🚮</button>
+        <button onClick={() => socket.emit('sendEmote', '👎')}>👎</button>
+        <button onClick={() => socket.emit('sendEmote', '🔥')}>🔥</button>
+        <button onClick={() => socket.emit('sendEmote', '🚮')}>🚮</button>
       </div>
     )
   }
@@ -61,9 +61,9 @@ jest.mock('../EmoteBubble', () => {
   return function MockEmoteBubble({ emoteType, isVisible }: any) {
     return (
       <div data-testid={`emote-bubble-${emoteType}`} className={isVisible ? 'visible' : 'hidden'}>
-        {emoteType === 'dislike' && '👎'}
-        {emoteType === 'fire' && '🔥'}
-        {emoteType === 'trash' && '🚮'}
+        {emoteType === '👎' && '👎'}
+        {emoteType === '🔥' && '🔥'}
+        {emoteType === '🚮' && '🚮'}
       </div>
     )
   }
@@ -84,80 +84,67 @@ describe('GameBoard エモート統合', () => {
     const dislikeButton = screen.getByText('👎')
     fireEvent.click(dislikeButton)
     
-    expect(mockSocket.emit).toHaveBeenCalledWith('sendEmote', 'dislike')
+    expect(mockSocket.emit).toHaveBeenCalledWith('sendEmote', '👎')
   })
 
   it('各プレイヤーにEmoteBubbleが配置される', () => {
     // エモートが設定されている状態でレンダー
     const propsWithEmote = {
       ...mockGameBoardProps,
-      socket: mockSocket
+      socket: mockSocket,
+      playerEmotes: {
+        1: { emoteType: '👎' as any, isVisible: true },
+        2: { emoteType: '🔥' as any, isVisible: true }
+      }
     }
     
     render(<GameBoard {...propsWithEmote} />)
     
-    // socket.onが呼ばれ、receiveEmoteイベントリスナーが設定されることを確認
-    expect(mockSocket.on).toHaveBeenCalledWith('receiveEmote', expect.any(Function))
+    // エモートバブルが表示されることを確認
+    expect(screen.getByTestId('emote-bubble-👎')).toBeInTheDocument()
+    expect(screen.getByTestId('emote-bubble-🔥')).toBeInTheDocument()
   })
 
-  it('receiveEmoteイベント受信時に該当プレイヤーにEmoteBubbleが表示される', async () => {
-    const propsWithSocket = { ...mockGameBoardProps, socket: mockSocket }
-    render(<GameBoard {...propsWithSocket} />)
+  it('playerEmotesプロップによりエモートバブルが制御される', () => {
+    // 最初は非表示状態でレンダー
+    const { rerender } = render(<GameBoard {...mockGameBoardProps} socket={mockSocket} />)
     
-    // socket.onが呼ばれていることを確認
-    expect(mockSocket.on).toHaveBeenCalledWith('receiveEmote', expect.any(Function))
+    // エモートバブルが存在しないことを確認
+    expect(screen.queryByTestId('emote-bubble-🔥')).not.toBeInTheDocument()
     
-    // receiveEmoteイベントハンドラーを取得してテスト実行
-    const receiveEmoteHandler = (mockSocket.on as jest.Mock).mock.calls
-      .find(call => call[0] === 'receiveEmote')?.[1]
-    
-    if (receiveEmoteHandler) {
-      // エモート受信をシミュレート
-      await act(async () => {
-        receiveEmoteHandler({
-          fromPlayerId: 2,
-          emoteType: 'fire',
-          timestamp: Date.now()
-        })
-      })
-      
-      await waitFor(() => {
-        // 該当プレイヤーのエモートバブルが表示状態になることを期待
-        const fireBubble = screen.getByTestId('emote-bubble-fire')
-        expect(fireBubble).toHaveClass('visible')
-      })
+    // エモートが表示される状態に変更
+    const propsWithEmote = {
+      ...mockGameBoardProps,
+      socket: mockSocket,
+      playerEmotes: {
+        2: { emoteType: '🔥' as any, isVisible: true }
+      }
     }
+    
+    rerender(<GameBoard {...propsWithEmote} />)
+    
+    // 該当プレイヤーのエモートバブルが表示されることを確認
+    expect(screen.getByTestId('emote-bubble-🔥')).toBeInTheDocument()
+    expect(screen.getByTestId('emote-bubble-🔥')).toHaveClass('visible')
   })
 
-  it('複数プレイヤーのエモートが同時に表示可能', async () => {
-    const propsWithSocket = { ...mockGameBoardProps, socket: mockSocket }
-    render(<GameBoard {...propsWithSocket} />)
-    
-    const receiveEmoteHandler = (mockSocket.on as jest.Mock).mock.calls
-      .find(call => call[0] === 'receiveEmote')?.[1]
-    
-    if (receiveEmoteHandler) {
-      // 複数のエモートを受信
-      await act(async () => {
-        receiveEmoteHandler({
-          fromPlayerId: 2,
-          emoteType: 'fire',
-          timestamp: Date.now()
-        })
-        
-        receiveEmoteHandler({
-          fromPlayerId: 3,
-          emoteType: 'dislike',
-          timestamp: Date.now()
-        })
-      })
-      
-      await waitFor(() => {
-        // 両方のエモートバブルが表示される
-        expect(screen.getByTestId('emote-bubble-fire')).toHaveClass('visible')
-        expect(screen.getByTestId('emote-bubble-dislike')).toHaveClass('visible')
-      })
+  it('複数プレイヤーのエモートが同時に表示可能', () => {
+    const propsWithMultipleEmotes = {
+      ...mockGameBoardProps,
+      socket: mockSocket,
+      playerEmotes: {
+        2: { emoteType: '🔥' as any, isVisible: true },
+        3: { emoteType: '👎' as any, isVisible: true }
+      }
     }
+    
+    render(<GameBoard {...propsWithMultipleEmotes} />)
+    
+    // 両方のエモートバブルが表示される
+    expect(screen.getByTestId('emote-bubble-🔥')).toBeInTheDocument()
+    expect(screen.getByTestId('emote-bubble-👎')).toBeInTheDocument()
+    expect(screen.getByTestId('emote-bubble-🔥')).toHaveClass('visible')
+    expect(screen.getByTestId('emote-bubble-👎')).toHaveClass('visible')
   })
 
   it('ゲーム外フェーズではEmoteButtonsが表示されない', () => {

@@ -11,14 +11,14 @@ describe('EmoteBubble', () => {
   })
 
   it('エモートが吹き出し内に表示される', () => {
-    render(<EmoteBubble emoteType="dislike" isVisible={true} />)
+    render(<EmoteBubble emoteType="👎" isVisible={true} />)
     
     expect(screen.getByText('👎')).toBeInTheDocument()
     expect(screen.getByRole('presentation')).toHaveClass('opacity-100')
   })
 
   it('isVisibleがfalseの場合は非表示になる', () => {
-    render(<EmoteBubble emoteType="fire" isVisible={false} />)
+    render(<EmoteBubble emoteType="🔥" isVisible={false} />)
     
     const bubble = screen.getByRole('presentation')
     expect(bubble).toHaveClass('opacity-0')
@@ -26,9 +26,9 @@ describe('EmoteBubble', () => {
 
   it('各エモートタイプが正しく表示される', () => {
     const testCases: Array<{ type: EmoteType; emoji: string }> = [
-      { type: 'dislike', emoji: '👎' },
-      { type: 'fire', emoji: '🔥' },
-      { type: 'trash', emoji: '🚮' }
+      { type: '👎', emoji: '👎' },
+      { type: '🔥', emoji: '🔥' },
+      { type: '🚮', emoji: '🚮' }
     ]
 
     testCases.forEach(({ type, emoji }) => {
@@ -39,7 +39,7 @@ describe('EmoteBubble', () => {
   })
 
   it('吹き出しデザインのスタイルが適用される', () => {
-    render(<EmoteBubble emoteType="fire" isVisible={true} />)
+    render(<EmoteBubble emoteType="🔥" isVisible={true} />)
     
     const bubble = screen.getByRole('presentation')
     expect(bubble).toHaveClass(
@@ -59,18 +59,18 @@ describe('EmoteBubble', () => {
   })
 
   it('アニメーション用のクラスが正しく適用される', () => {
-    const { rerender } = render(<EmoteBubble emoteType="dislike" isVisible={false} />)
+    const { rerender } = render(<EmoteBubble emoteType="👎" isVisible={false} />)
     
     let bubble = screen.getByRole('presentation')
     expect(bubble).toHaveClass('opacity-0')
     
-    rerender(<EmoteBubble emoteType="dislike" isVisible={true} />)
+    rerender(<EmoteBubble emoteType="👎" isVisible={true} />)
     bubble = screen.getByRole('presentation')
     expect(bubble).toHaveClass('opacity-100')
   })
 
   it('吹き出しの矢印（三角形）が表示される', () => {
-    render(<EmoteBubble emoteType="trash" isVisible={true} />)
+    render(<EmoteBubble emoteType="🚮" isVisible={true} />)
     
     // 疑似要素の三角形はテストしにくいが、コンテナの構造を確認
     const container = screen.getByRole('presentation')

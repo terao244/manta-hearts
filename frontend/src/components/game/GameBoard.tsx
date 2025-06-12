@@ -437,7 +437,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   {(() => {
                     const shouldShowEmoteButtons = player.id === currentPlayerId && socket && (phase === 'exchanging' || phase === 'playing');
                     return shouldShowEmoteButtons && (
-                      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-10">
+                      <div 
+                        className="absolute bottom-2 z-10"
+                        style={{ left: 'calc(50% + 70px)' }}
+                      >
                         <EmoteButtons socket={socket} gameState={gameState} />
                       </div>
                     );

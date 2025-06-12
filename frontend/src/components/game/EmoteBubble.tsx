@@ -48,7 +48,7 @@ export default function EmoteBubble({ emoteType, isVisible }: EmoteBubbleProps) 
         marginBottom: '8px'
       }}
     >
-      <span className="text-2xl select-none">
+      <span className="text-4xl select-none">
         {EMOTE_EMOJIS[emoteType]}
       </span>
     </div>
