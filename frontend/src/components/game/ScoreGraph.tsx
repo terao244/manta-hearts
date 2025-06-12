@@ -60,7 +60,8 @@ export const ScoreGraph: React.FC<ScoreGraphProps> = ({
       // scoreHistoryから累積スコアを計算
       scoreHistory.forEach(entry => {
         if (entry.hand >= 1 && entry.hand <= 20) {
-          cumulativeScore += entry.scores?.[player.id] || 0;
+          const handScore = entry.scores?.[player.id] || 0;
+          cumulativeScore += handScore;
           playerData[entry.hand] = cumulativeScore;
         }
       });

@@ -742,12 +742,14 @@ export class GameService {
           console.error('Error handling tie continuation:', error);
           // エラーが発生しても従来の処理で続行
           try {
+            const fallbackScoreHistory = this.gameScoreHistory.get(gameId) || [];
+            
             this.broadcastToGame(gameId, 'gameCompleted', {
               gameId,
               winnerId,
               finalScores: Object.fromEntries(finalScores),
               rankings: gameState.getFinalRankings(),
-              scoreHistory: this.gameScoreHistory.get(gameId) || [],
+              scoreHistory: fallbackScoreHistory,
               completedAt: new Date().toISOString()
             });
           } catch (fallbackError) {

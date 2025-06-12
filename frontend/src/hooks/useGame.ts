@@ -539,10 +539,23 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     // スコア履歴更新
     const handleScoreHistoryUpdate = (scoreHistory: ScoreHistoryEntry[]) => {
       console.log('Score history updated:', scoreHistory);
-      setGameHookState(prev => ({
-        ...prev,
-        scoreHistory
-      }));
+      
+      setGameHookState(prev => {
+        // ゲーム完了後にスコア履歴が更新された場合、gameResultも更新
+        let updatedGameResult = prev.gameResult;
+        if (prev.gameResult && scoreHistory.length > prev.scoreHistory.length) {
+          updatedGameResult = {
+            ...prev.gameResult,
+            scoreHistory
+          };
+        }
+        
+        return {
+          ...prev,
+          scoreHistory,
+          gameResult: updatedGameResult
+        };
+      });
     };
 
     // エモート受信
