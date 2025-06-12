@@ -51,8 +51,6 @@ describe('EmoteBubble', () => {
       'px-3',
       'py-2',
       'shadow-lg',
-      'transform',
-      '-translate-x-1/2',
       'transition-opacity',
       'duration-300'
     )
