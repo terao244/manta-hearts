@@ -19,9 +19,10 @@ interface PlayerCardProps {
   isTied?: boolean;
   emoteType?: EmoteType;
   isEmoteVisible?: boolean;
+  position?: RelativePosition | '';
 }
 
-const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, currentTurn, scores = {}, currentHandScores = {}, isTied = false, emoteType, isEmoteVisible = false }) => {
+const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, currentTurn, scores = {}, currentHandScores = {}, isTied = false, emoteType, isEmoteVisible = false, position = '' }) => {
   const isCurrentPlayer = player.id === currentPlayerId;
   const isCurrentTurn = player.id === currentTurn;
   const currentHandScore = currentHandScores[player.id] || 0;
@@ -61,6 +62,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player, currentPlayerId, curren
         <EmoteBubble 
           emoteType={emoteType} 
           isVisible={isEmoteVisible}
+          position={position}
         />
       )}
     </div>
@@ -391,6 +393,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     isTied={tiedPlayerIds.has(player.id)}
                     emoteType={playerEmotes[player.id]?.emoteType}
                     isEmoteVisible={playerEmotes[player.id]?.isVisible || false}
+                    position="top"
                   />
                 </div>
               ))}
@@ -411,6 +414,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     isTied={tiedPlayerIds.has(player.id)}
                     emoteType={playerEmotes[player.id]?.emoteType}
                     isEmoteVisible={playerEmotes[player.id]?.isVisible || false}
+                    position="right"
                   />
                 </div>
               ))}
@@ -431,6 +435,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                       isTied={tiedPlayerIds.has(player.id)}
                       emoteType={playerEmotes[player.id]?.emoteType}
                       isEmoteVisible={playerEmotes[player.id]?.isVisible || false}
+                      position="bottom"
                     />
                   </div>
                   {/* 自分のプレイヤーのエモートボタン */}
@@ -464,6 +469,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     isTied={tiedPlayerIds.has(player.id)}
                     emoteType={playerEmotes[player.id]?.emoteType}
                     isEmoteVisible={playerEmotes[player.id]?.isVisible || false}
+                    position="left"
                   />
                 </div>
               ))}
