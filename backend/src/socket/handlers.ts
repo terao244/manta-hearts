@@ -2,6 +2,7 @@ import { Socket } from 'socket.io';
 import { PrismaClient } from '@prisma/client';
 import { PrismaService } from '../services/PrismaService';
 import { GameService } from '../services/GameService';
+import { EMOTE_ERROR_MESSAGES, isValidEmoteType } from '../constants/emote';
 import type {
   ServerToClientEvents,
   ClientToServerEvents,
@@ -230,18 +231,14 @@ export class SocketHandlers {
         }
 
         // バリデーション: 有効なエモートタイプのみ許可
-        if (!['👎', '🔥', '🚮'].includes(emoteType)) {
-          socket.emit('error', '無効なエモートタイプです');
+        if (!isValidEmoteType(emoteType)) {
+          socket.emit('error', EMOTE_ERROR_MESSAGES.INVALID_TYPE);
           return;
         }
-
 
         // 同じゲームに参加している全プレイヤーに配信
         const gamePlayerIds = this.gameService.getGamePlayerIds(gameId);
         if (gamePlayerIds && gamePlayerIds.length > 0) {
-          // タイムスタンプを付与
-          const timestamp = Date.now();
-          
           // 各プレイヤーのソケットに配信
           gamePlayerIds.forEach(pid => {
             const socketId = SocketHandlers.playerSocketMap.get(pid);
@@ -250,8 +247,7 @@ export class SocketHandlers {
               if (playerSocket) {
                 playerSocket.emit('receiveEmote', { 
                   fromPlayerId: playerId, 
-                  emoteType,
-                  timestamp 
+                  emoteType
                 });
               }
             }
@@ -259,7 +255,7 @@ export class SocketHandlers {
         }
       } catch (error) {
         console.error('Send emote error:', error);
-        socket.emit('error', 'エモート送信に失敗しました');
+        socket.emit('error', EMOTE_ERROR_MESSAGES.SEND_FAILED);
       }
     });
 

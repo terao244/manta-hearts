@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSocket } from './useSocket';
+import { EMOTE_CONFIG, TRICK_CONFIG } from '@/constants/emote';
 import type { 
   GameState, 
   PlayerInfo, 
@@ -467,7 +468,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
           clearTimeout(prev.trickCompletedTimeout);
         }
         
-        // 新しいタイマーを設定（2秒後にトリック完了状態をクリア）
+        // 新しいタイマーを設定（定数で定義された時間後にトリック完了状態をクリア）
         const timeout = setTimeout(() => {
           setGameHookState(current => {
             const newState = {
@@ -489,7 +490,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
             
             return newState;
           });
-        }, 2000);
+        }, TRICK_CONFIG.DISPLAY_DURATION_MS);
         
         return {
           ...prev,
@@ -545,7 +546,8 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
     };
 
     // エモート受信
-    const handleReceiveEmote = (data: { fromPlayerId: number; emoteType: EmoteType; timestamp: number }) => {
+    const handleReceiveEmote = (data: { fromPlayerId: number; emoteType: EmoteType }) => {
+      const currentTimestamp = Date.now();
       setGameHookState(prev => ({
         ...prev,
         playerEmotes: {
@@ -553,12 +555,12 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
           [data.fromPlayerId]: {
             emoteType: data.emoteType,
             isVisible: true,
-            timestamp: data.timestamp
+            timestamp: currentTimestamp
           }
         }
       }));
 
-      // 2秒後に非表示にする
+      // 定数で定義された時間後に非表示にする
       setTimeout(() => {
         setGameHookState(prev => ({
           ...prev,
@@ -570,7 +572,7 @@ export const useGame = (currentPlayer: PlayerInfo | null) => {
             }
           }
         }));
-      }, 2000);
+      }, EMOTE_CONFIG.DISPLAY_DURATION_MS);
     };
 
     // ゲーム完了
