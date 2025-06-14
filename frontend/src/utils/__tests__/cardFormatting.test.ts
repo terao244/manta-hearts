@@ -161,10 +161,10 @@ describe('カード表記システム', () => {
 
   describe('getCardSortOrder', () => {
     it('正しいソート順序を返す', () => {
-      expect(getCardSortOrder('CLUBS', 'TWO')).toBe(2);
-      expect(getCardSortOrder('DIAMONDS', 'ACE')).toBe(114);
-      expect(getCardSortOrder('SPADES', 'QUEEN')).toBe(212);
-      expect(getCardSortOrder('HEARTS', 'KING')).toBe(313);
+      expect(getCardSortOrder('CLUBS', 'TWO')).toBe(102);
+      expect(getCardSortOrder('DIAMONDS', 'ACE')).toBe(214);
+      expect(getCardSortOrder('SPADES', 'QUEEN')).toBe(312);
+      expect(getCardSortOrder('HEARTS', 'KING')).toBe(413);
     });
 
     it('スーツの順序が正しい（クラブ < ダイヤ < スペード < ハート）', () => {

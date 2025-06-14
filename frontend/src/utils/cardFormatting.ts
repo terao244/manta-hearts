@@ -157,13 +157,13 @@ export function getCardPoints(suit: string, rank: string): number {
  * @returns ソート用数値
  */
 export function getCardSortOrder(suit: string, rank: string): number {
-  const suitOrder = { 'CLUBS': 0, 'DIAMONDS': 1, 'SPADES': 2, 'HEARTS': 3 };
+  const suitOrder = { 'CLUBS': 1, 'DIAMONDS': 2, 'SPADES': 3, 'HEARTS': 4 };
   const rankOrder = { 
     'TWO': 2, 'THREE': 3, 'FOUR': 4, 'FIVE': 5, 'SIX': 6, 'SEVEN': 7, 
     'EIGHT': 8, 'NINE': 9, 'TEN': 10, 'JACK': 11, 'QUEEN': 12, 'KING': 13, 'ACE': 14 
   };
   
-  const suitValue = suitOrder[suit.toUpperCase() as keyof typeof suitOrder] ?? 0;
+  const suitValue = suitOrder[suit.toUpperCase() as keyof typeof suitOrder] ?? 1;
   const rankValue = rankOrder[rank.toUpperCase() as keyof typeof rankOrder] ?? 0;
   
   return suitValue * 100 + rankValue;

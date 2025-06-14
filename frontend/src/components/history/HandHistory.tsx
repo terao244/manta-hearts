@@ -96,7 +96,19 @@ export function HandHistory({
                   <tbody>
                     {players.map(player => {
                       const cards = playerCards[player.id] || [];
-                      const sortedCards = [...cards].sort((a, b) => a.sortOrder - b.sortOrder);
+                      // ゲーム画面と同じソート順を適用（スート優先度: クラブ > ダイヤ > スペード > ハート）
+                      const sortedCards = [...cards].sort((a, b) => {
+                        const suitOrder = { 'CLUBS': 1, 'DIAMONDS': 2, 'SPADES': 3, 'HEARTS': 4 };
+                        const rankOrder = {
+                          'TWO': 2, 'THREE': 3, 'FOUR': 4, 'FIVE': 5, 'SIX': 6, 'SEVEN': 7, 'EIGHT': 8,
+                          'NINE': 9, 'TEN': 10, 'JACK': 11, 'QUEEN': 12, 'KING': 13, 'ACE': 14
+                        };
+                        
+                        if (a.suit !== b.suit) {
+                          return suitOrder[a.suit] - suitOrder[b.suit];
+                        }
+                        return rankOrder[a.rank] - rankOrder[b.rank];
+                      });
                       const formattedCards = formatCardsFromInfo(sortedCards);
 
                       return (
