@@ -116,7 +116,7 @@ export function HandHistory({
                                   return (
                                     <span
                                       key={`${card.suit}-${card.rank}`}
-                                      className={`inline-flex items-center px-1 py-0.5 rounded text-xs font-bold border bg-white border-gray-200 ${colorClass}`}
+                                      className={`inline-flex items-center justify-center px-1 py-0.5 rounded text-xs font-bold border bg-white border-gray-200 min-w-[40px] ${colorClass}`}
                                       title={`${cardDisplay.displayText}`}
                                     >
                                       {cardDisplay.displayText}

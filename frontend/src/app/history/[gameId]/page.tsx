@@ -492,7 +492,7 @@ function HandDetail({ hand, players, gameId }: { hand: HandDetailData; players: 
                                 return (
                                   <span
                                     key={`${cardPlay.card.suit}-${cardPlay.card.rank}`}
-                                    className={`inline-flex items-center px-1 py-0.5 rounded text-xs font-medium border ${isWinner
+                                    className={`inline-flex items-center justify-center px-1 py-0.5 rounded text-xs font-medium border min-w-[50px] ${isWinner
                                         ? 'bg-green-100 border-green-300 text-green-800'
                                         : 'bg-white border-gray-200'
                                       }`}
